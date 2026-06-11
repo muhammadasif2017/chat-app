@@ -89,7 +89,9 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-gray-700 px-3 py-3 flex items-center gap-2">
-        <Avatar username={user?.username ?? '?'} avatarUrl={user?.avatarUrl} size="sm" />
+        <Link href="/profile" title="Profile settings">
+          <Avatar username={user?.username ?? '?'} avatarUrl={user?.avatarUrl} size="sm" />
+        </Link>
         <span className="flex-1 text-sm text-gray-300 truncate">{user?.username}</span>
         <button
           onClick={handleLogout}

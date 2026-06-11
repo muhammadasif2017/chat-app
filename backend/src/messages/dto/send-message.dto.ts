@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsEnum, IsObject, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class SendMessageDto {
   @IsUUID()
@@ -10,4 +10,12 @@ export class SendMessageDto {
 
   @IsOptional()
   replyToId?: number;
+
+  @IsOptional()
+  @IsEnum(['TEXT', 'IMAGE', 'FILE'])
+  type?: 'TEXT' | 'IMAGE' | 'FILE';
+
+  @IsOptional()
+  @IsObject()
+  metadata?: Record<string, unknown>;
 }

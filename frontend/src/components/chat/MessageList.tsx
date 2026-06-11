@@ -9,17 +9,20 @@ import type { MessagesPage } from '../../types';
 
 interface MessageListProps {
   conversationId: string;
+  searchQuery?: string;
 }
 
-export function MessageList({ conversationId }: MessageListProps) {
+export function MessageList({ conversationId, searchQuery }: MessageListProps) {
   const user = useAuthStore((s) => s.user);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const isSearching = Boolean(searchQuery?.trim());
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } = useInfiniteQuery({
-    queryKey: ['messages', conversationId],
+    queryKey: ['messages', conversationId, searchQuery],
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams({ limit: '50' });
       if (pageParam) params.set('cursor', String(pageParam));
+      if (searchQuery?.trim()) params.set('q', searchQuery.trim());
       const res = await api.get<MessagesPage>(`/conversations/${conversationId}/messages?${params}`);
       return res.data;
     },
@@ -28,8 +31,10 @@ export function MessageList({ conversationId }: MessageListProps) {
   });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [data?.pages]);
+    if (!isSearching) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [data?.pages, isSearching]);
 
   if (status === 'pending') {
     return <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading…</div>;
@@ -39,7 +44,7 @@ export function MessageList({ conversationId }: MessageListProps) {
 
   return (
     <div className="flex-1 overflow-y-auto flex flex-col py-2">
-      {hasNextPage && (
+      {!isSearching && hasNextPage && (
         <button
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
@@ -47,6 +52,9 @@ export function MessageList({ conversationId }: MessageListProps) {
         >
           {isFetchingNextPage ? 'Loading…' : 'Load earlier messages'}
         </button>
+      )}
+      {isSearching && allMessages.length === 0 && (
+        <p className="text-sm text-gray-400 text-center mt-8">No messages found.</p>
       )}
       {allMessages.map((msg) => (
         <MessageItem key={msg.id} message={msg} isOwn={msg.senderId === user?.id} />

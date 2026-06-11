@@ -17,9 +17,10 @@ export class MessagesController {
     @Param('id') conversationId: string,
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
+    @Query('q') q?: string,
   ) {
     const isMember = await this.conversationsService.isMember(conversationId, user.id);
     if (!isMember) throw new ForbiddenException();
-    return this.messagesService.findMany(conversationId, cursor, limit ? parseInt(limit) : 50);
+    return this.messagesService.findMany(conversationId, cursor, limit ? parseInt(limit) : 50, q);
   }
 }

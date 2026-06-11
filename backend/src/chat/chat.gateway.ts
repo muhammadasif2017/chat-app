@@ -87,6 +87,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { event: 'message_sent', data: serialized };
   }
 
+  @SubscribeMessage('edit_message')
+  async handleEditMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { messageId, content }: { messageId: string; content: string },
+  ) {
+    const userId = client.data.userId as string;
+    const message = await this.messagesService.update(messageId, userId, content);
+    const serialized = { ...message, id: String(message.id) };
+    this.server.to(`conversation:${message.conversationId}`).emit('message_updated', serialized);
+    return { event: 'message_edited', data: serialized };
+  }
+
+  @SubscribeMessage('delete_message')
+  async handleDeleteMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { messageId }: { messageId: string },
+  ) {
+    const userId = client.data.userId as string;
+    const message = await this.messagesService.softDelete(messageId, userId);
+    const serialized = { ...message, id: String(message.id) };
+    this.server.to(`conversation:${message.conversationId}`).emit('message_deleted', serialized);
+    return { event: 'message_deleted_ack', data: serialized };
+  }
+
   @SubscribeMessage('typing_start')
   async handleTypingStart(
     @ConnectedSocket() client: Socket,

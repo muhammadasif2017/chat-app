@@ -12,6 +12,7 @@ import { ConversationsModule } from './conversations/conversations.module.js';
 import { MessagesModule } from './messages/messages.module.js';
 import { PresenceModule } from './presence/presence.module.js';
 import { ChatModule } from './chat/chat.module.js';
+import { UploadModule } from './upload/upload.module.js';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { ChatModule } from './chat/chat.module.js';
     MessagesModule,
     PresenceModule,
     ChatModule,
+    UploadModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

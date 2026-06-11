@@ -15,7 +15,17 @@ const SENDER_SELECT = {
 export class MessagesService {
   constructor(private prisma: PrismaService) {}
 
-  async findMany(conversationId: string, cursor?: string, limit = 50) {
+  async findMany(conversationId: string, cursor?: string, limit = 50, q?: string) {
+    if (q) {
+      const results = await this.prisma.message.findMany({
+        where: { conversationId, isDeleted: false, content: { contains: q, mode: 'insensitive' } },
+        orderBy: { id: 'desc' },
+        take: 50,
+        include: { sender: SENDER_SELECT },
+      });
+      return { messages: results.reverse(), nextCursor: null };
+    }
+
     const messages = await this.prisma.message.findMany({
       where: {
         conversationId,
@@ -33,12 +43,16 @@ export class MessagesService {
   }
 
   async create(senderId: string, dto: SendMessageDto) {
-    const content = sanitizeHtml(dto.content, { allowedTags: [], allowedAttributes: {} });
+    const content = dto.content
+      ? sanitizeHtml(dto.content, { allowedTags: [], allowedAttributes: {} })
+      : null;
     return this.prisma.message.create({
       data: {
         conversationId: dto.conversationId,
         senderId,
         content,
+        type: (dto.type as any) ?? 'TEXT',
+        metadata: dto.metadata as Record<string, string> | undefined,
         replyToId: dto.replyToId ? BigInt(dto.replyToId) : undefined,
       },
       include: { sender: SENDER_SELECT },

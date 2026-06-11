@@ -1,8 +1,9 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../../lib/api';
+import { getSocket } from '../../../../lib/socket';
 import { ConversationHeader } from '../../../../components/chat/ConversationHeader';
 import { MessageList } from '../../../../components/chat/MessageList';
 import { MessageInput } from '../../../../components/chat/MessageInput';
@@ -19,6 +20,11 @@ export default function ConversationPage({ params }: Props) {
   const { id } = use(params);
   const user = useAuthStore((s) => s.user);
   const { typing } = useChat(id);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    getSocket().emit('mark_read', { conversationId: id });
+  }, [id]);
 
   const { data: conversation, status } = useQuery({
     queryKey: ['conversation', id],
@@ -45,8 +51,12 @@ export default function ConversationPage({ params }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <ConversationHeader conversation={conversation} />
-      <MessageList conversationId={id} />
+      <ConversationHeader
+        conversation={conversation}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+      <MessageList conversationId={id} searchQuery={searchQuery} />
       <TypingIndicator typingUsernames={typingUsernames} />
       <MessageInput conversationId={id} />
     </div>
