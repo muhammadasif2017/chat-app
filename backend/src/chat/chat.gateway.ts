@@ -8,15 +8,18 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { UseFilters } from '@nestjs/common';
+import { Inject, UseFilters } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
+import type Redis from 'ioredis';
 import { ConversationsService } from '../conversations/conversations.service.js';
 import { MessagesService } from '../messages/messages.service.js';
 import { PresenceService } from '../presence/presence.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { WsExceptionFilter } from '../common/filters/ws-exception.filter.js';
 import { SendMessageDto } from '../messages/dto/send-message.dto.js';
+import { REDIS_CLIENT } from '../redis/redis.module.js';
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
@@ -33,7 +36,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private conversationsService: ConversationsService,
     private messagesService: MessagesService,
     private presenceService: PresenceService,
+    private prisma: PrismaService,
+    @Inject(REDIS_CLIENT) private redis: Redis,
   ) {}
+
+  private async checkRateLimit(userId: string): Promise<void> {
+    const window = Math.floor(Date.now() / 10000);
+    const key = `ws_rl:${userId}:${window}`;
+    const count = await this.redis.incr(key);
+    if (count === 1) await this.redis.expire(key, 15);
+    if (count > 10) throw new WsException('Rate limit exceeded');
+  }
 
   async handleConnection(client: Socket) {
     try {
@@ -43,6 +56,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const payload = this.jwt.verify<{ sub: string; email: string }>(token, {
         secret: this.config.get<string>('JWT_SECRET'),
       });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true },
+      });
+      if (!user) return client.disconnect();
 
       client.data.userId = payload.sub;
 
@@ -77,6 +96,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() dto: SendMessageDto,
   ) {
     const userId = client.data.userId as string;
+    await this.checkRateLimit(userId);
     const isMember = await this.conversationsService.isMember(dto.conversationId, userId);
     if (!isMember) throw new WsException('Not a member of this conversation');
 
@@ -93,6 +113,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { messageId, content }: { messageId: string; content: string },
   ) {
     const userId = client.data.userId as string;
+    await this.checkRateLimit(userId);
     const message = await this.messagesService.update(messageId, userId, content);
     const serialized = { ...message, id: String(message.id) };
     this.server.to(`conversation:${message.conversationId}`).emit('message_updated', serialized);
@@ -117,6 +138,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
+    const isMember = await this.conversationsService.isMember(conversationId, userId);
+    if (!isMember) throw new WsException('Not a member');
     await this.presenceService.setTyping(conversationId, userId);
     client.to(`conversation:${conversationId}`).emit('user_typing', { userId, conversationId });
   }
@@ -127,6 +150,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
+    const isMember = await this.conversationsService.isMember(conversationId, userId);
+    if (!isMember) throw new WsException('Not a member');
     await this.presenceService.clearTyping(conversationId, userId);
     client.to(`conversation:${conversationId}`).emit('user_stopped_typing', { userId, conversationId });
   }
@@ -137,6 +162,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
+    const isMember = await this.conversationsService.isMember(conversationId, userId);
+    if (!isMember) throw new WsException('Not a member');
     await this.conversationsService.markRead(conversationId, userId);
     client.to(`conversation:${conversationId}`).emit('message_read', { userId, conversationId });
   }
