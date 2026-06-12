@@ -26,3 +26,6 @@ backend/prisma/migrations/
 # IDE
 .vscode/
 .idea/
+
+# Docs
+docs/
