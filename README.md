@@ -84,7 +84,10 @@ backend/    NestJS 11, Prisma 7 (PostgreSQL), Socket.io, Redis
 ### Key decisions
 See [`docs/decisions/`](docs/decisions/) for Architecture Decision Records.
 
-- [ADR-001](docs/decisions/001-read-receipt-tracking.md) — Read receipt tracking: conversation-level `lastReadAt` vs per-message `MessageRead` table
+- [ADR-001](docs/decisions/001-read-receipt-tracking.md) — Read receipt tracking: `lastReadAt` vs per-message `MessageRead` table
+- [ADR-002](docs/decisions/002-prisma-adapter-pattern.md) — Prisma runtime adapter: why `schema.prisma` has no `url` field
+- [ADR-003](docs/decisions/003-two-jwt-auth.md) — Two-JWT auth with stored, hashed refresh tokens
+- [ADR-004](docs/decisions/004-eventemitter2-gateway-decoupling.md) — EventEmitter2 for service-to-gateway WS broadcast decoupling
 
 ---
 
