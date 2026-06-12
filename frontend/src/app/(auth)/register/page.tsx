@@ -11,7 +11,7 @@ import type { User } from '../../../types';
 
 const schema = z.object({
   username: z.string().min(2).max(30),
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(8),
 });
 

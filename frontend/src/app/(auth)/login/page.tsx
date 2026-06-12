@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../store/auth.store';
 import type { User } from '../../../types';
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(1),
 });
 
