@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsEnum, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 import { ConversationType } from '@prisma/client';
 
 export class CreateConversationDto {
@@ -12,8 +12,15 @@ export class CreateConversationDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   description?: string;
 
   @IsOptional()
   isPublic?: boolean;
+
+  @IsArray()
+  @IsUUID('4', { each: true })
+  @ArrayMaxSize(49)
+  @IsOptional()
+  memberIds?: string[];
 }

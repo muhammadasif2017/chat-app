@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { useAuthStore } from '../../store/auth.store';
 import { Avatar } from '../ui/Avatar';
+import { CreateGroupModal } from './CreateGroupModal';
 import type { Conversation } from '../../types';
 
 function useConversations() {
@@ -22,6 +24,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const { data: conversations = [] } = useConversations();
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
 
   const channels = conversations.filter((c) => c.type === 'CHANNEL');
   const groups = conversations.filter((c) => c.type === 'GROUP');
@@ -61,11 +64,22 @@ export function Sidebar() {
     );
   };
 
-  const Section = ({ title, items }: { title: string; items: Conversation[] }) => {
-    if (!items.length) return null;
+  const Section = ({
+    title,
+    items,
+    action,
+  }: {
+    title: string;
+    items: Conversation[];
+    action?: React.ReactNode;
+  }) => {
+    if (!items.length && !action) return null;
     return (
       <div className="mb-4">
-        <p className="px-3 mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">{title}</p>
+        <div className="flex items-center px-3 mb-1">
+          <p className="flex-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">{title}</p>
+          {action}
+        </div>
         <div className="space-y-0.5">
           {items.map((c) => <ConvLink key={c.id} conv={c} />)}
         </div>
@@ -81,7 +95,19 @@ export function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <Section title="Channels" items={channels} />
-        <Section title="Groups" items={groups} />
+        <Section
+          title="Groups"
+          items={groups}
+          action={
+            <button
+              onClick={() => setShowCreateGroup(true)}
+              className="text-gray-400 hover:text-gray-200 text-base leading-none"
+              title="New group"
+            >
+              +
+            </button>
+          }
+        />
         <Section title="Direct Messages" items={dms} />
         {!conversations.length && (
           <p className="px-3 text-xs text-gray-500">No conversations yet.</p>
@@ -101,6 +127,8 @@ export function Sidebar() {
           ⏏
         </button>
       </div>
+
+      {showCreateGroup && <CreateGroupModal onClose={() => setShowCreateGroup(false)} />}
     </aside>
   );
 }

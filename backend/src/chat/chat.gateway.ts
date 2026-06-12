@@ -9,6 +9,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Inject, UseFilters } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
@@ -65,6 +66,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       client.data.userId = payload.sub;
 
+      await client.join(`user:${payload.sub}`);
       const roomIds = await this.conversationsService.getUserRooms(payload.sub);
       await Promise.all(roomIds.map((id) => client.join(`conversation:${id}`)));
 
@@ -184,5 +186,52 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const isMember = await this.conversationsService.isMember(conversationId, userId);
     if (!isMember) throw new WsException('Not a member');
     await client.join(`conversation:${conversationId}`);
+  }
+
+  @OnEvent('internal.group.created')
+  handleGroupCreated({ conversationId, memberIds }: { conversationId: string; memberIds: string[] }) {
+    for (const userId of memberIds) {
+      this.server.in(`user:${userId}`).socketsJoin(`conversation:${conversationId}`);
+      this.server.to(`user:${userId}`).emit('new_conversation', { conversationId });
+    }
+  }
+
+  @OnEvent('internal.member.added')
+  handleMemberAdded(payload: {
+    conversationId: string;
+    member: { userId: string; role: string; joinedAt: Date; user: { id: string; username: string; avatarUrl: string | null } };
+    systemMessage: Record<string, unknown>;
+  }) {
+    this.server.in(`user:${payload.member.userId}`).socketsJoin(`conversation:${payload.conversationId}`);
+    this.server.to(`user:${payload.member.userId}`).emit('new_conversation', { conversationId: payload.conversationId });
+    this.server.to(`conversation:${payload.conversationId}`).emit('member_added', {
+      conversationId: payload.conversationId,
+      member: payload.member,
+    });
+    this.server.to(`conversation:${payload.conversationId}`).emit('new_message', payload.systemMessage);
+  }
+
+  @OnEvent('internal.member.removed')
+  handleMemberRemoved(payload: {
+    conversationId: string;
+    userId: string;
+    systemMessage: Record<string, unknown>;
+  }) {
+    this.server.to(`conversation:${payload.conversationId}`).emit('member_removed', {
+      conversationId: payload.conversationId,
+      userId: payload.userId,
+    });
+    this.server.to(`conversation:${payload.conversationId}`).emit('new_message', payload.systemMessage);
+    this.server.in(`user:${payload.userId}`).socketsLeave(`conversation:${payload.conversationId}`);
+  }
+
+  @OnEvent('internal.group.updated')
+  handleGroupUpdated(payload: { conversationId: string; name: string | null; description: string | null }) {
+    this.server.to(`conversation:${payload.conversationId}`).emit('group_updated', payload);
+  }
+
+  @OnEvent('internal.member.role_changed')
+  handleMemberRoleChanged(payload: { conversationId: string; userId: string; role: string }) {
+    this.server.to(`conversation:${payload.conversationId}`).emit('member_role_changed', payload);
   }
 }

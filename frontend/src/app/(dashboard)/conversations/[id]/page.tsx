@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../../../lib/api';
 import { getSocket } from '../../../../lib/socket';
 import { ConversationHeader } from '../../../../components/chat/ConversationHeader';
+import { GroupMembersPanel } from '../../../../components/chat/GroupMembersPanel';
 import { MessageList } from '../../../../components/chat/MessageList';
 import { MessageInput } from '../../../../components/chat/MessageInput';
 import { TypingIndicator } from '../../../../components/chat/TypingIndicator';
@@ -21,6 +22,7 @@ export default function ConversationPage({ params }: Props) {
   const user = useAuthStore((s) => s.user);
   const { typing } = useChat(id);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMembers, setShowMembers] = useState(false);
 
   useEffect(() => {
     getSocket().emit('mark_read', { conversationId: id });
@@ -50,15 +52,22 @@ export default function ConversationPage({ params }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <ConversationHeader
-        conversation={conversation}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
-      <MessageList conversationId={id} searchQuery={searchQuery} />
-      <TypingIndicator typingUsernames={typingUsernames} />
-      <MessageInput conversationId={id} />
+    <div className="flex h-full min-w-0">
+      <div className="flex flex-col flex-1 min-w-0">
+        <ConversationHeader
+          conversation={conversation}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          showMembers={showMembers}
+          onToggleMembers={() => setShowMembers((v) => !v)}
+        />
+        <MessageList conversationId={id} searchQuery={searchQuery} />
+        <TypingIndicator typingUsernames={typingUsernames} />
+        <MessageInput conversationId={id} />
+      </div>
+      {showMembers && conversation.type === 'GROUP' && (
+        <GroupMembersPanel conversation={conversation} onClose={() => setShowMembers(false)} />
+      )}
     </div>
   );
 }
