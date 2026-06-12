@@ -70,41 +70,45 @@ export class ConversationsService {
   }
 
   async create(userId: string, dto: CreateConversationDto) {
-    const conversation = await this.prisma.conversation.create({
-      data: {
-        type: dto.type,
-        name: this.sanitizeText(dto.name),
-        description: dto.description ? this.sanitizeText(dto.description) : dto.description,
-        isPublic: dto.isPublic ?? false,
-        createdById: userId,
-        members: {
-          create: { userId, role: 'OWNER' },
+    const uniqueIds = dto.memberIds?.length
+      ? [...new Set(dto.memberIds)].filter((id) => id !== userId)
+      : [];
+
+    const conversation = await this.prisma.$transaction(async (tx) => {
+      const conv = await tx.conversation.create({
+        data: {
+          type: dto.type,
+          name: this.sanitizeText(dto.name),
+          description: dto.description ? this.sanitizeText(dto.description) : dto.description,
+          isPublic: dto.isPublic ?? false,
+          createdById: userId,
+          members: { create: { userId, role: 'OWNER' } },
         },
-      },
-      include: { members: { include: { user: MEMBER_SELECT } } },
+        include: { members: { include: { user: MEMBER_SELECT } } },
+      });
+
+      if (!uniqueIds.length) return conv;
+
+      try {
+        await tx.conversationMember.createMany({
+          data: uniqueIds.map((id) => ({ conversationId: conv.id, userId: id, role: 'MEMBER' as const })),
+          skipDuplicates: true,
+        });
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+          throw new BadRequestException('One or more member IDs do not correspond to existing users');
+        }
+        throw err;
+      }
+
+      return tx.conversation.findUniqueOrThrow({
+        where: { id: conv.id },
+        include: { members: { include: { user: MEMBER_SELECT } } },
+      });
     });
 
-    if (dto.memberIds?.length) {
-      const uniqueIds = [...new Set(dto.memberIds)].filter((id) => id !== userId);
-      if (uniqueIds.length) {
-        try {
-          await this.prisma.conversationMember.createMany({
-            data: uniqueIds.map((id) => ({ conversationId: conversation.id, userId: id, role: 'MEMBER' as const })),
-            skipDuplicates: true,
-          });
-        } catch (err) {
-          if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
-            throw new BadRequestException('One or more member IDs do not correspond to existing users');
-          }
-          throw err;
-        }
-        const full = await this.prisma.conversation.findUniqueOrThrow({
-          where: { id: conversation.id },
-          include: { members: { include: { user: MEMBER_SELECT } } },
-        });
-        this.events.emit('internal.group.created', { conversationId: full.id, memberIds: uniqueIds });
-        return full;
-      }
+    if (uniqueIds.length) {
+      this.events.emit('internal.group.created', { conversationId: conversation.id, memberIds: uniqueIds });
     }
 
     return conversation;
@@ -159,10 +163,20 @@ export class ConversationsService {
 
   async addMember(conversationId: string, requesterId: string, targetUserId: string) {
     await this.assertAdminOrOwner(conversationId, requesterId);
-    const member = await this.prisma.conversationMember.create({
-      data: { conversationId, userId: targetUserId, role: 'MEMBER' },
-      include: { user: SENDER_SELECT },
-    });
+    const member = await (async () => {
+      try {
+        return await this.prisma.conversationMember.create({
+          data: { conversationId, userId: targetUserId, role: 'MEMBER' },
+          include: { user: SENDER_SELECT },
+        });
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError) {
+          if (err.code === 'P2003') throw new BadRequestException('User does not exist');
+          if (err.code === 'P2002') throw new BadRequestException('User is already a member');
+        }
+        throw err;
+      }
+    })();
     const systemMessage = await this.prisma.message.create({
       data: {
         conversationId,
