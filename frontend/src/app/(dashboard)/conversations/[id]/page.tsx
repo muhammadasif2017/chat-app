@@ -61,7 +61,7 @@ export default function ConversationPage({ params }: Props) {
           showMembers={showMembers}
           onToggleMembers={() => setShowMembers((v) => !v)}
         />
-        <MessageList conversationId={id} searchQuery={searchQuery} />
+        <MessageList conversationId={id} searchQuery={searchQuery} members={conversation.members} />
         <TypingIndicator typingUsernames={typingUsernames} />
         <MessageInput conversationId={id} />
       </div>

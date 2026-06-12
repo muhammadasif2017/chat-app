@@ -4,14 +4,22 @@ import { useState, useRef } from 'react';
 import { Avatar } from '../ui/Avatar';
 import { formatTime } from '../../lib/utils';
 import { getSocket } from '../../lib/socket';
-import type { Message } from '../../types';
+import type { ConversationMember, Message } from '../../types';
+
+const MAX_RECEIPT_AVATARS = 3;
 
 interface MessageItemProps {
   message: Message;
   isOwn: boolean;
+  members?: ConversationMember[];
 }
 
-export function MessageItem({ message, isOwn }: MessageItemProps) {
+export function MessageItem({ message, isOwn, members }: MessageItemProps) {
+  const seenBy = isOwn
+    ? members?.filter(
+        (m) => m.userId !== message.senderId && m.lastReadAt != null && m.lastReadAt >= message.createdAt,
+      ) ?? []
+    : [];
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content ?? '');
   const [showMenu, setShowMenu] = useState(false);
@@ -123,6 +131,18 @@ export function MessageItem({ message, isOwn }: MessageItemProps) {
               />
             ) : (
               message.content
+            )}
+          </div>
+        )}
+        {seenBy.length > 0 && (
+          <div className="flex items-center gap-0.5 mt-0.5">
+            {seenBy.slice(0, MAX_RECEIPT_AVATARS).map((m) => (
+              <span key={m.userId} title={m.user.username}>
+                <Avatar username={m.user.username} avatarUrl={m.user.avatarUrl} size="xs" />
+              </span>
+            ))}
+            {seenBy.length > MAX_RECEIPT_AVATARS && (
+              <span className="text-[10px] text-gray-400 ml-0.5">+{seenBy.length - MAX_RECEIPT_AVATARS}</span>
             )}
           </div>
         )}

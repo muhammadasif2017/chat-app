@@ -53,6 +53,52 @@ function makeService(prismaOverrides = {}) {
   return new ConversationsService(prisma, events);
 }
 
+describe('ConversationsService.markRead', () => {
+  it('returns a Date', async () => {
+    const svc = makeService();
+    const result = await svc.markRead(CONV_ID, MEMBER_ID);
+    expect(result).toBeInstanceOf(Date);
+  });
+
+  it('returns a timestamp close to now', async () => {
+    const before = Date.now();
+    const svc = makeService();
+    const result = await svc.markRead(CONV_ID, MEMBER_ID);
+    const after = Date.now();
+    expect(result.getTime()).toBeGreaterThanOrEqual(before);
+    expect(result.getTime()).toBeLessThanOrEqual(after);
+  });
+
+  it('calls update with the correct where clause and lastReadAt in data', async () => {
+    const prisma = makePrisma();
+    const svc = makeService(prisma as any);
+
+    const result = await svc.markRead(CONV_ID, MEMBER_ID);
+
+    const updateCall = (prisma.conversationMember.update as jest.Mock).mock.calls[0][0];
+    expect(updateCall.where).toEqual({ conversationId_userId: { conversationId: CONV_ID, userId: MEMBER_ID } });
+    expect(updateCall.data.lastReadAt).toBe(result);
+  });
+
+  it('throws NotFoundException when the member row no longer exists (P2025 race condition)', async () => {
+    const prisma = makePrisma();
+    (prisma.conversationMember.update as jest.Mock).mockRejectedValue(
+      makeFkError('P2025'),
+    );
+    const svc = makeService(prisma as any);
+
+    await expect(svc.markRead(CONV_ID, MEMBER_ID)).rejects.toThrow(NotFoundException);
+  });
+
+  it('re-throws unexpected errors from the update call', async () => {
+    const prisma = makePrisma();
+    (prisma.conversationMember.update as jest.Mock).mockRejectedValue(new Error('db connection lost'));
+    const svc = makeService(prisma as any);
+
+    await expect(svc.markRead(CONV_ID, MEMBER_ID)).rejects.toThrow('db connection lost');
+  });
+});
+
 describe('ConversationsService.updateMemberRole', () => {
   it('throws ForbiddenException when requester is ADMIN (not OWNER)', async () => {
     const prisma = makePrisma();

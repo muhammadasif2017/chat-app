@@ -41,6 +41,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @Inject(REDIS_CLIENT) private redis: Redis,
   ) {}
 
+  private async assertMember(conversationId: string, userId: string): Promise<void> {
+    const isMember = await this.conversationsService.isMember(conversationId, userId);
+    if (!isMember) throw new WsException('Not a member');
+  }
+
   private async checkRateLimit(userId: string): Promise<void> {
     const window = Math.floor(Date.now() / 10000);
     const key = `ws_rl:${userId}:${window}`;
@@ -99,8 +104,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const userId = client.data.userId as string;
     await this.checkRateLimit(userId);
-    const isMember = await this.conversationsService.isMember(dto.conversationId, userId);
-    if (!isMember) throw new WsException('Not a member of this conversation');
+    await this.assertMember(dto.conversationId, userId);
 
     const message = await this.messagesService.create(userId, dto);
     const serialized = { ...message, id: String(message.id) };
@@ -140,8 +144,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
-    const isMember = await this.conversationsService.isMember(conversationId, userId);
-    if (!isMember) throw new WsException('Not a member');
+    await this.assertMember(conversationId, userId);
     await this.presenceService.setTyping(conversationId, userId);
     client.to(`conversation:${conversationId}`).emit('user_typing', { userId, conversationId });
   }
@@ -152,8 +155,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
-    const isMember = await this.conversationsService.isMember(conversationId, userId);
-    if (!isMember) throw new WsException('Not a member');
+    await this.assertMember(conversationId, userId);
     await this.presenceService.clearTyping(conversationId, userId);
     client.to(`conversation:${conversationId}`).emit('user_stopped_typing', { userId, conversationId });
   }
@@ -164,10 +166,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
-    const isMember = await this.conversationsService.isMember(conversationId, userId);
-    if (!isMember) throw new WsException('Not a member');
-    await this.conversationsService.markRead(conversationId, userId);
-    client.to(`conversation:${conversationId}`).emit('message_read', { userId, conversationId });
+    await this.assertMember(conversationId, userId);
+    const lastReadAt = await this.conversationsService.markRead(conversationId, userId);
+    const payload = { userId, conversationId, lastReadAt };
+    client.to(`conversation:${conversationId}`).emit('message_read', payload);
+    client.emit('message_read', payload);
   }
 
   @SubscribeMessage('ping')
@@ -183,8 +186,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
-    const isMember = await this.conversationsService.isMember(conversationId, userId);
-    if (!isMember) throw new WsException('Not a member');
+    await this.assertMember(conversationId, userId);
     await client.join(`conversation:${conversationId}`);
   }
 

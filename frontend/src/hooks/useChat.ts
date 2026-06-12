@@ -31,6 +31,9 @@ export function useChat(conversationId?: string) {
           return { ...old, pages };
         },
       );
+      if (conversationId && message.conversationId === conversationId && message.senderId !== currentUser?.id) {
+        socket.emit('mark_read', { conversationId: message.conversationId });
+      }
       qc.invalidateQueries({ queryKey: ['conversations'] });
     };
 
@@ -146,6 +149,23 @@ export function useChat(conversationId?: string) {
       qc.invalidateQueries({ queryKey: ['conversations'] });
     };
 
+    const onMessageRead = ({ userId: uid, conversationId: cid, lastReadAt }: { userId: string; conversationId: string; lastReadAt: string }) => {
+      qc.setQueryData<Conversation>(['conversation', cid], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          members: old.members.map((m) =>
+            m.userId === uid ? { ...m, lastReadAt } : m,
+          ),
+        };
+      });
+      // Only refetch conversations when it's the current user's own read event,
+      // since only that changes our own unread count in the sidebar.
+      if (uid === currentUser?.id) {
+        qc.invalidateQueries({ queryKey: ['conversations'] });
+      }
+    };
+
     socket.on('new_message', onNewMessage);
     socket.on('message_updated', onMessageUpdated);
     socket.on('message_deleted', onMessageUpdated);
@@ -156,6 +176,7 @@ export function useChat(conversationId?: string) {
     socket.on('member_role_changed', onMemberRoleChanged);
     socket.on('group_updated', onGroupUpdated);
     socket.on('new_conversation', onNewConversation);
+    socket.on('message_read', onMessageRead);
 
     return () => {
       socket.off('new_message', onNewMessage);
@@ -168,6 +189,7 @@ export function useChat(conversationId?: string) {
       socket.off('member_role_changed', onMemberRoleChanged);
       socket.off('group_updated', onGroupUpdated);
       socket.off('new_conversation', onNewConversation);
+      socket.off('message_read', onMessageRead);
     };
   }, [isAuthenticated, conversationId, qc, currentUser?.id, router]);
 

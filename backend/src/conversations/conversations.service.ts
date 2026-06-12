@@ -277,11 +277,20 @@ export class ConversationsService {
     return !!member;
   }
 
-  async markRead(conversationId: string, userId: string) {
-    await this.prisma.conversationMember.update({
-      where: { conversationId_userId: { conversationId, userId } },
-      data: { lastReadAt: new Date() },
-    });
+  async markRead(conversationId: string, userId: string): Promise<Date> {
+    const lastReadAt = new Date();
+    try {
+      await this.prisma.conversationMember.update({
+        where: { conversationId_userId: { conversationId, userId } },
+        data: { lastReadAt },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        throw new NotFoundException('Member record not found');
+      }
+      throw err;
+    }
+    return lastReadAt;
   }
 
   private async assertAdminOrOwner(conversationId: string, userId: string) {
