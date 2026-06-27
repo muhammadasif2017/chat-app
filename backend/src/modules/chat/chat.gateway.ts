@@ -20,6 +20,7 @@ import { PresenceService } from '../presence/presence.service.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { WsExceptionFilter } from '../../common/filters/ws-exception.filter.js';
 import { SendMessageDto } from '../messages/dto/send-message.dto.js';
+import { EditMessageDto } from '../messages/dto/edit-message.dto.js';
 import { REDIS_CLIENT } from '../../infra/redis/redis.module.js';
 
 @UseFilters(WsExceptionFilter)
@@ -111,13 +112,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('edit_message')
-  async handleEditMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() { messageId, content }: { messageId: string; content: string },
-  ) {
+  async handleEditMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: EditMessageDto) {
     const userId = client.data.userId as string;
     await this.checkRateLimit(userId);
-    const message = await this.messagesService.update(messageId, userId, content);
+    const message = await this.messagesService.update(dto.messageId, userId, dto.content);
     const serialized = { ...message, id: String(message.id) };
     this.server.to(`conversation:${message.conversationId}`).emit('message_updated', serialized);
     return { event: 'message_edited', data: serialized };
@@ -129,6 +127,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { messageId }: { messageId: string },
   ) {
     const userId = client.data.userId as string;
+    await this.checkRateLimit(userId);
     const message = await this.messagesService.softDelete(messageId, userId);
     const serialized = { ...message, id: String(message.id) };
     this.server.to(`conversation:${message.conversationId}`).emit('message_deleted', serialized);
