@@ -5,15 +5,17 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import * as Joi from 'joi';
-import { PrismaModule } from './prisma/prisma.module.js';
-import { RedisModule } from './redis/redis.module.js';
-import { AuthModule } from './auth/auth.module.js';
-import { UsersModule } from './users/users.module.js';
-import { ConversationsModule } from './conversations/conversations.module.js';
-import { MessagesModule } from './messages/messages.module.js';
-import { PresenceModule } from './presence/presence.module.js';
-import { ChatModule } from './chat/chat.module.js';
-import { UploadModule } from './upload/upload.module.js';
+import { loggerConfig } from './config/logger.config.js';
+import { throttlerConfig } from './config/throttler.config.js';
+import { PrismaModule } from './infra/prisma/prisma.module.js';
+import { RedisModule } from './infra/redis/redis.module.js';
+import { UploadModule } from './infra/upload/upload.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
+import { UsersModule } from './modules/users/users.module.js';
+import { ConversationsModule } from './modules/conversations/conversations.module.js';
+import { MessagesModule } from './modules/messages/messages.module.js';
+import { PresenceModule } from './modules/presence/presence.module.js';
+import { ChatModule } from './modules/chat/chat.module.js';
 
 @Module({
   imports: [
@@ -31,31 +33,17 @@ import { UploadModule } from './upload/upload.module.js';
       }),
     }),
     EventEmitterModule.forRoot(),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
-    LoggerModule.forRoot({
-      pinoHttp: {
-        transport:
-          process.env.NODE_ENV !== 'production'
-            ? { target: 'pino-pretty', options: { singleLine: true } }
-            : undefined,
-        autoLogging: true,
-        redact: [
-          'req.headers.authorization',
-          'req.body.password',
-          'req.body.refreshToken',
-          'req.body.content',
-        ],
-      },
-    }),
+    ThrottlerModule.forRoot(throttlerConfig),
+    LoggerModule.forRoot(loggerConfig),
     PrismaModule,
     RedisModule,
+    UploadModule,
     AuthModule,
     UsersModule,
     ConversationsModule,
     MessagesModule,
     PresenceModule,
     ChatModule,
-    UploadModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

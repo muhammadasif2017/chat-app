@@ -17,10 +17,10 @@ import type Redis from 'ioredis';
 import { ConversationsService } from '../conversations/conversations.service.js';
 import { MessagesService } from '../messages/messages.service.js';
 import { PresenceService } from '../presence/presence.service.js';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { WsExceptionFilter } from '../common/filters/ws-exception.filter.js';
+import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { WsExceptionFilter } from '../../common/filters/ws-exception.filter.js';
 import { SendMessageDto } from '../messages/dto/send-message.dto.js';
-import { REDIS_CLIENT } from '../redis/redis.module.js';
+import { REDIS_CLIENT } from '../../infra/redis/redis.module.js';
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({

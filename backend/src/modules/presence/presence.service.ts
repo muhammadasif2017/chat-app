@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
-import { REDIS_CLIENT } from '../redis/redis.module.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { REDIS_CLIENT } from '../../infra/redis/redis.module.js';
+import { PrismaService } from '../../infra/prisma/prisma.service.js';
 
 const PRESENCE_TTL = 30;
 

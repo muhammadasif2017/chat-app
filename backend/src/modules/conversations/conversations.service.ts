@@ -7,7 +7,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import sanitizeHtml from 'sanitize-html';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { CreateConversationDto } from './dto/create-conversation.dto.js';
 import { CreateDmDto } from './dto/create-dm.dto.js';
 import { UpdateGroupDto } from './dto/update-group.dto.js';

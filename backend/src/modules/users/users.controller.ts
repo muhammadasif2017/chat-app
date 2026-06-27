@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 import { UsersService } from './users.service.js';
-import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 
 @Controller('users')
 export class UsersController {
