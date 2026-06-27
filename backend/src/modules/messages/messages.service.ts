@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import sanitizeHtml from 'sanitize-html';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { SendMessageDto } from './dto/send-message.dto.js';

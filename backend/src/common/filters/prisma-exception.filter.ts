@@ -1,10 +1,4 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Logger } from '@nestjs/common';
 import { Response } from 'express';
 
 const PRISMA_UNIQUE_VIOLATION = 'P2002';
@@ -19,9 +13,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     if (exception?.getStatus) {
-      return response
-        .status(exception.getStatus())
-        .json(exception.getResponse());
+      return response.status(exception.getStatus()).json(exception.getResponse());
     }
 
     if (exception?.code === PRISMA_UNIQUE_VIOLATION) {

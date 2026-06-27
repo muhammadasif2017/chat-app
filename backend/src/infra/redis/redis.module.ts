@@ -10,8 +10,7 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
     {
       provide: REDIS_CLIENT,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
-        new Redis(config.get<string>('REDIS_URL')!),
+      useFactory: (config: ConfigService) => new Redis(config.get<string>('REDIS_URL')!),
     },
   ],
   exports: [REDIS_CLIENT],

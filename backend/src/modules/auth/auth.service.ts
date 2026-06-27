@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -32,9 +28,7 @@ export class AuthService {
     });
     if (exists) {
       throw new BadRequestException(
-        exists.email === dto.email
-          ? 'Email already in use'
-          : 'Username already taken',
+        exists.email === dto.email ? 'Email already in use' : 'Username already taken',
       );
     }
 
@@ -44,7 +38,10 @@ export class AuthService {
     });
 
     const tokens = await this.issueTokens(user.id, user.email);
-    return { ...tokens, user: { id: user.id, username: user.username, email: user.email, avatarUrl: user.avatarUrl } };
+    return {
+      ...tokens,
+      user: { id: user.id, username: user.username, email: user.email, avatarUrl: user.avatarUrl },
+    };
   }
 
   async login(userId: string, email: string) {

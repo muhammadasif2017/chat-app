@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ConversationsService } from './conversations.service.js';
 import { AddMemberDto } from './dto/add-member.dto.js';
 import { CreateConversationDto } from './dto/create-conversation.dto.js';
@@ -68,6 +60,11 @@ export class ConversationsController {
     @Param('userId') targetUserId: string,
     @Body() dto: UpdateMemberRoleDto,
   ) {
-    return this.conversationsService.updateMemberRole(conversationId, user.id, targetUserId, dto.role);
+    return this.conversationsService.updateMemberRole(
+      conversationId,
+      user.id,
+      targetUserId,
+      dto.role,
+    );
   }
 }

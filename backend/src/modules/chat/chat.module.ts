@@ -6,12 +6,7 @@ import { MessagesModule } from '../messages/messages.module.js';
 import { PresenceModule } from '../presence/presence.module.js';
 
 @Module({
-  imports: [
-    JwtModule.register({}),
-    ConversationsModule,
-    MessagesModule,
-    PresenceModule,
-  ],
+  imports: [JwtModule.register({}), ConversationsModule, MessagesModule, PresenceModule],
   providers: [ChatGateway],
 })
 export class ChatModule {}

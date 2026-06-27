@@ -91,12 +91,18 @@ export class ConversationsService {
 
       try {
         await tx.conversationMember.createMany({
-          data: uniqueIds.map((id) => ({ conversationId: conv.id, userId: id, role: 'MEMBER' as const })),
+          data: uniqueIds.map((id) => ({
+            conversationId: conv.id,
+            userId: id,
+            role: 'MEMBER' as const,
+          })),
           skipDuplicates: true,
         });
       } catch (err) {
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
-          throw new BadRequestException('One or more member IDs do not correspond to existing users');
+          throw new BadRequestException(
+            'One or more member IDs do not correspond to existing users',
+          );
         }
         throw err;
       }
@@ -108,7 +114,10 @@ export class ConversationsService {
     });
 
     if (uniqueIds.length) {
-      this.events.emit('internal.group.created', { conversationId: conversation.id, memberIds: uniqueIds });
+      this.events.emit('internal.group.created', {
+        conversationId: conversation.id,
+        memberIds: uniqueIds,
+      });
     }
 
     return conversation;
@@ -136,7 +145,10 @@ export class ConversationsService {
       data: {
         type: 'DIRECT',
         members: {
-          create: [{ userId: a, role: 'MEMBER' }, { userId: b, role: 'MEMBER' }],
+          create: [
+            { userId: a, role: 'MEMBER' },
+            { userId: b, role: 'MEMBER' },
+          ],
         },
       },
       include: { members: { include: { user: MEMBER_SELECT } } },
@@ -189,7 +201,12 @@ export class ConversationsService {
     });
     this.events.emit('internal.member.added', {
       conversationId,
-      member: { userId: member.userId, role: member.role, joinedAt: member.joinedAt, user: member.user },
+      member: {
+        userId: member.userId,
+        role: member.role,
+        joinedAt: member.joinedAt,
+        user: member.user,
+      },
       systemMessage: { ...systemMessage, id: String(systemMessage.id) },
     });
     return member;
@@ -258,7 +275,11 @@ export class ConversationsService {
       where: { conversationId_userId: { conversationId, userId: targetUserId } },
       data: { role },
     });
-    this.events.emit('internal.member.role_changed', { conversationId, userId: targetUserId, role });
+    this.events.emit('internal.member.role_changed', {
+      conversationId,
+      userId: targetUserId,
+      role,
+    });
     return updated;
   }
 

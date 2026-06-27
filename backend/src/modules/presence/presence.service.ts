@@ -13,12 +13,7 @@ export class PresenceService {
   ) {}
 
   async setOnline(userId: string, socketId: string) {
-    await this.redis.set(
-      `presence:${userId}`,
-      JSON.stringify({ socketId }),
-      'EX',
-      PRESENCE_TTL,
-    );
+    await this.redis.set(`presence:${userId}`, JSON.stringify({ socketId }), 'EX', PRESENCE_TTL);
   }
 
   async setOffline(userId: string) {

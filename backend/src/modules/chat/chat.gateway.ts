@@ -73,7 +73,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       await client.join(`user:${payload.sub}`);
       const roomIds = await this.conversationsService.getUserRooms(payload.sub);
-      await Promise.all(roomIds.map((id) => client.join(`conversation:${id}`)));
+      await client.join(roomIds.map((id) => `conversation:${id}`));
 
       await this.presenceService.setOnline(payload.sub, client.id);
 
@@ -98,10 +98,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send_message')
-  async handleSendMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() dto: SendMessageDto,
-  ) {
+  async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: SendMessageDto) {
     const userId = client.data.userId as string;
     await this.checkRateLimit(userId);
     await this.assertMember(dto.conversationId, userId);
@@ -157,7 +154,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId as string;
     await this.assertMember(conversationId, userId);
     await this.presenceService.clearTyping(conversationId, userId);
-    client.to(`conversation:${conversationId}`).emit('user_stopped_typing', { userId, conversationId });
+    client
+      .to(`conversation:${conversationId}`)
+      .emit('user_stopped_typing', { userId, conversationId });
   }
 
   @SubscribeMessage('mark_read')
@@ -191,7 +190,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @OnEvent('internal.group.created')
-  handleGroupCreated({ conversationId, memberIds }: { conversationId: string; memberIds: string[] }) {
+  handleGroupCreated({
+    conversationId,
+    memberIds,
+  }: {
+    conversationId: string;
+    memberIds: string[];
+  }) {
     for (const userId of memberIds) {
       this.server.in(`user:${userId}`).socketsJoin(`conversation:${conversationId}`);
       this.server.to(`user:${userId}`).emit('new_conversation', { conversationId });
@@ -201,16 +206,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @OnEvent('internal.member.added')
   handleMemberAdded(payload: {
     conversationId: string;
-    member: { userId: string; role: string; joinedAt: Date; user: { id: string; username: string; avatarUrl: string | null } };
+    member: {
+      userId: string;
+      role: string;
+      joinedAt: Date;
+      user: { id: string; username: string; avatarUrl: string | null };
+    };
     systemMessage: Record<string, unknown>;
   }) {
-    this.server.in(`user:${payload.member.userId}`).socketsJoin(`conversation:${payload.conversationId}`);
-    this.server.to(`user:${payload.member.userId}`).emit('new_conversation', { conversationId: payload.conversationId });
+    this.server
+      .in(`user:${payload.member.userId}`)
+      .socketsJoin(`conversation:${payload.conversationId}`);
+    this.server
+      .to(`user:${payload.member.userId}`)
+      .emit('new_conversation', { conversationId: payload.conversationId });
     this.server.to(`conversation:${payload.conversationId}`).emit('member_added', {
       conversationId: payload.conversationId,
       member: payload.member,
     });
-    this.server.to(`conversation:${payload.conversationId}`).emit('new_message', payload.systemMessage);
+    this.server
+      .to(`conversation:${payload.conversationId}`)
+      .emit('new_message', payload.systemMessage);
   }
 
   @OnEvent('internal.member.removed')
@@ -223,12 +239,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       conversationId: payload.conversationId,
       userId: payload.userId,
     });
-    this.server.to(`conversation:${payload.conversationId}`).emit('new_message', payload.systemMessage);
+    this.server
+      .to(`conversation:${payload.conversationId}`)
+      .emit('new_message', payload.systemMessage);
     this.server.in(`user:${payload.userId}`).socketsLeave(`conversation:${payload.conversationId}`);
   }
 
   @OnEvent('internal.group.updated')
-  handleGroupUpdated(payload: { conversationId: string; name: string | null; description: string | null }) {
+  handleGroupUpdated(payload: {
+    conversationId: string;
+    name: string | null;
+    description: string | null;
+  }) {
     this.server.to(`conversation:${payload.conversationId}`).emit('group_updated', payload);
   }
 

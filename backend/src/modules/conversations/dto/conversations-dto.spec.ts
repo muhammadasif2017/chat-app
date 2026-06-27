@@ -6,8 +6,7 @@ import { UpdateGroupDto } from './update-group.dto';
 import { CreateConversationDto } from './create-conversation.dto';
 
 describe('UpdateMemberRoleDto', () => {
-  const make = (role: unknown) =>
-    plainToInstance(UpdateMemberRoleDto, { role });
+  const make = (role: unknown) => plainToInstance(UpdateMemberRoleDto, { role });
 
   it('accepts ADMIN', async () => {
     const errors = await validate(make('ADMIN'));
@@ -37,8 +36,7 @@ describe('UpdateMemberRoleDto', () => {
 });
 
 describe('AddMemberDto', () => {
-  const make = (userId: unknown) =>
-    plainToInstance(AddMemberDto, { userId });
+  const make = (userId: unknown) => plainToInstance(AddMemberDto, { userId });
 
   it('accepts a valid v4 UUID', async () => {
     const errors = await validate(make('550e8400-e29b-41d4-a716-446655440000'));
@@ -63,8 +61,7 @@ describe('AddMemberDto', () => {
 });
 
 describe('UpdateGroupDto', () => {
-  const make = (body: Record<string, unknown>) =>
-    plainToInstance(UpdateGroupDto, body);
+  const make = (body: Record<string, unknown>) => plainToInstance(UpdateGroupDto, body);
 
   it('accepts valid name and description', async () => {
     const errors = await validate(make({ name: 'Team Alpha', description: 'Our team' }));
@@ -96,8 +93,7 @@ describe('UpdateGroupDto', () => {
 });
 
 describe('CreateConversationDto — memberIds', () => {
-  const make = (body: Record<string, unknown>) =>
-    plainToInstance(CreateConversationDto, body);
+  const make = (body: Record<string, unknown>) => plainToInstance(CreateConversationDto, body);
 
   const validUuid = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -117,8 +113,9 @@ describe('CreateConversationDto — memberIds', () => {
   });
 
   it('rejects memberIds with more than 49 entries', async () => {
-    const ids = Array.from({ length: 50 }, (_, i) =>
-      `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
+    const ids = Array.from(
+      { length: 50 },
+      (_, i) => `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
     );
     const errors = await validate(make({ type: 'GROUP', name: 'Test', memberIds: ids }));
     expect(errors.some((e) => e.property === 'memberIds')).toBe(true);

@@ -16,7 +16,14 @@ function makeFkError(code: string) {
 }
 
 function makeMember(userId: string, role: 'OWNER' | 'ADMIN' | 'MEMBER') {
-  return { conversationId: CONV_ID, userId, role, isMuted: false, lastReadAt: null, joinedAt: new Date() };
+  return {
+    conversationId: CONV_ID,
+    userId,
+    role,
+    isMuted: false,
+    lastReadAt: null,
+    joinedAt: new Date(),
+  };
 }
 
 function makePrisma(overrides: Record<string, unknown> = {}) {
@@ -31,19 +38,32 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
     },
     conversation: {
       create: jest.fn(),
-      update: jest.fn().mockResolvedValue({ id: CONV_ID, name: 'x', description: null, members: [] }),
+      update: jest
+        .fn()
+        .mockResolvedValue({ id: CONV_ID, name: 'x', description: null, members: [] }),
       findFirst: jest.fn(),
       findUniqueOrThrow: jest.fn(),
     },
     message: {
-      create: jest.fn().mockResolvedValue({ id: BigInt(1), conversationId: CONV_ID, senderId: MEMBER_ID, type: 'SYSTEM', content: null, metadata: {}, createdAt: new Date(), sender: {} }),
+      create: jest.fn().mockResolvedValue({
+        id: BigInt(1),
+        conversationId: CONV_ID,
+        senderId: MEMBER_ID,
+        type: 'SYSTEM',
+        content: null,
+        metadata: {},
+        createdAt: new Date(),
+        sender: {},
+      }),
       count: jest.fn().mockResolvedValue(0),
     },
     ...overrides,
   };
   return {
     ...mock,
-    $transaction: jest.fn().mockImplementation((cb: (tx: typeof mock) => Promise<unknown>) => cb(mock)),
+    $transaction: jest
+      .fn()
+      .mockImplementation((cb: (tx: typeof mock) => Promise<unknown>) => cb(mock)),
   };
 }
 
@@ -71,29 +91,29 @@ describe('ConversationsService.markRead', () => {
 
   it('calls update with the correct where clause and lastReadAt in data', async () => {
     const prisma = makePrisma();
-    const svc = makeService(prisma as any);
+    const svc = makeService(prisma);
 
     const result = await svc.markRead(CONV_ID, MEMBER_ID);
 
-    const updateCall = (prisma.conversationMember.update as jest.Mock).mock.calls[0][0];
-    expect(updateCall.where).toEqual({ conversationId_userId: { conversationId: CONV_ID, userId: MEMBER_ID } });
+    const updateCall = prisma.conversationMember.update.mock.calls[0][0];
+    expect(updateCall.where).toEqual({
+      conversationId_userId: { conversationId: CONV_ID, userId: MEMBER_ID },
+    });
     expect(updateCall.data.lastReadAt).toBe(result);
   });
 
   it('throws NotFoundException when the member row no longer exists (P2025 race condition)', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.update as jest.Mock).mockRejectedValue(
-      makeFkError('P2025'),
-    );
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.update.mockRejectedValue(makeFkError('P2025'));
+    const svc = makeService(prisma);
 
     await expect(svc.markRead(CONV_ID, MEMBER_ID)).rejects.toThrow(NotFoundException);
   });
 
   it('re-throws unexpected errors from the update call', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.update as jest.Mock).mockRejectedValue(new Error('db connection lost'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.update.mockRejectedValue(new Error('db connection lost'));
+    const svc = makeService(prisma);
 
     await expect(svc.markRead(CONV_ID, MEMBER_ID)).rejects.toThrow('db connection lost');
   });
@@ -102,57 +122,57 @@ describe('ConversationsService.markRead', () => {
 describe('ConversationsService.updateMemberRole', () => {
   it('throws ForbiddenException when requester is ADMIN (not OWNER)', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.updateMemberRole(CONV_ID, ADMIN_ID, MEMBER_ID, 'ADMIN'),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(svc.updateMemberRole(CONV_ID, ADMIN_ID, MEMBER_ID, 'ADMIN')).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('throws BadRequestException when requester tries to change their own role', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(OWNER_ID, 'OWNER'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(OWNER_ID, 'OWNER'));
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.updateMemberRole(CONV_ID, OWNER_ID, OWNER_ID, 'MEMBER'),
-    ).rejects.toThrow(BadRequestException);
+    await expect(svc.updateMemberRole(CONV_ID, OWNER_ID, OWNER_ID, 'MEMBER')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('throws NotFoundException when target is not a member', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock)
+    prisma.conversationMember.findUnique
       .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')) // requester check
-      .mockResolvedValueOnce(null);                          // target check
-    const svc = makeService(prisma as any);
+      .mockResolvedValueOnce(null); // target check
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.updateMemberRole(CONV_ID, OWNER_ID, MEMBER_ID, 'ADMIN'),
-    ).rejects.toThrow(NotFoundException);
+    await expect(svc.updateMemberRole(CONV_ID, OWNER_ID, MEMBER_ID, 'ADMIN')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('throws BadRequestException when demoting the only OWNER', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock)
-      .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER'))  // assertOwner
+    prisma.conversationMember.findUnique
+      .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')) // assertOwner
       .mockResolvedValueOnce(makeMember(ADMIN_ID, 'OWNER')); // target (also OWNER)
-    (prisma.conversationMember.count as jest.Mock).mockResolvedValue(1); // only 1 OWNER
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.count.mockResolvedValue(1); // only 1 OWNER
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.updateMemberRole(CONV_ID, OWNER_ID, ADMIN_ID, 'MEMBER'),
-    ).rejects.toThrow(BadRequestException);
+    await expect(svc.updateMemberRole(CONV_ID, OWNER_ID, ADMIN_ID, 'MEMBER')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('allows demoting an OWNER when multiple OWNERs exist', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock)
-      .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER'))  // assertOwner
+    prisma.conversationMember.findUnique
+      .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')) // assertOwner
       .mockResolvedValueOnce(makeMember(ADMIN_ID, 'OWNER')); // target
-    (prisma.conversationMember.count as jest.Mock).mockResolvedValue(2); // 2 OWNERs
-    (prisma.conversationMember.update as jest.Mock).mockResolvedValue(makeMember(ADMIN_ID, 'MEMBER'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.count.mockResolvedValue(2); // 2 OWNERs
+    prisma.conversationMember.update.mockResolvedValue(makeMember(ADMIN_ID, 'MEMBER'));
+    const svc = makeService(prisma);
 
     await expect(
       svc.updateMemberRole(CONV_ID, OWNER_ID, ADMIN_ID, 'MEMBER'),
@@ -163,73 +183,91 @@ describe('ConversationsService.updateMemberRole', () => {
 describe('ConversationsService.removeMember', () => {
   it('throws BadRequestException when removing the only OWNER', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock)
-      .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER'))  // assertAdminOrOwner skipped (self)
+    prisma.conversationMember.findUnique
+      .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')) // assertAdminOrOwner skipped (self)
       .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')); // target lookup
-    (prisma.conversationMember.count as jest.Mock).mockResolvedValue(1);
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.count.mockResolvedValue(1);
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.removeMember(CONV_ID, OWNER_ID, OWNER_ID),
-    ).rejects.toThrow(BadRequestException);
+    await expect(svc.removeMember(CONV_ID, OWNER_ID, OWNER_ID)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('allows a member to remove themselves', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(MEMBER_ID, 'MEMBER'));
-    (prisma.conversationMember.delete as jest.Mock).mockResolvedValue({});
-    (prisma.message.create as jest.Mock).mockResolvedValue({ id: BigInt(1), conversationId: CONV_ID, senderId: MEMBER_ID, type: 'SYSTEM', content: null, metadata: {}, createdAt: new Date(), sender: {} });
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(MEMBER_ID, 'MEMBER'));
+    prisma.conversationMember.delete.mockResolvedValue({});
+    prisma.message.create.mockResolvedValue({
+      id: BigInt(1),
+      conversationId: CONV_ID,
+      senderId: MEMBER_ID,
+      type: 'SYSTEM',
+      content: null,
+      metadata: {},
+      createdAt: new Date(),
+      sender: {},
+    });
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.removeMember(CONV_ID, MEMBER_ID, MEMBER_ID),
-    ).resolves.not.toThrow();
+    await expect(svc.removeMember(CONV_ID, MEMBER_ID, MEMBER_ID)).resolves.not.toThrow();
   });
 
   it('throws ForbiddenException when a MEMBER tries to remove someone else', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(MEMBER_ID, 'MEMBER'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(MEMBER_ID, 'MEMBER'));
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.removeMember(CONV_ID, MEMBER_ID, ADMIN_ID),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(svc.removeMember(CONV_ID, MEMBER_ID, ADMIN_ID)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 });
 
 describe('ConversationsService.updateGroup', () => {
   it('throws ForbiddenException when requester is MEMBER', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(MEMBER_ID, 'MEMBER'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(MEMBER_ID, 'MEMBER'));
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.updateGroup(CONV_ID, MEMBER_ID, { name: 'New Name' }),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(svc.updateGroup(CONV_ID, MEMBER_ID, { name: 'New Name' })).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('allows ADMIN to update group info', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
-    (prisma.conversation.update as jest.Mock).mockResolvedValue({ id: CONV_ID, name: 'New Name', description: null, members: [] });
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
+    prisma.conversation.update.mockResolvedValue({
+      id: CONV_ID,
+      name: 'New Name',
+      description: null,
+      members: [],
+    });
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.updateGroup(CONV_ID, ADMIN_ID, { name: 'New Name' }),
-    ).resolves.not.toThrow();
+    await expect(svc.updateGroup(CONV_ID, ADMIN_ID, { name: 'New Name' })).resolves.not.toThrow();
   });
 
   it('strips HTML tags from name and description', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
     let capturedData: Record<string, unknown> = {};
-    (prisma.conversation.update as jest.Mock).mockImplementation(({ data }: { data: Record<string, unknown> }) => {
+    prisma.conversation.update.mockImplementation(({ data }: { data: Record<string, unknown> }) => {
       capturedData = data;
-      return Promise.resolve({ id: CONV_ID, name: data.name, description: data.description, members: [] });
+      return Promise.resolve({
+        id: CONV_ID,
+        name: data.name,
+        description: data.description,
+        members: [],
+      });
     });
-    const svc = makeService(prisma as any);
+    const svc = makeService(prisma);
 
-    await svc.updateGroup(CONV_ID, ADMIN_ID, { name: '<b>Team</b>', description: '<script>xss</script>Notes' });
+    await svc.updateGroup(CONV_ID, ADMIN_ID, {
+      name: '<b>Team</b>',
+      description: '<script>xss</script>Notes',
+    });
 
     expect(capturedData.name).toBe('Team');
     expect(capturedData.description).toBe('Notes');
@@ -239,35 +277,33 @@ describe('ConversationsService.updateGroup', () => {
 describe('ConversationsService.addMember', () => {
   it('throws BadRequestException when targetUserId does not exist (P2003)', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
-    (prisma.conversationMember.create as jest.Mock).mockRejectedValue(makeFkError('P2003'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
+    prisma.conversationMember.create.mockRejectedValue(makeFkError('P2003'));
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.addMember(CONV_ID, ADMIN_ID, 'nonexistent-user-uuid'),
-    ).rejects.toThrow(BadRequestException);
+    await expect(svc.addMember(CONV_ID, ADMIN_ID, 'nonexistent-user-uuid')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('throws BadRequestException when targetUserId is already a member (P2002)', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
-    (prisma.conversationMember.create as jest.Mock).mockRejectedValue(makeFkError('P2002'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
+    prisma.conversationMember.create.mockRejectedValue(makeFkError('P2002'));
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.addMember(CONV_ID, ADMIN_ID, MEMBER_ID),
-    ).rejects.toThrow(BadRequestException);
+    await expect(svc.addMember(CONV_ID, ADMIN_ID, MEMBER_ID)).rejects.toThrow(BadRequestException);
   });
 
   it('re-throws unexpected non-Prisma errors', async () => {
     const prisma = makePrisma();
-    (prisma.conversationMember.findUnique as jest.Mock).mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
-    (prisma.conversationMember.create as jest.Mock).mockRejectedValue(new Error('unexpected db error'));
-    const svc = makeService(prisma as any);
+    prisma.conversationMember.findUnique.mockResolvedValue(makeMember(ADMIN_ID, 'ADMIN'));
+    prisma.conversationMember.create.mockRejectedValue(new Error('unexpected db error'));
+    const svc = makeService(prisma);
 
-    await expect(
-      svc.addMember(CONV_ID, ADMIN_ID, 'some-uuid'),
-    ).rejects.toThrow('unexpected db error');
+    await expect(svc.addMember(CONV_ID, ADMIN_ID, 'some-uuid')).rejects.toThrow(
+      'unexpected db error',
+    );
   });
 });
 
@@ -275,13 +311,22 @@ describe('ConversationsService.create', () => {
   it('strips HTML from name and description', async () => {
     const prisma = makePrisma();
     let capturedData: Record<string, unknown> = {};
-    (prisma.conversation.create as jest.Mock).mockImplementation(({ data }: { data: Record<string, unknown> }) => {
+    prisma.conversation.create.mockImplementation(({ data }: { data: Record<string, unknown> }) => {
       capturedData = data;
-      return Promise.resolve({ id: CONV_ID, name: data.name, description: data.description, members: [] });
+      return Promise.resolve({
+        id: CONV_ID,
+        name: data.name,
+        description: data.description,
+        members: [],
+      });
     });
-    const svc = makeService(prisma as any);
+    const svc = makeService(prisma);
 
-    await svc.create(OWNER_ID, { type: 'GROUP' as const, name: '<em>Chat</em>', description: '<b>desc</b>' });
+    await svc.create(OWNER_ID, {
+      type: 'GROUP' as const,
+      name: '<em>Chat</em>',
+      description: '<b>desc</b>',
+    });
 
     expect(capturedData.name).toBe('Chat');
     expect(capturedData.description).toBe('desc');
@@ -289,25 +334,45 @@ describe('ConversationsService.create', () => {
 
   it('throws BadRequestException when memberIds contain non-existent users (P2003)', async () => {
     const prisma = makePrisma();
-    (prisma.conversation.create as jest.Mock).mockResolvedValue({ id: CONV_ID, name: 'x', members: [] });
-    (prisma.conversationMember.createMany as jest.Mock).mockRejectedValue(makeFkError('P2003'));
-    const svc = makeService(prisma as any);
+    prisma.conversation.create.mockResolvedValue({
+      id: CONV_ID,
+      name: 'x',
+      members: [],
+    });
+    prisma.conversationMember.createMany.mockRejectedValue(makeFkError('P2003'));
+    const svc = makeService(prisma);
 
     await expect(
-      svc.create(OWNER_ID, { type: 'GROUP' as const, name: 'Chat', memberIds: ['non-existent-uuid'] }),
+      svc.create(OWNER_ID, {
+        type: 'GROUP' as const,
+        name: 'Chat',
+        memberIds: ['non-existent-uuid'],
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('excludes creator own ID from memberIds bulk insert', async () => {
     const prisma = makePrisma();
-    (prisma.conversation.create as jest.Mock).mockResolvedValue({ id: CONV_ID, name: 'x', members: [] });
-    (prisma.conversationMember.createMany as jest.Mock).mockResolvedValue({ count: 1 });
-    (prisma.conversation.findUniqueOrThrow as jest.Mock).mockResolvedValue({ id: CONV_ID, name: 'x', members: [] });
-    const svc = makeService(prisma as any);
+    prisma.conversation.create.mockResolvedValue({
+      id: CONV_ID,
+      name: 'x',
+      members: [],
+    });
+    prisma.conversationMember.createMany.mockResolvedValue({ count: 1 });
+    prisma.conversation.findUniqueOrThrow.mockResolvedValue({
+      id: CONV_ID,
+      name: 'x',
+      members: [],
+    });
+    const svc = makeService(prisma);
 
-    await svc.create(OWNER_ID, { type: 'GROUP' as const, name: 'Chat', memberIds: [OWNER_ID, MEMBER_ID] });
+    await svc.create(OWNER_ID, {
+      type: 'GROUP' as const,
+      name: 'Chat',
+      memberIds: [OWNER_ID, MEMBER_ID],
+    });
 
-    const call = (prisma.conversationMember.createMany as jest.Mock).mock.calls[0][0];
+    const call = prisma.conversationMember.createMany.mock.calls[0][0];
     const insertedIds = call.data.map((d: { userId: string }) => d.userId);
     expect(insertedIds).not.toContain(OWNER_ID);
     expect(insertedIds).toContain(MEMBER_ID);
