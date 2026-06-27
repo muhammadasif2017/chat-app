@@ -30,8 +30,9 @@ export default function RegisterPage() {
       const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>('/auth/register', data);
       setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
       router.push('/');
-    } catch (err: any) {
-      setError('root', { message: err?.response?.data?.message ?? 'Registration failed' });
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError('root', { message: message ?? 'Registration failed' });
     }
   };
 

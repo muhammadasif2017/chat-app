@@ -1,28 +1,24 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Socket } from 'socket.io-client';
 import { connectSocket, disconnectSocket, getSocket } from '../lib/socket';
 import { useAuthStore } from '../store/auth.store';
 
-export function useSocket(): Socket | null {
+export function useSocket(): void {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const socketRef = useRef<Socket | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     connectSocket();
-    socketRef.current = getSocket();
 
-    const interval = setInterval(() => {
-      socketRef.current?.emit('ping');
+    intervalRef.current = setInterval(() => {
+      getSocket()?.emit('ping');
     }, 15000);
 
     return () => {
-      clearInterval(interval);
+      if (intervalRef.current) clearInterval(intervalRef.current);
       disconnectSocket();
     };
   }, [isAuthenticated]);
-
-  return socketRef.current;
 }
