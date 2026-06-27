@@ -20,12 +20,20 @@ function useConversations() {
   });
 }
 
-function ConvLink({ conv, userId, pathname }: { conv: Conversation; userId: string | undefined; pathname: string }) {
+function ConvLink({
+  conv,
+  userId,
+  pathname,
+}: {
+  conv: Conversation;
+  userId: string | undefined;
+  pathname: string;
+}) {
   const isActive = pathname === `/conversations/${conv.id}`;
   const label =
     conv.type === 'DIRECT'
-      ? conv.members.find((m) => m.userId !== userId)?.user.username ?? 'DM'
-      : conv.name ?? 'Unnamed';
+      ? (conv.members.find((m) => m.userId !== userId)?.user.username ?? 'DM')
+      : (conv.name ?? 'Unnamed');
 
   return (
     <Link
@@ -36,9 +44,7 @@ function ConvLink({ conv, userId, pathname }: { conv: Conversation; userId: stri
           : 'text-gray-300 hover:bg-gray-700 hover:text-white'
       }`}
     >
-      <span className="truncate">
-        {conv.type === 'CHANNEL' ? `# ${label}` : label}
-      </span>
+      <span className="truncate">{conv.type === 'CHANNEL' ? `# ${label}` : label}</span>
       {conv.unreadCount > 0 && (
         <span className="ml-auto bg-indigo-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
           {conv.unreadCount}
@@ -65,11 +71,15 @@ function Section({
   return (
     <div className="mb-4">
       <div className="flex items-center px-3 mb-1">
-        <p className="flex-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">{title}</p>
+        <p className="flex-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {title}
+        </p>
         {action}
       </div>
       <div className="space-y-0.5">
-        {items.map((c) => <ConvLink key={c.id} conv={c} userId={userId} pathname={pathname} />)}
+        {items.map((c) => (
+          <ConvLink key={c.id} conv={c} userId={userId} pathname={pathname} />
+        ))}
       </div>
     </div>
   );
@@ -86,7 +96,11 @@ export function Sidebar() {
   const dms = conversations.filter((c) => c.type === 'DIRECT');
 
   const handleLogout = async () => {
-    try { await api.post('/auth/logout'); } catch { /* ignore */ }
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      /* ignore */
+    }
     logout();
     window.location.href = '/login';
   };

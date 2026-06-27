@@ -21,17 +21,26 @@ export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: FormData) => {
     try {
-      const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>('/auth/register', data);
+      const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>(
+        '/auth/register',
+        data,
+      );
       setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
       router.push('/');
     } catch (err: unknown) {
-      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data
+        ?.message;
       setError('root', { message: message ?? 'Registration failed' });
     }
   };
@@ -47,7 +56,9 @@ export default function RegisterPage() {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             placeholder="yourname"
           />
-          {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username.message}</p>}
+          {errors.username && (
+            <p className="text-red-500 text-xs mt-1">{errors.username.message}</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -66,7 +77,9 @@ export default function RegisterPage() {
             type="password"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+          )}
         </div>
         {errors.root && <p className="text-red-500 text-sm">{errors.root.message}</p>}
         <button

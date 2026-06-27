@@ -24,14 +24,16 @@ export function useChat(conversationId?: string) {
         (old) => {
           if (!old) return old;
           const pages = old.pages.map((page, i) =>
-            i === old.pages.length - 1
-              ? { ...page, messages: [...page.messages, message] }
-              : page,
+            i === old.pages.length - 1 ? { ...page, messages: [...page.messages, message] } : page,
           );
           return { ...old, pages };
         },
       );
-      if (conversationId && message.conversationId === conversationId && message.senderId !== currentUser?.id) {
+      if (
+        conversationId &&
+        message.conversationId === conversationId &&
+        message.senderId !== currentUser?.id
+      ) {
         socket.emit('mark_read', { conversationId: message.conversationId });
       }
       qc.invalidateQueries({ queryKey: ['conversations'] });
@@ -51,7 +53,13 @@ export function useChat(conversationId?: string) {
       );
     };
 
-    const onTyping = ({ userId, conversationId: cid }: { userId: string; conversationId: string }) => {
+    const onTyping = ({
+      userId,
+      conversationId: cid,
+    }: {
+      userId: string;
+      conversationId: string;
+    }) => {
       if (cid === conversationId) {
         setTyping((prev) => new Map(prev).set(userId, true));
         setTimeout(() => {
@@ -64,7 +72,13 @@ export function useChat(conversationId?: string) {
       }
     };
 
-    const onStoppedTyping = ({ userId, conversationId: cid }: { userId: string; conversationId: string }) => {
+    const onStoppedTyping = ({
+      userId,
+      conversationId: cid,
+    }: {
+      userId: string;
+      conversationId: string;
+    }) => {
       if (cid === conversationId) {
         setTyping((prev) => {
           const next = new Map(prev);
@@ -149,14 +163,20 @@ export function useChat(conversationId?: string) {
       qc.invalidateQueries({ queryKey: ['conversations'] });
     };
 
-    const onMessageRead = ({ userId: uid, conversationId: cid, lastReadAt }: { userId: string; conversationId: string; lastReadAt: string }) => {
+    const onMessageRead = ({
+      userId: uid,
+      conversationId: cid,
+      lastReadAt,
+    }: {
+      userId: string;
+      conversationId: string;
+      lastReadAt: string;
+    }) => {
       qc.setQueryData<Conversation>(['conversation', cid], (old) => {
         if (!old) return old;
         return {
           ...old,
-          members: old.members.map((m) =>
-            m.userId === uid ? { ...m, lastReadAt } : m,
-          ),
+          members: old.members.map((m) => (m.userId === uid ? { ...m, lastReadAt } : m)),
         };
       });
       // Only refetch conversations when it's the current user's own read event,

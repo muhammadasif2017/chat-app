@@ -44,11 +44,17 @@ export default function ConversationPage({ params }: Props) {
     });
 
   if (status === 'pending') {
-    return <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading…</div>;
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading…</div>
+    );
   }
 
   if (!conversation) {
-    return <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Conversation not found</div>;
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+        Conversation not found
+      </div>
+    );
   }
 
   return (

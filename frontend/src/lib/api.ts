@@ -54,10 +54,9 @@ api.interceptors.response.use(
     }
 
     try {
-      const { data } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-        { refreshToken },
-      );
+      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
+        refreshToken,
+      });
       tokenStorage.set(data.accessToken, data.refreshToken);
       processQueue(null, data.accessToken);
       original.headers.Authorization = `Bearer ${data.accessToken}`;

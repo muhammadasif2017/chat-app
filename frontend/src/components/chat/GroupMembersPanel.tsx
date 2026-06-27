@@ -5,7 +5,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/auth.store';
 import { Avatar } from '../ui/Avatar';
-import { addMember, removeMember, updateMemberRole, updateGroup, searchUsers } from '../../lib/groups';
+import {
+  addMember,
+  removeMember,
+  updateMemberRole,
+  updateGroup,
+  searchUsers,
+} from '../../lib/groups';
 import type { Conversation, ConversationMember, MemberRole, User } from '../../types';
 
 interface Props {
@@ -29,11 +35,16 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
   const handleSaveInfo = async () => {
     setInfoLoading(true);
     try {
-      await updateGroup(conversation.id, { name: editName.trim() || undefined, description: editDesc.trim() || undefined });
+      await updateGroup(conversation.id, {
+        name: editName.trim() || undefined,
+        description: editDesc.trim() || undefined,
+      });
       await qc.invalidateQueries({ queryKey: ['conversations'] });
       await qc.invalidateQueries({ queryKey: ['conversation', conversation.id] });
       setEditingInfo(false);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setInfoLoading(false);
   };
 
@@ -42,7 +53,9 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       await removeMember(conversation.id, member.userId);
       await qc.invalidateQueries({ queryKey: ['conversation', conversation.id] });
       await qc.invalidateQueries({ queryKey: ['conversations'] });
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleLeave = async () => {
@@ -52,14 +65,18 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       await removeMember(conversation.id, currentUser.id);
       await qc.invalidateQueries({ queryKey: ['conversations'] });
       router.push('/');
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleRoleChange = async (member: ConversationMember, role: 'ADMIN' | 'MEMBER') => {
     try {
       await updateMemberRole(conversation.id, member.userId, role);
       await qc.invalidateQueries({ queryKey: ['conversation', conversation.id] });
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   return (
@@ -67,7 +84,12 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
         <span className="font-semibold text-sm text-gray-900">Members</span>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+        >
+          ×
+        </button>
       </div>
 
       {/* Group info */}
@@ -95,7 +117,10 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
               >
                 Save
               </button>
-              <button onClick={() => setEditingInfo(false)} className="text-xs text-gray-500 hover:text-gray-700">
+              <button
+                onClick={() => setEditingInfo(false)}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
                 Cancel
               </button>
             </div>
@@ -105,7 +130,9 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
             <div className="min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">{conversation.name}</p>
               {conversation.description && (
-                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{conversation.description}</p>
+                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                  {conversation.description}
+                </p>
               )}
             </div>
             {canManage && (
@@ -183,7 +210,8 @@ function MemberRow({
   onRoleChange: (m: ConversationMember, role: 'ADMIN' | 'MEMBER') => void;
 }) {
   const canPromote = myRole === 'OWNER' && !isCurrentUser && member.role !== 'OWNER';
-  const canRemove = (myRole === 'OWNER' || myRole === 'ADMIN') && !isCurrentUser && member.role !== 'OWNER';
+  const canRemove =
+    (myRole === 'OWNER' || myRole === 'ADMIN') && !isCurrentUser && member.role !== 'OWNER';
 
   const ROLE_BADGE: Record<MemberRole, string> = {
     OWNER: 'bg-yellow-100 text-yellow-700',
@@ -252,7 +280,9 @@ function AddMembersSheet({
       try {
         const res = await searchUsers(query.trim());
         setResults(res.data.filter((u) => !existingIds.has(u.id)));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }, 300);
   }, [query, existingIds]);
 
@@ -262,21 +292,28 @@ function AddMembersSheet({
       await addMember(conversation.id, user.id);
       onAdded();
       setResults((prev) => prev.filter((u) => u.id !== user.id));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setAdding(null);
   };
 
   return (
     <div className="absolute inset-0 bg-white z-10 flex flex-col">
       <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-sm">← Back</button>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-sm">
+          ← Back
+        </button>
         <span className="font-semibold text-sm text-gray-900">Add Members</span>
       </div>
       <div className="px-4 py-3">
         <input
           autoFocus
           value={query}
-          onChange={(e) => { setQuery(e.target.value); if (!e.target.value.trim()) setResults([]); }}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (!e.target.value.trim()) setResults([]);
+          }}
           placeholder="Search by username or email…"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />

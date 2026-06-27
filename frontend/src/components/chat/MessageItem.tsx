@@ -16,9 +16,12 @@ interface MessageItemProps {
 
 export function MessageItem({ message, isOwn, members }: MessageItemProps) {
   const seenBy = isOwn
-    ? members?.filter(
-        (m) => m.userId !== message.senderId && m.lastReadAt != null && m.lastReadAt >= message.createdAt,
-      ) ?? []
+    ? (members?.filter(
+        (m) =>
+          m.userId !== message.senderId &&
+          m.lastReadAt != null &&
+          m.lastReadAt >= message.createdAt,
+      ) ?? [])
     : [];
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content ?? '');
@@ -43,7 +46,10 @@ export function MessageItem({ message, isOwn, members }: MessageItemProps) {
 
   const handleSaveEdit = () => {
     const trimmed = editValue.trim();
-    if (!trimmed || trimmed === message.content) { setIsEditing(false); return; }
+    if (!trimmed || trimmed === message.content) {
+      setIsEditing(false);
+      return;
+    }
     getSocket().emit('edit_message', { messageId: message.id, content: trimmed });
     setIsEditing(false);
   };
@@ -54,7 +60,9 @@ export function MessageItem({ message, isOwn, members }: MessageItemProps) {
   };
 
   return (
-    <div className={`flex gap-3 px-4 py-1 hover:bg-gray-50 group ${isOwn ? 'flex-row-reverse' : ''}`}>
+    <div
+      className={`flex gap-3 px-4 py-1 hover:bg-gray-50 group ${isOwn ? 'flex-row-reverse' : ''}`}
+    >
       <Avatar username={message.sender.username} avatarUrl={message.sender.avatarUrl} size="sm" />
       <div className={`max-w-[70%] flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
         <div className="flex items-center gap-1.5 mb-0.5">
@@ -103,16 +111,23 @@ export function MessageItem({ message, isOwn, members }: MessageItemProps) {
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); }
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSaveEdit();
+                }
                 if (e.key === 'Escape') setIsEditing(false);
               }}
               rows={2}
               className="rounded-lg border border-indigo-300 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
             />
             <div className="flex gap-1 text-xs">
-              <button onClick={handleSaveEdit} className="text-indigo-600 hover:underline">Save</button>
+              <button onClick={handleSaveEdit} className="text-indigo-600 hover:underline">
+                Save
+              </button>
               <span className="text-gray-400">·</span>
-              <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:underline">Cancel</button>
+              <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:underline">
+                Cancel
+              </button>
             </div>
           </div>
         ) : (
@@ -124,11 +139,7 @@ export function MessageItem({ message, isOwn, members }: MessageItemProps) {
             }`}
           >
             {message.type === 'IMAGE' && message.metadata?.url ? (
-              <img
-                src={String(message.metadata.url)}
-                alt="image"
-                className="max-w-xs rounded-lg"
-              />
+              <img src={String(message.metadata.url)} alt="image" className="max-w-xs rounded-lg" />
             ) : (
               message.content
             )}
@@ -142,7 +153,9 @@ export function MessageItem({ message, isOwn, members }: MessageItemProps) {
               </span>
             ))}
             {seenBy.length > MAX_RECEIPT_AVATARS && (
-              <span className="text-[10px] text-gray-400 ml-0.5">+{seenBy.length - MAX_RECEIPT_AVATARS}</span>
+              <span className="text-[10px] text-gray-400 ml-0.5">
+                +{seenBy.length - MAX_RECEIPT_AVATARS}
+              </span>
             )}
           </div>
         )}

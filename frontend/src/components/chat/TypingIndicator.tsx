@@ -10,7 +10,5 @@ export function TypingIndicator({ typingUsernames }: TypingIndicatorProps) {
       ? `${typingUsernames[0]} is typing…`
       : `${typingUsernames.slice(0, 2).join(', ')} are typing…`;
 
-  return (
-    <p className="text-xs text-gray-400 px-4 pb-1 italic">{label}</p>
-  );
+  return <p className="text-xs text-gray-400 px-4 pb-1 italic">{label}</p>;
 }

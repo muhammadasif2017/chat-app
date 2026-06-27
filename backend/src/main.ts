@@ -11,7 +11,9 @@ import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter.
 import { RedisIoAdapter } from './infra/redis/redis-io.adapter.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
   app.useLogger(app.get(Logger));
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
@@ -28,7 +30,11 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    }),
   );
   app.useGlobalGuards(new JwtAuthGuard(app.get(Reflector)));
   app.useGlobalFilters(new PrismaExceptionFilter());

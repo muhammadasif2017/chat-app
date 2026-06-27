@@ -20,13 +20,21 @@ export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: FormData) => {
     try {
-      const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>('/auth/login', data);
+      const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>(
+        '/auth/login',
+        data,
+      );
       setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
       router.push('/');
     } catch {
@@ -55,7 +63,9 @@ export default function LoginPage() {
             type="password"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+          )}
         </div>
         {errors.root && <p className="text-red-500 text-sm">{errors.root.message}</p>}
         <button

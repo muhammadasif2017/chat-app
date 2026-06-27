@@ -31,15 +31,15 @@ export function CreateGroupModal({ onClose }: Props) {
       try {
         const res = await searchUsers(query.trim());
         setResults(res.data.filter((u) => !selected.some((s) => s.id === u.id)));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }, 300);
   }, [query, selected]);
 
   const toggleUser = (user: User) => {
     setSelected((prev) =>
-      prev.some((u) => u.id === user.id)
-        ? prev.filter((u) => u.id !== user.id)
-        : [...prev, user],
+      prev.some((u) => u.id === user.id) ? prev.filter((u) => u.id !== user.id) : [...prev, user],
     );
     setQuery('');
     setResults([]);
@@ -51,7 +51,11 @@ export function CreateGroupModal({ onClose }: Props) {
     setLoading(true);
     setError('');
     try {
-      const res = await createGroup(name.trim(), description.trim(), selected.map((u) => u.id));
+      const res = await createGroup(
+        name.trim(),
+        description.trim(),
+        selected.map((u) => u.id),
+      );
       await qc.invalidateQueries({ queryKey: ['conversations'] });
       router.push(`/conversations/${res.data.id}`);
       onClose();
@@ -62,7 +66,10 @@ export function CreateGroupModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
       <div
         className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6"
         onClick={(e) => e.stopPropagation()}
@@ -115,7 +122,10 @@ export function CreateGroupModal({ onClose }: Props) {
             )}
             <input
               value={query}
-              onChange={(e) => { setQuery(e.target.value); if (!e.target.value.trim()) setResults([]); }}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (!e.target.value.trim()) setResults([]);
+              }}
               placeholder="Search by username or email…"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />

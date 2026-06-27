@@ -24,7 +24,9 @@ export function MessageList({ conversationId, searchQuery, members }: MessageLis
       const params = new URLSearchParams({ limit: '50' });
       if (pageParam) params.set('cursor', String(pageParam));
       if (searchQuery?.trim()) params.set('q', searchQuery.trim());
-      const res = await api.get<MessagesPage>(`/conversations/${conversationId}/messages?${params}`);
+      const res = await api.get<MessagesPage>(
+        `/conversations/${conversationId}/messages?${params}`,
+      );
       return res.data;
     },
     initialPageParam: undefined as string | undefined,
@@ -38,7 +40,9 @@ export function MessageList({ conversationId, searchQuery, members }: MessageLis
   }, [data?.pages, isSearching]);
 
   if (status === 'pending') {
-    return <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading…</div>;
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading…</div>
+    );
   }
 
   const allMessages = data?.pages.flatMap((p) => p.messages) ?? [];
@@ -58,7 +62,12 @@ export function MessageList({ conversationId, searchQuery, members }: MessageLis
         <p className="text-sm text-gray-400 text-center mt-8">No messages found.</p>
       )}
       {allMessages.map((msg) => (
-        <MessageItem key={msg.id} message={msg} isOwn={msg.senderId === user?.id} members={members} />
+        <MessageItem
+          key={msg.id}
+          message={msg}
+          isOwn={msg.senderId === user?.id}
+          members={members}
+        />
       ))}
       <div ref={bottomRef} />
     </div>

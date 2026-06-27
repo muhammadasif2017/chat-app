@@ -4,9 +4,7 @@ const PUBLIC_PATHS = ['/login', '/register'];
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const isPublic = PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/'),
-  );
+  const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
   const isAuthed = req.cookies.has('ca_authed');
 
   if (!isAuthed && !isPublic) {

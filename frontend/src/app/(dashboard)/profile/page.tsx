@@ -70,7 +70,13 @@ export default function ProfilePage() {
             <p className="font-medium text-gray-900">{user?.username}</p>
             <p className="text-sm text-gray-500">{user?.email}</p>
           </div>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
         </div>
 
         <div className="space-y-4">
