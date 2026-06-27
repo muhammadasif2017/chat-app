@@ -1,5 +1,6 @@
 #!/bin/sh
-set -e
 
-cd backend && npx tsc --noEmit
-cd ../frontend && npm run lint
+cd backend && npx tsc --noEmit || exit 1
+npx lint-staged || exit 1
+
+cd ../frontend && npx lint-staged || exit 1
