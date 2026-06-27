@@ -8,7 +8,7 @@ import { join } from 'path';
 import { AppModule } from './app.module.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter.js';
-import { RedisIoAdapter } from './redis/redis-io.adapter.js';
+import { RedisIoAdapter } from './infra/redis/redis-io.adapter.js';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });

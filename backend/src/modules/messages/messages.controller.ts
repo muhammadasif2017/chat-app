@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { MessagesService } from './messages.service.js';
-import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ConversationsService } from '../conversations/conversations.service.js';
 import { ForbiddenException } from '@nestjs/common';
 

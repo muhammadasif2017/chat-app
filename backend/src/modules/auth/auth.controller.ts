@@ -13,8 +13,8 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
-import { Public } from '../common/decorators/public.decorator.js';
-import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { Public } from '../../common/decorators/public.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 
 const authThrottle = {
   default: { ttl: 60000, limit: process.env.NODE_ENV === 'production' ? 10 : 100 },
