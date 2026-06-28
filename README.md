@@ -177,6 +177,35 @@ npm run format              # Prettier
 
 ## Architecture
 
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Browser  (Next.js 16)                      │
+│       TanStack Query v5 · Zustand · Socket.io client         │
+└──────────────────┬──────────────────────────┬───────────────┘
+                   │ REST / Axios              │ Socket.io
+                   │ Bearer JWT               │ JWT on connect
+                   ▼                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  NestJS 11  (:3001)                          │
+│  ┌──────┐ ┌───────┐ ┌────────────┐ ┌──────────────────┐    │
+│  │ Auth │ │ Users │ │  Convos    │ │    Messages      │    │
+│  └──────┘ └───────┘ └────────────┘ └──────────────────┘    │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Chat Gateway  (/chat)  — JWT auth · room guard ·   │   │
+│  │  Redis pub/sub adapter · 10 events / 10 s per user  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Presence Service — Redis keys (TTL 30 s) · roster  │   │
+│  └──────────────────────────────────────────────────────┘   │
+└───────────────────────┬─────────────────────┬───────────────┘
+                        │                     │
+              ┌─────────▼──────┐    ┌─────────▼──────────┐
+              │  PostgreSQL    │    │       Redis         │
+              │  Prisma 7      │    │  Presence · Pub/   │
+              │  (pg adapter)  │    │  Sub · Rate limit  │
+              └────────────────┘    └────────────────────┘
+```
+
 ### Backend
 
 The API is built with **NestJS** using a layered module structure:
