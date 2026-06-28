@@ -3,12 +3,15 @@
 import { useRef, useState, useCallback } from 'react';
 import { getSocket } from '../../lib/socket';
 import api from '../../lib/api';
+import type { Message } from '../../types';
 
 interface MessageInputProps {
   conversationId: string;
+  replyTo?: Message | null;
+  onCancelReply?: () => void;
 }
 
-export function MessageInput({ conversationId }: MessageInputProps) {
+export function MessageInput({ conversationId, replyTo, onCancelReply }: MessageInputProps) {
   const [value, setValue] = useState('');
   const [uploading, setUploading] = useState(false);
   const typingTimer = useRef<NodeJS.Timeout | null>(null);
@@ -33,8 +36,11 @@ export function MessageInput({ conversationId }: MessageInputProps) {
     setValue('');
     if (typingTimer.current) clearTimeout(typingTimer.current);
     isTyping.current = false;
-    getSocket().emit('send_message', { conversationId, content });
-  }, [value, conversationId]);
+    const payload: Record<string, unknown> = { conversationId, content };
+    if (replyTo) payload.replyToId = Number(replyTo.id);
+    getSocket().emit('send_message', payload);
+    onCancelReply?.();
+  }, [value, conversationId, replyTo, onCancelReply]);
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,6 +70,26 @@ export function MessageInput({ conversationId }: MessageInputProps) {
 
   return (
     <div className="border-t border-gray-200 px-4 py-3">
+      {replyTo && (
+        <div className="flex items-center gap-2 mb-2 pl-3 border-l-2 border-indigo-400 text-xs text-gray-500">
+          <span className="flex-1 truncate">
+            Replying to <span className="font-medium text-gray-700">{replyTo.sender.username}</span>
+            {': '}
+            {replyTo.isDeleted
+              ? 'Message deleted'
+              : replyTo.type === 'IMAGE'
+                ? '[image]'
+                : replyTo.content}
+          </span>
+          <button
+            onClick={onCancelReply}
+            className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+            title="Cancel reply"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className="flex items-end gap-2 bg-gray-100 rounded-xl px-3 py-2">
         <button
           onClick={() => fileInputRef.current?.click()}

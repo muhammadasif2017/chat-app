@@ -72,9 +72,6 @@ npm run dev                 # app at http://localhost:3000
 
 App: http://localhost:3000 · API docs (Swagger): http://localhost:3001/api/docs
 
-```bash
-```
-
 ---
 
 ## Environment Variables

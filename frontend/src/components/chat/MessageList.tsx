@@ -5,15 +5,16 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { MessageItem } from './MessageItem';
 import { useAuthStore } from '../../store/auth.store';
-import type { ConversationMember, MessagesPage } from '../../types';
+import type { ConversationMember, Message, MessagesPage } from '../../types';
 
 interface MessageListProps {
   conversationId: string;
   searchQuery?: string;
   members?: ConversationMember[];
+  onReply?: (message: Message) => void;
 }
 
-export function MessageList({ conversationId, searchQuery, members }: MessageListProps) {
+export function MessageList({ conversationId, searchQuery, members, onReply }: MessageListProps) {
   const user = useAuthStore((s) => s.user);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isSearching = Boolean(searchQuery?.trim());
@@ -67,6 +68,10 @@ export function MessageList({ conversationId, searchQuery, members }: MessageLis
           message={msg}
           isOwn={msg.senderId === user?.id}
           members={members}
+          onReply={onReply ? () => onReply(msg) : undefined}
+          replyToMessage={
+            msg.replyToId ? (allMessages.find((m) => m.id === msg.replyToId) ?? null) : null
+          }
         />
       ))}
       <div ref={bottomRef} />

@@ -116,7 +116,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.assertMember(dto.conversationId, userId);
 
     const message = await this.messagesService.create(userId, dto);
-    const serialized = { ...message, id: String(message.id) };
+    const serialized = {
+      ...message,
+      id: String(message.id),
+      replyToId: message.replyToId != null ? String(message.replyToId) : null,
+    };
 
     this.server.to(`conversation:${dto.conversationId}`).emit('new_message', serialized);
     return { event: 'message_sent', data: serialized };
@@ -127,7 +131,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId as string;
     await this.checkRateLimit(userId);
     const message = await this.messagesService.update(dto.messageId, userId, dto.content);
-    const serialized = { ...message, id: String(message.id) };
+    const serialized = {
+      ...message,
+      id: String(message.id),
+      replyToId: message.replyToId != null ? String(message.replyToId) : null,
+    };
     this.server.to(`conversation:${message.conversationId}`).emit('message_updated', serialized);
     return { event: 'message_edited', data: serialized };
   }
@@ -140,7 +148,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId as string;
     await this.checkRateLimit(userId);
     const message = await this.messagesService.softDelete(messageId, userId);
-    const serialized = { ...message, id: String(message.id) };
+    const serialized = {
+      ...message,
+      id: String(message.id),
+      replyToId: message.replyToId != null ? String(message.replyToId) : null,
+    };
     this.server.to(`conversation:${message.conversationId}`).emit('message_deleted', serialized);
     return { event: 'message_deleted_ack', data: serialized };
   }

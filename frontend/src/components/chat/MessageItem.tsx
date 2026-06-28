@@ -12,9 +12,17 @@ interface MessageItemProps {
   message: Message;
   isOwn: boolean;
   members?: ConversationMember[];
+  onReply?: () => void;
+  replyToMessage?: Message | null;
 }
 
-export function MessageItem({ message, isOwn, members }: MessageItemProps) {
+export function MessageItem({
+  message,
+  isOwn,
+  members,
+  onReply,
+  replyToMessage,
+}: MessageItemProps) {
   const seenBy = isOwn
     ? (members?.filter(
         (m) =>
@@ -71,6 +79,15 @@ export function MessageItem({ message, isOwn, members }: MessageItemProps) {
           )}
           <span className="text-xs text-gray-400">{formatTime(message.createdAt)}</span>
           {message.isEdited && <span className="text-xs text-gray-400">(edited)</span>}
+          {onReply && !isEditing && (
+            <button
+              onClick={onReply}
+              title="Reply"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 text-xs px-1"
+            >
+              ↩
+            </button>
+          )}
           {isOwn && !isEditing && (
             <div className="relative">
               <button
@@ -138,6 +155,30 @@ export function MessageItem({ message, isOwn, members }: MessageItemProps) {
                 : 'bg-gray-100 text-gray-900 rounded-tl-sm'
             }`}
           >
+            {replyToMessage && (
+              <div
+                className={`mb-1.5 pl-2 border-l-2 text-xs opacity-75 truncate ${
+                  isOwn ? 'border-indigo-300' : 'border-gray-400'
+                }`}
+              >
+                <span className="font-medium">{replyToMessage.sender.username}</span>
+                {': '}
+                {replyToMessage.isDeleted
+                  ? 'Message deleted'
+                  : replyToMessage.type === 'IMAGE'
+                    ? '[image]'
+                    : (replyToMessage.content ?? '')}
+              </div>
+            )}
+            {message.replyToId && !replyToMessage && (
+              <div
+                className={`mb-1.5 pl-2 border-l-2 text-xs opacity-60 ${
+                  isOwn ? 'border-indigo-300' : 'border-gray-400'
+                }`}
+              >
+                Reply to earlier message
+              </div>
+            )}
             {message.type === 'IMAGE' && message.metadata?.url ? (
               <img src={String(message.metadata.url)} alt="image" className="max-w-xs rounded-lg" />
             ) : (

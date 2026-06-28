@@ -11,7 +11,7 @@ import { MessageInput } from '../../../../components/chat/MessageInput';
 import { TypingIndicator } from '../../../../components/chat/TypingIndicator';
 import { useChat } from '../../../../hooks/useChat';
 import { useAuthStore } from '../../../../store/auth.store';
-import type { Conversation } from '../../../../types';
+import type { Conversation, Message } from '../../../../types';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -23,6 +23,7 @@ export default function ConversationPage({ params }: Props) {
   const { typing } = useChat(id);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMembers, setShowMembers] = useState(false);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
 
   useEffect(() => {
     getSocket().emit('mark_read', { conversationId: id });
@@ -68,9 +69,18 @@ export default function ConversationPage({ params }: Props) {
           showMembers={showMembers}
           onToggleMembers={() => setShowMembers((v) => !v)}
         />
-        <MessageList conversationId={id} searchQuery={searchQuery} members={conversation.members} />
+        <MessageList
+          conversationId={id}
+          searchQuery={searchQuery}
+          members={conversation.members}
+          onReply={setReplyTo}
+        />
         <TypingIndicator typingUsernames={typingUsernames} />
-        <MessageInput conversationId={id} />
+        <MessageInput
+          conversationId={id}
+          replyTo={replyTo}
+          onCancelReply={() => setReplyTo(null)}
+        />
       </div>
       {showMembers && conversation.type === 'GROUP' && (
         <GroupMembersPanel conversation={conversation} onClose={() => setShowMembers(false)} />
