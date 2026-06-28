@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
+import { formatDaySeparator } from '../../lib/utils';
 import { MessageItem } from './MessageItem';
 import { useAuthStore } from '../../store/auth.store';
 import type { ConversationMember, Message, MessagesPage } from '../../types';
@@ -62,18 +63,34 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
       {isSearching && allMessages.length === 0 && (
         <p className="text-sm text-gray-400 text-center mt-8">No messages found.</p>
       )}
-      {allMessages.map((msg) => (
-        <MessageItem
-          key={msg.id}
-          message={msg}
-          isOwn={msg.senderId === user?.id}
-          members={members}
-          onReply={onReply ? () => onReply(msg) : undefined}
-          replyToMessage={
-            msg.replyToId ? (allMessages.find((m) => m.id === msg.replyToId) ?? null) : null
-          }
-        />
-      ))}
+      {allMessages.map((msg, i) => {
+        const prevMsg = allMessages[i - 1];
+        const msgDay = new Date(msg.createdAt).toDateString();
+        const prevDay = prevMsg ? new Date(prevMsg.createdAt).toDateString() : null;
+        const showSeparator = msgDay !== prevDay;
+        return (
+          <div key={msg.id}>
+            {showSeparator && (
+              <div className="flex items-center gap-3 px-4 py-2">
+                <div className="flex-1 border-t border-gray-200" />
+                <span className="text-xs text-gray-400 font-medium">
+                  {formatDaySeparator(msg.createdAt)}
+                </span>
+                <div className="flex-1 border-t border-gray-200" />
+              </div>
+            )}
+            <MessageItem
+              message={msg}
+              isOwn={msg.senderId === user?.id}
+              members={members}
+              onReply={onReply ? () => onReply(msg) : undefined}
+              replyToMessage={
+                msg.replyToId ? (allMessages.find((m) => m.id === msg.replyToId) ?? null) : null
+              }
+            />
+          </div>
+        );
+      })}
       <div ref={bottomRef} />
     </div>
   );

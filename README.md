@@ -15,6 +15,8 @@ A full-stack real-time chat application built with NestJS, Next.js, and Socket.i
 - **Typing indicators** — live "is typing…" signals
 - **Read receipts** — "Seen by" avatars per message
 - **Message actions** — edit and soft-delete messages
+- **Reply threading** — quote any message and reply in-context
+- **Emoji reactions** — react with 👍 ❤️ 😂 😮 😢 🎉; click to toggle your own
 - **File uploads** — attach images to messages
 - **Message search** — full-text search within any conversation
 - **Secure auth** — dual-JWT (access 15 min + refresh 7 days), bcrypt-hashed refresh tokens stored in DB
@@ -48,7 +50,7 @@ A full-stack real-time chat application built with NestJS, Next.js, and Socket.i
 ```bash
 git clone https://github.com/muhammadasif2017/chat-app.git
 cd chat-app
-docker compose up -d        # starts PostgreSQL :5432 and Redis :6379
+docker compose up -d        # starts PostgreSQL :5433 and Redis :6379
 ```
 
 ### 2. Backend
