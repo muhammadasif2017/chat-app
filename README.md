@@ -211,6 +211,30 @@ See [`docs/decisions/`](docs/decisions/) for full context on key design choices:
 
 ---
 
+## Testing
+
+```bash
+# Backend — 97 unit tests across 7 suites
+cd backend && npm test
+
+# Frontend — 22 unit tests across 2 suites
+cd frontend && npm test
+
+# Coverage
+cd backend && npm run test:cov
+```
+
+Key coverage areas:
+- **Auth service** — token issuance, bcrypt hashing, refresh-token rotation, revocation
+- **Conversations service** — member checks, unread counts, DM deduplication, role enforcement
+- **Messages service** — content sanitization, soft-delete, `updatedAt` touch on create, cursor pagination
+- **Presence service** — Redis key writes/deletes with correct TTLs, pipeline EXISTS batch query, typing indicators
+- **Users service** — search query and profile lookup
+- **Frontend hooks** — TanStack Query cache updates for real-time messages, `setQueriesData` predicate behaviour
+- **Frontend utils** — `formatRelativeTime`, `formatDaySeparator`, `cn`, `getInitials`
+
+---
+
 ## Contributing
 
 ### Commit convention
