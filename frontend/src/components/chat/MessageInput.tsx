@@ -14,6 +14,7 @@ interface MessageInputProps {
 export function MessageInput({ conversationId, replyTo, onCancelReply }: MessageInputProps) {
   const [value, setValue] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const typingTimer = useRef<NodeJS.Timeout | null>(null);
   const isTyping = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +49,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
       if (!file) return;
       e.target.value = '';
       setUploading(true);
+      setUploadError(null);
       try {
         const form = new FormData();
         form.append('file', file);
@@ -60,7 +62,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           metadata: { url },
         });
       } catch {
-        /* upload errors shown via connection state */
+        setUploadError('Upload failed. Please try again.');
       } finally {
         setUploading(false);
       }
@@ -155,6 +157,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           Send
         </button>
       </div>
+      {uploadError && <p className="text-xs text-red-500 mt-1">{uploadError}</p>}
       <p className="text-xs text-gray-400 mt-1">Enter to send · Shift+Enter for newline</p>
     </div>
   );

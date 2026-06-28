@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import sanitizeHtml from 'sanitize-html';
+import { MessageType } from '@prisma/client';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
 
@@ -51,7 +52,7 @@ export class MessagesService {
         conversationId: dto.conversationId,
         senderId,
         content,
-        type: (dto.type as any) ?? 'TEXT',
+        type: (dto.type as MessageType) ?? MessageType.TEXT,
         metadata: dto.metadata as Record<string, string> | undefined,
         replyToId: dto.replyToId ? BigInt(dto.replyToId) : undefined,
       },
