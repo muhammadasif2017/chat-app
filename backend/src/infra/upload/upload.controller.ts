@@ -5,6 +5,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiCookieAuth, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -15,8 +16,14 @@ import { fileTypeFromFile } from 'file-type';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
+@ApiTags('Upload')
+@ApiCookieAuth('access_token')
 @Controller('upload')
 export class UploadController {
+  @ApiOperation({ summary: 'Upload an image file (max 10 MB; jpeg/png/gif/webp only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Upload succeeded; returns { url }' })
+  @ApiResponse({ status: 400, description: 'File missing, too large, or wrong type' })
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post()
   @UseInterceptors(
