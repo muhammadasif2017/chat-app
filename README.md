@@ -206,6 +206,7 @@ See [`docs/decisions/`](docs/decisions/) for full context on key design choices:
 | [002](docs/decisions/002-prisma-adapter-pattern.md) | Prisma runtime adapter — why `schema.prisma` has no `url` field |
 | [003](docs/decisions/003-two-jwt-auth.md) | Dual-JWT auth with hashed, stored refresh tokens |
 | [004](docs/decisions/004-eventemitter2-gateway-decoupling.md) | EventEmitter2 for service-to-gateway broadcast decoupling |
+| [005](docs/decisions/005-websocket-security-and-rate-limiting.md) | WebSocket security: JWT auth on connect, server-side room membership, per-event-type rate limits |
 
 ---
 
