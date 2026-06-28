@@ -311,7 +311,8 @@ cd backend && npm run test:cov
 
 Key coverage areas:
 - **Auth service** — token issuance, bcrypt hashing, refresh-token rotation, revocation
-- **Conversations service** — member checks, unread counts, DM deduplication, role enforcement
+- **Chat gateway** — JWT auth on connect (invalid token, missing cookie, unknown user), rate-limit enforcement, membership guard, BigInt serialization, reaction upsert + broadcast
+- **Conversations service** — member checks, unread batch query, DM deduplication, role enforcement
 - **Messages service** — content sanitization, soft-delete, `updatedAt` touch on create, cursor pagination
 - **Presence service** — Redis key writes/deletes with correct TTLs, pipeline EXISTS batch query, typing indicators
 - **Users service** — search query and profile lookup
