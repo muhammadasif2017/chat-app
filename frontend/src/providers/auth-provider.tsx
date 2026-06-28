@@ -13,7 +13,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     api
       .get<User>('/users/me')
       .then((res) => setUser(res.data))
-      .catch(() => logout());
+      .catch(() =>
+        api
+          .post('/auth/logout')
+          .catch(() => {})
+          .finally(() => logout()),
+      );
   }, [isAuthenticated, setUser, logout]);
 
   return <>{children}</>;

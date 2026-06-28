@@ -31,11 +31,8 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>(
-        '/auth/login',
-        data,
-      );
-      setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
+      const res = await api.post<{ user: User }>('/auth/login', data);
+      setAuth(res.data.user);
       router.push('/');
     } catch {
       setError('root', { message: 'Invalid email or password' });

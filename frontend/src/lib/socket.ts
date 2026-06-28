@@ -1,14 +1,13 @@
 'use client';
 
 import { io, Socket } from 'socket.io-client';
-import { tokenStorage } from './auth';
 
 let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
     socket = io(`${process.env.NEXT_PUBLIC_WS_URL}/chat`, {
-      auth: { token: tokenStorage.getAccess() },
+      withCredentials: true,
       autoConnect: false,
     });
   }
@@ -17,7 +16,6 @@ export function getSocket(): Socket {
 
 export function connectSocket() {
   const s = getSocket();
-  s.auth = { token: tokenStorage.getAccess() };
   if (!s.connected) s.connect();
 }
 

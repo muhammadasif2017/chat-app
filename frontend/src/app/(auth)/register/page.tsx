@@ -32,11 +32,8 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>(
-        '/auth/register',
-        data,
-      );
-      setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
+      const res = await api.post<{ user: User }>('/auth/register', data);
+      setAuth(res.data.user);
       router.push('/');
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data

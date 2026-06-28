@@ -26,7 +26,13 @@ import { REDIS_CLIENT } from '../../infra/redis/redis.module.js';
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
   namespace: '/chat',
-  cors: { origin: process.env.FRONTEND_URL, credentials: true },
+  cors: {
+    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin || origin === process.env.FRONTEND_URL) cb(null, true);
+      else cb(new Error('CORS: origin not allowed'));
+    },
+    credentials: true,
+  },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -47,17 +53,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!isMember) throw new WsException('Not a member');
   }
 
-  private async checkRateLimit(userId: string): Promise<void> {
+  private async checkRateLimit(userId: string, prefix = 'ws_rl', limit = 10): Promise<void> {
     const window = Math.floor(Date.now() / 10000);
-    const key = `ws_rl:${userId}:${window}`;
+    const key = `${prefix}:${userId}:${window}`;
     const count = await this.redis.incr(key);
     if (count === 1) await this.redis.expire(key, 15);
-    if (count > 10) throw new WsException('Rate limit exceeded');
+    if (count > limit) throw new WsException('Rate limit exceeded');
   }
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth?.token as string | undefined;
+      const cookieStr = (client.handshake.headers.cookie as string) ?? '';
+      const match = cookieStr
+        .split(';')
+        .map((c) => c.trim())
+        .find((c) => c.startsWith('access_token='));
+      const token = match ? match.slice('access_token='.length) : undefined;
       if (!token) return client.disconnect();
 
       const payload = this.jwt.verify<{ sub: string; email: string }>(token, {
@@ -140,6 +151,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
+    await this.checkRateLimit(userId, 'ws_rl_typing', 30);
     await this.assertMember(conversationId, userId);
     await this.presenceService.setTyping(conversationId, userId);
     client.to(`conversation:${conversationId}`).emit('user_typing', { userId, conversationId });
@@ -151,6 +163,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
+    await this.checkRateLimit(userId, 'ws_rl_typing', 30);
     await this.assertMember(conversationId, userId);
     await this.presenceService.clearTyping(conversationId, userId);
     client
@@ -164,6 +177,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
+    await this.checkRateLimit(userId);
     await this.assertMember(conversationId, userId);
     const lastReadAt = await this.conversationsService.markRead(conversationId, userId);
     const payload = { userId, conversationId, lastReadAt };
@@ -174,7 +188,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('ping')
   async handlePing(@ConnectedSocket() client: Socket) {
     const userId = client.data.userId as string;
-    if (userId) await this.presenceService.refreshHeartbeat(userId);
+    if (userId) {
+      await this.checkRateLimit(userId, 'ws_rl_ping', 6);
+      await this.presenceService.refreshHeartbeat(userId);
+    }
     return { event: 'pong' };
   }
 
@@ -184,6 +201,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
     const userId = client.data.userId as string;
+    await this.checkRateLimit(userId);
     await this.assertMember(conversationId, userId);
     await client.join(`conversation:${conversationId}`);
   }

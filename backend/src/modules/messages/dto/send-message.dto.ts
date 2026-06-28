@@ -1,4 +1,4 @@
-import { IsEnum, IsObject, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsEnum, IsInt, IsObject, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class SendMessageDto {
   @IsUUID()
@@ -9,6 +9,7 @@ export class SendMessageDto {
   content: string;
 
   @IsOptional()
+  @IsInt()
   replyToId?: number;
 
   @IsOptional()

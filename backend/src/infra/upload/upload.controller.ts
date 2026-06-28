@@ -5,6 +5,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { join } from 'path';
@@ -16,6 +17,7 @@ const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/web
 
 @Controller('upload')
 export class UploadController {
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
