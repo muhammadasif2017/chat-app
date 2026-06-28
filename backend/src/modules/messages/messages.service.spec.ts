@@ -34,6 +34,9 @@ function makePrisma() {
       create: jest.fn().mockResolvedValue(fakeMessage()),
       update: jest.fn().mockResolvedValue(fakeMessage()),
     },
+    conversation: {
+      update: jest.fn().mockResolvedValue({}),
+    },
   } as unknown as import('../../infra/prisma/prisma.service.js').PrismaService;
 }
 
@@ -106,6 +109,16 @@ describe('MessagesService.create', () => {
     ];
     expect(createCall[0].data.conversationId).toBe(CONV_ID);
     expect(createCall[0].data.senderId).toBe(SENDER_ID);
+  });
+
+  it('touches conversation updatedAt so sidebar ordering stays current', async () => {
+    const { svc, prisma } = makeService();
+
+    await svc.create(SENDER_ID, { conversationId: CONV_ID, content: 'hi' });
+
+    expect(prisma.conversation.update as jest.Mock).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: CONV_ID } }),
+    );
   });
 });
 

@@ -46,7 +46,7 @@ export class MessagesService {
     const content = dto.content
       ? sanitizeHtml(dto.content, { allowedTags: [], allowedAttributes: {} })
       : null;
-    return this.prisma.message.create({
+    const message = await this.prisma.message.create({
       data: {
         conversationId: dto.conversationId,
         senderId,
@@ -57,6 +57,11 @@ export class MessagesService {
       },
       include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
     });
+    await this.prisma.conversation.update({
+      where: { id: dto.conversationId },
+      data: { updatedAt: new Date() },
+    });
+    return message;
   }
 
   async softDelete(messageId: string, userId: string) {
