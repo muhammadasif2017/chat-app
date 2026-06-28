@@ -14,7 +14,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 COPY --chown=node:node --from=builder /app/public ./public
-COPY --chown=node:node --from=builder /app/.next/standalone ./
+COPY --chown=node:node --from=builder /app/.next/standalone/frontend ./
 COPY --chown=node:node --from=builder /app/.next/static ./.next/static
 USER node
 EXPOSE 3000
