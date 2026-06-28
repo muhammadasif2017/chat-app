@@ -11,6 +11,9 @@ dist/
 .next/
 out/
 
+# Test coverage
+coverage/
+
 # Logs
 *.log
 npm-debug.log*
