@@ -43,7 +43,23 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
 
   if (status === 'pending') {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading…</div>
+      <div className="flex-1 flex flex-col gap-3 px-4 py-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className={`flex gap-3 ${i % 3 === 2 ? 'flex-row-reverse' : ''}`}>
+            <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+            <div className="flex flex-col gap-1.5" style={{ maxWidth: '60%' }}>
+              <div
+                className="h-3 w-16 bg-gray-200 rounded animate-pulse"
+                style={{ alignSelf: i % 3 === 2 ? 'flex-end' : 'flex-start' }}
+              />
+              <div
+                className="h-9 bg-gray-200 rounded-2xl animate-pulse"
+                style={{ width: `${120 + ((i * 37) % 80)}px` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     );
   }
 

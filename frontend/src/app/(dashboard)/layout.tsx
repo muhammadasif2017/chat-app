@@ -1,11 +1,13 @@
 'use client';
 
 import { useSocket } from '../../hooks/useSocket';
+import { useUnreadTitle } from '../../hooks/useUnreadTitle';
 import { Sidebar } from '../../components/chat/Sidebar';
 import { ConnectionBanner } from '../../components/chat/ConnectionBanner';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   useSocket();
+  useUnreadTitle();
 
   return (
     <div className="flex h-full flex-col">
