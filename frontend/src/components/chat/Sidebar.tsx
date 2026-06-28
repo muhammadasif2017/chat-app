@@ -9,6 +9,8 @@ import { useAuthStore } from '../../store/auth.store';
 import { Avatar } from '../ui/Avatar';
 import { CreateGroupModal } from './CreateGroupModal';
 import { NewDmModal } from './NewDmModal';
+import { PresenceIndicator } from './PresenceIndicator';
+import { usePresence } from '../../hooks/usePresence';
 import type { Conversation } from '../../types';
 
 function useConversations() {
@@ -25,26 +27,28 @@ function ConvLink({
   conv,
   userId,
   pathname,
+  presence,
 }: {
   conv: Conversation;
   userId: string | undefined;
   pathname: string;
+  presence: Map<string, boolean>;
 }) {
   const isActive = pathname === `/conversations/${conv.id}`;
-  const label =
-    conv.type === 'DIRECT'
-      ? (conv.members.find((m) => m.userId !== userId)?.user.username ?? 'DM')
-      : (conv.name ?? 'Unnamed');
+  const otherMember = conv.type === 'DIRECT' ? conv.members.find((m) => m.userId !== userId) : null;
+  const label = otherMember?.user.username ?? conv.name ?? 'Unnamed';
+  const isOnline = otherMember ? (presence.get(otherMember.userId) ?? false) : false;
 
   return (
     <Link
       href={`/conversations/${conv.id}`}
-      className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
         isActive
           ? 'bg-indigo-100 text-indigo-900 font-medium'
           : 'text-gray-300 hover:bg-gray-700 hover:text-white'
       }`}
     >
+      {otherMember && <PresenceIndicator online={isOnline} />}
       <span className="truncate">{conv.type === 'CHANNEL' ? `# ${label}` : label}</span>
       {conv.unreadCount > 0 && (
         <span className="ml-auto bg-indigo-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
@@ -61,12 +65,14 @@ function Section({
   action,
   userId,
   pathname,
+  presence,
 }: {
   title: string;
   items: Conversation[];
   action?: React.ReactNode;
   userId: string | undefined;
   pathname: string;
+  presence: Map<string, boolean>;
 }) {
   if (!items.length && !action) return null;
   return (
@@ -79,7 +85,7 @@ function Section({
       </div>
       <div className="space-y-0.5">
         {items.map((c) => (
-          <ConvLink key={c.id} conv={c} userId={userId} pathname={pathname} />
+          <ConvLink key={c.id} conv={c} userId={userId} pathname={pathname} presence={presence} />
         ))}
       </div>
     </div>
@@ -90,6 +96,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const { data: conversations = [] } = useConversations();
+  const presence = usePresence();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showNewDm, setShowNewDm] = useState(false);
 
@@ -114,12 +121,19 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        <Section title="Channels" items={channels} userId={user?.id} pathname={pathname} />
+        <Section
+          title="Channels"
+          items={channels}
+          userId={user?.id}
+          pathname={pathname}
+          presence={presence}
+        />
         <Section
           title="Groups"
           items={groups}
           userId={user?.id}
           pathname={pathname}
+          presence={presence}
           action={
             <button
               onClick={() => setShowCreateGroup(true)}
@@ -135,6 +149,7 @@ export function Sidebar() {
           items={dms}
           userId={user?.id}
           pathname={pathname}
+          presence={presence}
           action={
             <button
               onClick={() => setShowNewDm(true)}

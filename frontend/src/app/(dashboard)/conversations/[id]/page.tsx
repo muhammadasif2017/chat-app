@@ -62,6 +62,7 @@ export default function ConversationPage({ params }: Props) {
       <div className="flex flex-col flex-1 min-w-0">
         <ConversationHeader
           conversation={conversation}
+          currentUserId={user?.id}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           showMembers={showMembers}

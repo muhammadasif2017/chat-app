@@ -3,6 +3,7 @@ import type { Conversation } from '../../types';
 
 interface ConversationHeaderProps {
   conversation: Conversation;
+  currentUserId?: string;
   searchQuery: string;
   onSearchChange: (q: string) => void;
   showMembers?: boolean;
@@ -11,6 +12,7 @@ interface ConversationHeaderProps {
 
 export function ConversationHeader({
   conversation,
+  currentUserId,
   searchQuery,
   onSearchChange,
   showMembers,
@@ -20,7 +22,7 @@ export function ConversationHeader({
 
   const title =
     conversation.type === 'DIRECT'
-      ? (conversation.members.find((m) => m.userId !== undefined)?.user.username ??
+      ? (conversation.members.find((m) => m.userId !== currentUserId)?.user.username ??
         'Direct Message')
       : (conversation.name ?? 'Unnamed');
 
