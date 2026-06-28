@@ -13,7 +13,7 @@ import { CreateDmDto } from './dto/create-dm.dto.js';
 import { UpdateGroupDto } from './dto/update-group.dto.js';
 
 const MEMBER_SELECT = {
-  select: { id: true, username: true, email: true, avatarUrl: true },
+  select: { id: true, username: true, email: true, avatarUrl: true, lastSeenAt: true },
 };
 
 const SENDER_SELECT = {

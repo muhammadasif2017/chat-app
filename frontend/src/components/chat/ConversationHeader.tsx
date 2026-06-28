@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { Conversation } from '../../types';
+import { usePresence } from '../../hooks/usePresence';
+import { formatRelativeTime } from '../../lib/utils';
 
 interface ConversationHeaderProps {
   conversation: Conversation;
@@ -19,12 +21,20 @@ export function ConversationHeader({
   onToggleMembers,
 }: ConversationHeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
+  const presence = usePresence();
 
-  const title =
+  const otherMember =
     conversation.type === 'DIRECT'
-      ? (conversation.members.find((m) => m.userId !== currentUserId)?.user.username ??
-        'Direct Message')
-      : (conversation.name ?? 'Unnamed');
+      ? conversation.members.find((m) => m.userId !== currentUserId)
+      : null;
+  const title = otherMember?.user.username ?? conversation.name ?? 'Unnamed';
+
+  const subtitle =
+    conversation.type === 'DIRECT'
+      ? (presence.get(otherMember?.userId ?? '') ?? false)
+        ? 'Online'
+        : `Last seen ${formatRelativeTime(otherMember?.user.lastSeenAt)}`
+      : `${conversation.members.length} members`;
 
   return (
     <div className="border-b border-gray-200 px-4 py-3 flex items-center gap-3">
@@ -32,11 +42,7 @@ export function ConversationHeader({
         <h2 className="font-semibold text-gray-900 text-sm">
           {conversation.type === 'CHANNEL' ? `# ${title}` : title}
         </h2>
-        <p className="text-xs text-gray-500">
-          {conversation.type === 'DIRECT'
-            ? 'Direct message'
-            : `${conversation.members.length} members`}
-        </p>
+        <p className="text-xs text-gray-500">{subtitle}</p>
       </div>
 
       {showSearch ? (

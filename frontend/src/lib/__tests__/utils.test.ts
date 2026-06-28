@@ -1,4 +1,4 @@
-import { cn, formatDaySeparator, getInitials } from '../utils';
+import { cn, formatDaySeparator, formatRelativeTime, getInitials } from '../utils';
 
 describe('cn', () => {
   it('merges class names', () => {
@@ -60,5 +60,35 @@ describe('formatDaySeparator', () => {
 
   it('accepts an ISO string as input', () => {
     expect(formatDaySeparator(new Date().toISOString())).toBe('Today');
+  });
+});
+
+describe('formatRelativeTime', () => {
+  it('returns "just now" for dates less than a minute ago', () => {
+    const recent = new Date(Date.now() - 30000).toISOString();
+    expect(formatRelativeTime(recent)).toBe('just now');
+  });
+
+  it('returns "Xm ago" for dates within the last hour', () => {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60000).toISOString();
+    expect(formatRelativeTime(fiveMinutesAgo)).toBe('5m ago');
+  });
+
+  it('returns "Xh ago" for dates within the last day', () => {
+    const threeHoursAgo = new Date(Date.now() - 3 * 3600000).toISOString();
+    expect(formatRelativeTime(threeHoursAgo)).toBe('3h ago');
+  });
+
+  it('returns "Xd ago" for dates within the last week', () => {
+    const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString();
+    expect(formatRelativeTime(twoDaysAgo)).toBe('2d ago');
+  });
+
+  it('returns "a while ago" for null input', () => {
+    expect(formatRelativeTime(null)).toBe('a while ago');
+  });
+
+  it('returns "a while ago" for undefined input', () => {
+    expect(formatRelativeTime(undefined)).toBe('a while ago');
   });
 });
