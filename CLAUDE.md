@@ -37,7 +37,7 @@ When editing existing code:
 - If you notice unrelated dead code, mention it - don't delete it.
 
 When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes m;;''ade unused.
+- Remove imports/variables/functions that YOUR changes made unused.
 - Don't remove pre-existing dead code unless asked.
 
 The test: Every changed line should trace directly to the user's request.

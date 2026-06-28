@@ -36,6 +36,9 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
     if (!content) return;
     setValue('');
     if (typingTimer.current) clearTimeout(typingTimer.current);
+    if (isTyping.current) {
+      getSocket().emit('typing_stop', { conversationId });
+    }
     isTyping.current = false;
     const payload: Record<string, unknown> = { conversationId, content };
     if (replyTo) payload.replyToId = Number(replyTo.id);
