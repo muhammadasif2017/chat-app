@@ -92,6 +92,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       roomIds.forEach((id) => {
         client.to(`conversation:${id}`).emit('user_online', { userId: payload.sub });
       });
+
+      const memberIds = await this.conversationsService.getConversationMemberIds(payload.sub);
+      const roster = await this.presenceService.getPresence(memberIds);
+      const rosterObj: Record<string, boolean> = {};
+      roster.forEach((online, uid) => {
+        rosterObj[uid] = online;
+      });
+      client.emit('presence_roster', rosterObj);
     } catch {
       client.disconnect();
     }

@@ -12,6 +12,9 @@ export function usePresence() {
     if (!isAuthenticated) return;
     const socket = getSocket();
 
+    const onRoster = (roster: Record<string, boolean>) => {
+      setPresence(new Map(Object.entries(roster)));
+    };
     const onOnline = ({ userId }: { userId: string }) => {
       setPresence((prev) => new Map(prev).set(userId, true));
     };
@@ -19,10 +22,12 @@ export function usePresence() {
       setPresence((prev) => new Map(prev).set(userId, false));
     };
 
+    socket.on('presence_roster', onRoster);
     socket.on('user_online', onOnline);
     socket.on('user_offline', onOffline);
 
     return () => {
+      socket.off('presence_roster', onRoster);
       socket.off('user_online', onOnline);
       socket.off('user_offline', onOffline);
     };

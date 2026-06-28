@@ -30,6 +30,7 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
   const mock = {
     conversationMember: {
       findUnique: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
       update: jest.fn().mockResolvedValue({}),
       count: jest.fn().mockResolvedValue(1),
       create: jest.fn(),
@@ -212,6 +213,32 @@ describe('ConversationsService.markRead', () => {
     const svc = makeService(prisma);
 
     await expect(svc.markRead(CONV_ID, MEMBER_ID)).rejects.toThrow('db connection lost');
+  });
+});
+
+describe('ConversationsService.getConversationMemberIds', () => {
+  it('returns userIds from members in shared conversations, excluding self', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findMany = jest
+      .fn()
+      .mockResolvedValue([{ userId: 'user-b' }, { userId: 'user-c' }]);
+    const svc = makeService(prisma);
+
+    const result = await svc.getConversationMemberIds(OWNER_ID);
+
+    expect(result).toEqual(['user-b', 'user-c']);
+    const call = prisma.conversationMember.findMany.mock.calls[0][0];
+    expect(call.where.userId).toEqual({ not: OWNER_ID });
+  });
+
+  it('returns empty array when user has no conversations', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findMany = jest.fn().mockResolvedValue([]);
+    const svc = makeService(prisma);
+
+    const result = await svc.getConversationMemberIds(OWNER_ID);
+
+    expect(result).toEqual([]);
   });
 });
 

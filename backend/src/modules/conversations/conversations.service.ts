@@ -319,6 +319,18 @@ export class ConversationsService {
     return members.map((m) => m.conversationId);
   }
 
+  async getConversationMemberIds(userId: string): Promise<string[]> {
+    const members = await this.prisma.conversationMember.findMany({
+      where: {
+        conversation: { members: { some: { userId } } },
+        userId: { not: userId },
+      },
+      select: { userId: true },
+      distinct: ['userId'],
+    });
+    return members.map((m) => m.userId);
+  }
+
   async isMember(conversationId: string, userId: string): Promise<boolean> {
     const member = await this.prisma.conversationMember.findUnique({
       where: { conversationId_userId: { conversationId, userId } },

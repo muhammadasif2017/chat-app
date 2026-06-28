@@ -31,7 +31,7 @@ The `PresenceService.setOffline` method updates `user.lastSeenAt = new Date()` w
 
 The `MEMBER_SELECT` projection on the conversation endpoints includes `lastSeenAt`, so it arrives in the same API response as the rest of the conversation data — no separate API call needed.
 
-In the `ConversationHeader` component, the `usePresence` hook provides the live online/offline state via WebSocket events. If the other user is online, the subtitle shows "Online". If offline, it formats the stored `lastSeenAt` as a human-readable relative time ("Last seen 3h ago") using the `formatRelativeTime` utility.
+In the `ConversationHeader` component, the `usePresence` hook provides the live online/offline state. On WS connect, the gateway emits `presence_roster` — a map of `{ [userId]: boolean }` covering all members across the user's conversations — which seeds `usePresence`'s initial state. Subsequent `user_online` / `user_offline` events update it incrementally. If the other user is online, the subtitle shows "Online". If offline, it formats the stored `lastSeenAt` as a human-readable relative time ("Last seen 3h ago") using the `formatRelativeTime` utility.
 
 ---
 
