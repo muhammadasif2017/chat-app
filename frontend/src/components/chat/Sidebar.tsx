@@ -8,6 +8,7 @@ import api from '../../lib/api';
 import { useAuthStore } from '../../store/auth.store';
 import { Avatar } from '../ui/Avatar';
 import { CreateGroupModal } from './CreateGroupModal';
+import { NewDmModal } from './NewDmModal';
 import type { Conversation } from '../../types';
 
 function useConversations() {
@@ -90,6 +91,7 @@ export function Sidebar() {
   const { user, logout } = useAuthStore();
   const { data: conversations = [] } = useConversations();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showNewDm, setShowNewDm] = useState(false);
 
   const channels = conversations.filter((c) => c.type === 'CHANNEL');
   const groups = conversations.filter((c) => c.type === 'GROUP');
@@ -128,7 +130,21 @@ export function Sidebar() {
             </button>
           }
         />
-        <Section title="Direct Messages" items={dms} userId={user?.id} pathname={pathname} />
+        <Section
+          title="Direct Messages"
+          items={dms}
+          userId={user?.id}
+          pathname={pathname}
+          action={
+            <button
+              onClick={() => setShowNewDm(true)}
+              className="text-gray-400 hover:text-gray-200 text-base leading-none"
+              title="New direct message"
+            >
+              +
+            </button>
+          }
+        />
         {!conversations.length && (
           <p className="px-3 text-xs text-gray-500">No conversations yet.</p>
         )}
@@ -149,6 +165,7 @@ export function Sidebar() {
       </div>
 
       {showCreateGroup && <CreateGroupModal onClose={() => setShowCreateGroup(false)} />}
+      {showNewDm && <NewDmModal onClose={() => setShowNewDm(false)} />}
     </aside>
   );
 }

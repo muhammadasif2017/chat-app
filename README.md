@@ -80,8 +80,8 @@ npm run dev                 # app at http://localhost:3000
 |---|---|---|---|
 | `DATABASE_URL` | ✅ | — | PostgreSQL connection string |
 | `REDIS_URL` | ✅ | — | Redis connection string |
-| `JWT_SECRET` | ✅ | — | Access token signing secret (min 8 chars) |
-| `JWT_REFRESH_SECRET` | ✅ | — | Refresh token signing secret (min 8 chars) |
+| `JWT_SECRET` | ✅ | — | Access token signing secret (min 32 chars) |
+| `JWT_REFRESH_SECRET` | ✅ | — | Refresh token signing secret (min 32 chars) |
 | `JWT_EXPIRES_IN` | | `15m` | Access token TTL |
 | `JWT_REFRESH_EXPIRES_IN` | | `7d` | Refresh token TTL |
 | `PORT` | | `3001` | API server port |

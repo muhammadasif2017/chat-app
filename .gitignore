@@ -27,5 +27,3 @@ backend/prisma/migrations/
 .vscode/
 .idea/
 
-# Docs
-docs/

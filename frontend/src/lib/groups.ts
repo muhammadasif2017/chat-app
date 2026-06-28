@@ -21,6 +21,10 @@ export function updateMemberRole(conversationId: string, userId: string, role: '
   return api.patch(`/conversations/${conversationId}/members/${userId}/role`, { role });
 }
 
+export function findOrCreateDm(targetUserId: string) {
+  return api.post<Conversation>('/conversations/dm', { targetUserId });
+}
+
 export function searchUsers(q: string) {
   return api.get<User[]>(`/users/search?q=${encodeURIComponent(q)}`);
 }
