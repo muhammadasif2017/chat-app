@@ -38,22 +38,35 @@ A full-stack real-time chat application built with NestJS, Next.js, and Socket.i
 
 ## Prerequisites
 
-- **Node.js** 20+
-- **Docker** (for PostgreSQL and Redis)
+- **Docker** (for the full-stack Docker setup)
+- **Node.js** 20+ (for local development only)
 
 ---
 
 ## Getting Started
 
-### 1. Clone and start infrastructure
+### Option A — Docker (recommended)
 
 ```bash
 git clone https://github.com/muhammadasif2017/chat-app.git
 cd chat-app
-docker compose up -d        # starts PostgreSQL :5433 and Redis :6379
+cp backend/.env.example backend/.env   # set JWT secrets (min 32 chars each)
+docker compose up --build
 ```
 
-### 2. Backend
+App: http://localhost:3000 · API docs (Swagger): http://localhost:3001/api/docs
+
+On first run, the backend container automatically applies all database migrations before starting.
+
+### Option B — Local development
+
+#### 1. Start infrastructure
+
+```bash
+docker compose up -d postgres redis   # starts PostgreSQL :5433 and Redis :6379
+```
+
+#### 2. Backend
 
 ```bash
 cd backend
@@ -63,7 +76,7 @@ npx prisma migrate dev      # run migrations and generate Prisma client
 npm run start:dev           # API server at http://localhost:3001
 ```
 
-### 3. Frontend
+#### 3. Frontend
 
 ```bash
 cd frontend                 # new terminal
@@ -71,8 +84,6 @@ cp .env.local.example .env.local
 npm install
 npm run dev                 # app at http://localhost:3000
 ```
-
-App: http://localhost:3000 · API docs (Swagger): http://localhost:3001/api/docs
 
 ---
 
