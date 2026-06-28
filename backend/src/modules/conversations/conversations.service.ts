@@ -28,45 +28,45 @@ export class ConversationsService {
   ) {}
 
   async findAll(userId: string) {
-    const members = await this.prisma.conversationMember.findMany({
-      where: { userId },
-      include: {
-        conversation: {
-          include: {
-            members: { include: { user: MEMBER_SELECT } },
-            messages: {
-              orderBy: { id: 'desc' },
-              take: 1,
-              where: { isDeleted: false },
+    const [members, unreadRows] = await Promise.all([
+      this.prisma.conversationMember.findMany({
+        where: { userId },
+        include: {
+          conversation: {
+            include: {
+              members: { include: { user: MEMBER_SELECT } },
+              messages: {
+                orderBy: { id: 'desc' },
+                take: 1,
+                where: { isDeleted: false },
+              },
             },
           },
         },
-      },
-      orderBy: { conversation: { updatedAt: 'desc' } },
-    });
-
-    return Promise.all(
-      members.map(async (m) => {
-        const unreadCount = m.lastReadAt
-          ? await this.prisma.message.count({
-              where: {
-                conversationId: m.conversationId,
-                createdAt: { gt: m.lastReadAt },
-                isDeleted: false,
-              },
-            })
-          : await this.prisma.message.count({
-              where: { conversationId: m.conversationId, isDeleted: false },
-            });
-
-        return {
-          ...m.conversation,
-          lastMessage: m.conversation.messages[0] ?? null,
-          unreadCount,
-          myRole: m.role,
-        };
+        orderBy: { conversation: { updatedAt: 'desc' } },
       }),
-    );
+      this.prisma.$queryRaw<{ conversationId: string; unreadCount: number }[]>`
+        SELECT
+          cm."conversationId",
+          CAST(COUNT(m.id) AS INTEGER) AS "unreadCount"
+        FROM "ConversationMember" cm
+        LEFT JOIN "Message" m
+          ON m."conversationId" = cm."conversationId"
+          AND m."isDeleted" = false
+          AND (cm."lastReadAt" IS NULL OR m."createdAt" > cm."lastReadAt")
+        WHERE cm."userId" = ${userId}
+        GROUP BY cm."conversationId"
+      `,
+    ]);
+
+    const unreadMap = new Map(unreadRows.map((r) => [r.conversationId, r.unreadCount]));
+
+    return members.map((m) => ({
+      ...m.conversation,
+      lastMessage: m.conversation.messages[0] ?? null,
+      unreadCount: unreadMap.get(m.conversationId) ?? 0,
+      myRole: m.role,
+    }));
   }
 
   async findOne(userId: string, conversationId: string) {

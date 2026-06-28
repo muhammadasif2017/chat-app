@@ -58,6 +58,7 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
       }),
       count: jest.fn().mockResolvedValue(0),
     },
+    $queryRaw: jest.fn().mockResolvedValue([]),
     ...overrides,
   };
   return {
@@ -113,37 +114,31 @@ describe('ConversationsService.findAll', () => {
     expect(result).toEqual([]);
   });
 
-  it('counts all messages when lastReadAt is null', async () => {
+  it('uses unread count from batch query result', async () => {
     const prisma = makePrisma();
     prisma.conversationMember.findMany.mockResolvedValue([
       fakeConvMemberWithConversation(OWNER_ID, 'OWNER'),
     ]);
-    prisma.message.count.mockResolvedValue(3);
+    prisma.$queryRaw.mockResolvedValue([{ conversationId: CONV_ID, unreadCount: 5 }]);
     const svc = makeService(prisma);
 
     const [conv] = await svc.findAll(OWNER_ID);
 
-    expect(conv.unreadCount).toBe(3);
-    const countCall = prisma.message.count.mock.calls[0][0];
-    expect(countCall.where).not.toHaveProperty('createdAt');
+    expect(conv.unreadCount).toBe(5);
+    expect(prisma.message.count).not.toHaveBeenCalled();
   });
 
-  it('counts only messages after lastReadAt when it is set', async () => {
+  it('defaults to 0 unread when conversation has no entry in batch result', async () => {
     const prisma = makePrisma();
-    const lastReadAt = new Date('2026-01-01');
-    const member = {
-      ...fakeConvMemberWithConversation(OWNER_ID, 'OWNER'),
-      lastReadAt,
-    };
-    prisma.conversationMember.findMany.mockResolvedValue([member]);
-    prisma.message.count.mockResolvedValue(2);
+    prisma.conversationMember.findMany.mockResolvedValue([
+      fakeConvMemberWithConversation(OWNER_ID, 'OWNER'),
+    ]);
+    prisma.$queryRaw.mockResolvedValue([]);
     const svc = makeService(prisma);
 
     const [conv] = await svc.findAll(OWNER_ID);
 
-    expect(conv.unreadCount).toBe(2);
-    const countCall = prisma.message.count.mock.calls[0][0];
-    expect(countCall.where.createdAt).toEqual({ gt: lastReadAt });
+    expect(conv.unreadCount).toBe(0);
   });
 
   it('exposes myRole from the member record', async () => {

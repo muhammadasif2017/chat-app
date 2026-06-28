@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getInitials } from '../../lib/utils';
 
 interface AvatarProps {
@@ -14,13 +15,17 @@ const sizeClasses = {
   lg: 'w-12 h-12 text-base',
 };
 
+const sizePx = { xs: 20, sm: 28, md: 36, lg: 48 };
+
 export function Avatar({ username, avatarUrl, size = 'md', online }: AvatarProps) {
   return (
     <div className="relative flex-shrink-0">
       {avatarUrl ? (
-        <img
+        <Image
           src={avatarUrl}
           alt={username}
+          width={sizePx[size]}
+          height={sizePx[size]}
           className={`${sizeClasses[size]} rounded-full object-cover`}
         />
       ) : (

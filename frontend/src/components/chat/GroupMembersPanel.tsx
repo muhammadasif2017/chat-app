@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { isAxiosError } from 'axios';
 import { useAuthStore } from '../../store/auth.store';
 import { Avatar } from '../ui/Avatar';
 import {
@@ -13,6 +14,15 @@ import {
   searchUsers,
 } from '../../lib/groups';
 import type { Conversation, ConversationMember, MemberRole, User } from '../../types';
+
+function extractErrorMessage(err: unknown): string {
+  if (isAxiosError(err)) {
+    const msg = err.response?.data?.message;
+    if (typeof msg === 'string') return msg;
+    if (Array.isArray(msg)) return msg[0];
+  }
+  return 'Something went wrong. Please try again.';
+}
 
 interface Props {
   conversation: Conversation;
@@ -31,8 +41,10 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
   const [editName, setEditName] = useState(conversation.name ?? '');
   const [editDesc, setEditDesc] = useState(conversation.description ?? '');
   const [infoLoading, setInfoLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSaveInfo = async () => {
+    setError(null);
     setInfoLoading(true);
     try {
       await updateGroup(conversation.id, {
@@ -42,40 +54,43 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       await qc.invalidateQueries({ queryKey: ['conversations'] });
       await qc.invalidateQueries({ queryKey: ['conversation', conversation.id] });
       setEditingInfo(false);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      setError(extractErrorMessage(err));
     }
     setInfoLoading(false);
   };
 
   const handleRemove = async (member: ConversationMember) => {
+    setError(null);
     try {
       await removeMember(conversation.id, member.userId);
       await qc.invalidateQueries({ queryKey: ['conversation', conversation.id] });
       await qc.invalidateQueries({ queryKey: ['conversations'] });
-    } catch {
-      /* ignore */
+    } catch (err) {
+      setError(extractErrorMessage(err));
     }
   };
 
   const handleLeave = async () => {
     if (!currentUser) return;
     if (!confirm('Leave this group?')) return;
+    setError(null);
     try {
       await removeMember(conversation.id, currentUser.id);
       await qc.invalidateQueries({ queryKey: ['conversations'] });
       router.push('/');
-    } catch {
-      /* ignore */
+    } catch (err) {
+      setError(extractErrorMessage(err));
     }
   };
 
   const handleRoleChange = async (member: ConversationMember, role: 'ADMIN' | 'MEMBER') => {
+    setError(null);
     try {
       await updateMemberRole(conversation.id, member.userId, role);
       await qc.invalidateQueries({ queryKey: ['conversation', conversation.id] });
-    } catch {
-      /* ignore */
+    } catch (err) {
+      setError(extractErrorMessage(err));
     }
   };
 
@@ -91,6 +106,19 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
           ×
         </button>
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="mx-3 mt-2 flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+          <span className="flex-1">{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="flex-shrink-0 text-red-400 hover:text-red-600"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Group info */}
       <div className="px-4 py-3 border-b border-gray-100">
@@ -267,6 +295,7 @@ function AddMembersSheet({
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<User[]>([]);
   const [adding, setAdding] = useState<string | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const existingIds = useMemo(
     () => new Set(conversation.members.map((m) => m.userId)),
@@ -287,13 +316,14 @@ function AddMembersSheet({
   }, [query, existingIds]);
 
   const handleAdd = async (user: User) => {
+    setAddError(null);
     setAdding(user.id);
     try {
       await addMember(conversation.id, user.id);
       onAdded();
       setResults((prev) => prev.filter((u) => u.id !== user.id));
-    } catch {
-      /* ignore */
+    } catch (err) {
+      setAddError(extractErrorMessage(err));
     }
     setAdding(null);
   };
@@ -338,6 +368,7 @@ function AddMembersSheet({
         {results.length === 0 && query.trim() && (
           <li className="px-4 py-3 text-xs text-gray-400">No users found.</li>
         )}
+        {addError && <li className="px-4 py-2 text-xs text-red-600">{addError}</li>}
       </ul>
     </div>
   );

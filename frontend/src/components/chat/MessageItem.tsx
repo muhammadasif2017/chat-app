@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Avatar } from '../ui/Avatar';
 import { formatTime } from '../../lib/utils';
 import { getSocket } from '../../lib/socket';
@@ -239,7 +240,14 @@ export function MessageItem({
               </div>
             )}
             {message.type === 'IMAGE' && message.metadata?.url ? (
-              <img src={String(message.metadata.url)} alt="image" className="max-w-xs rounded-lg" />
+              <Image
+                src={String(message.metadata.url)}
+                alt="image"
+                width={0}
+                height={0}
+                sizes="320px"
+                className="max-w-xs rounded-lg w-auto h-auto"
+              />
             ) : (
               message.content
             )}
