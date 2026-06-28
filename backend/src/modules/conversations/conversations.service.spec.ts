@@ -106,6 +106,86 @@ function fakeConvMemberWithConversation(
   };
 }
 
+describe('ConversationsService.findAll', () => {
+  it('returns empty array when user is in no conversations', async () => {
+    const svc = makeService();
+    const result = await svc.findAll(OWNER_ID);
+    expect(result).toEqual([]);
+  });
+
+  it('counts all messages when lastReadAt is null', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findMany.mockResolvedValue([
+      fakeConvMemberWithConversation(OWNER_ID, 'OWNER'),
+    ]);
+    prisma.message.count.mockResolvedValue(3);
+    const svc = makeService(prisma);
+
+    const [conv] = await svc.findAll(OWNER_ID);
+
+    expect(conv.unreadCount).toBe(3);
+    const countCall = prisma.message.count.mock.calls[0][0];
+    expect(countCall.where).not.toHaveProperty('createdAt');
+  });
+
+  it('counts only messages after lastReadAt when it is set', async () => {
+    const prisma = makePrisma();
+    const lastReadAt = new Date('2026-01-01');
+    const member = {
+      ...fakeConvMemberWithConversation(OWNER_ID, 'OWNER'),
+      lastReadAt,
+    };
+    prisma.conversationMember.findMany.mockResolvedValue([member]);
+    prisma.message.count.mockResolvedValue(2);
+    const svc = makeService(prisma);
+
+    const [conv] = await svc.findAll(OWNER_ID);
+
+    expect(conv.unreadCount).toBe(2);
+    const countCall = prisma.message.count.mock.calls[0][0];
+    expect(countCall.where.createdAt).toEqual({ gt: lastReadAt });
+  });
+
+  it('exposes myRole from the member record', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findMany.mockResolvedValue([
+      fakeConvMemberWithConversation(OWNER_ID, 'ADMIN'),
+    ]);
+    const svc = makeService(prisma);
+
+    const [conv] = await svc.findAll(OWNER_ID);
+
+    expect(conv.myRole).toBe('ADMIN');
+  });
+});
+
+describe('ConversationsService.findOrCreateDm', () => {
+  it('returns existing DM without creating a new one', async () => {
+    const prisma = makePrisma();
+    const existing = { id: CONV_ID, type: 'DIRECT', members: [] };
+    prisma.conversation.findFirst.mockResolvedValue(existing);
+    const svc = makeService(prisma);
+
+    const result = await svc.findOrCreateDm(OWNER_ID, { targetUserId: MEMBER_ID });
+
+    expect(result).toBe(existing);
+    expect(prisma.conversation.create).not.toHaveBeenCalled();
+  });
+
+  it('creates a new DM when none exists', async () => {
+    const prisma = makePrisma();
+    prisma.conversation.findFirst.mockResolvedValue(null);
+    const created = { id: 'new-conv', type: 'DIRECT', members: [] };
+    prisma.conversation.create.mockResolvedValue(created);
+    const svc = makeService(prisma);
+
+    const result = await svc.findOrCreateDm(OWNER_ID, { targetUserId: MEMBER_ID });
+
+    expect(result).toBe(created);
+    expect(prisma.conversation.create).toHaveBeenCalled();
+  });
+});
+
 describe('ConversationsService.findOne', () => {
   it('throws NotFoundException when user is not a member', async () => {
     const prisma = makePrisma();
