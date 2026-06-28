@@ -140,9 +140,39 @@ describe('AuthService.validateLocalUser', () => {
   });
 });
 
+describe('AuthService.login', () => {
+  it('returns user profile and token pair', async () => {
+    const { svc, prisma } = makeService();
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+      id: USER_ID,
+      username: 'alice',
+      email: EMAIL,
+      avatarUrl: null,
+    });
+
+    const result = await svc.login(USER_ID, EMAIL);
+
+    expect(result.user?.id).toBe(USER_ID);
+    expect(result).toHaveProperty('accessToken');
+    expect(result).toHaveProperty('refreshToken');
+  });
+});
+
 describe('AuthService.refresh', () => {
   it('throws ForbiddenException when jti has no DB record', async () => {
     const { svc } = makeService();
+    await expect(svc.refresh(USER_ID, EMAIL, 'raw-token', JTI)).rejects.toThrow(ForbiddenException);
+  });
+
+  it('throws ForbiddenException when token is expired', async () => {
+    const { svc, prisma } = makeService();
+    (prisma.refreshToken.findUnique as jest.Mock).mockResolvedValue({
+      id: JTI,
+      userId: USER_ID,
+      tokenHash: 'hash',
+      expiresAt: new Date(Date.now() - 1000),
+    });
+
     await expect(svc.refresh(USER_ID, EMAIL, 'raw-token', JTI)).rejects.toThrow(ForbiddenException);
   });
 
