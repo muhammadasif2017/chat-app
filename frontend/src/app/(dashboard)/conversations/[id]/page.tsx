@@ -1,7 +1,9 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import { notFound } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import api from '../../../../lib/api';
 import { getSocket } from '../../../../lib/socket';
 import { ConversationHeader } from '../../../../components/chat/ConversationHeader';
@@ -29,11 +31,15 @@ export default function ConversationPage({ params }: Props) {
     getSocket().emit('mark_read', { conversationId: id });
   }, [id]);
 
-  const { data: conversation, status } = useQuery({
+  const {
+    data: conversation,
+    status,
+    error,
+  } = useQuery({
     queryKey: ['conversation', id],
     queryFn: async () => {
-      const res = await api.get<Conversation[]>('/conversations');
-      return res.data.find((c) => c.id === id) ?? null;
+      const res = await api.get<Conversation>(`/conversations/${id}`);
+      return res.data;
     },
   });
 
@@ -50,10 +56,14 @@ export default function ConversationPage({ params }: Props) {
     );
   }
 
+  if (status === 'error' && isAxiosError(error) && error.response?.status === 404) {
+    notFound();
+  }
+
   if (!conversation) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
-        Conversation not found
+        Something went wrong
       </div>
     );
   }

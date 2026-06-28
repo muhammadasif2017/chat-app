@@ -47,6 +47,24 @@ export function MessageItem({
     return acc;
   }, {});
 
+  if (message.type === 'SYSTEM') {
+    const event = message.metadata?.event as string | undefined;
+    const actorId = message.metadata?.userId as string | undefined;
+    const actor = members?.find((m) => m.userId === actorId);
+    const name = actor?.user.username ?? message.sender.username;
+    const text =
+      event === 'member_joined'
+        ? `${name} joined the conversation`
+        : event === 'member_left'
+          ? `${name} left the conversation`
+          : 'System message';
+    return (
+      <div className="flex justify-center px-4 py-2">
+        <span className="text-xs text-gray-400 italic">{text}</span>
+      </div>
+    );
+  }
+
   if (message.isDeleted) {
     return (
       <div className="flex gap-3 px-4 py-1">

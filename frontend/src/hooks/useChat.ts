@@ -19,8 +19,11 @@ export function useChat(conversationId?: string) {
     const socket = getSocket();
 
     const onNewMessage = (message: Message) => {
-      qc.setQueryData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
-        ['messages', message.conversationId],
+      qc.setQueriesData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
+        {
+          queryKey: ['messages', message.conversationId],
+          predicate: (query) => !query.queryKey[2],
+        },
         (old) => {
           if (!old) return old;
           const pages = old.pages.map((page, i) =>
@@ -40,8 +43,8 @@ export function useChat(conversationId?: string) {
     };
 
     const onMessageUpdated = (message: Message) => {
-      qc.setQueryData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
-        ['messages', message.conversationId],
+      qc.setQueriesData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
+        { queryKey: ['messages', message.conversationId] },
         (old) => {
           if (!old) return old;
           const pages = old.pages.map((page) => ({
@@ -170,8 +173,8 @@ export function useChat(conversationId?: string) {
       emoji: string;
       conversationId: string;
     }) => {
-      qc.setQueryData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
-        ['messages', cid],
+      qc.setQueriesData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
+        { queryKey: ['messages', cid] },
         (old) => {
           if (!old) return old;
           const pages = old.pages.map((page) => ({
@@ -199,8 +202,8 @@ export function useChat(conversationId?: string) {
       emoji: string;
       conversationId: string;
     }) => {
-      qc.setQueryData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
-        ['messages', cid],
+      qc.setQueriesData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
+        { queryKey: ['messages', cid] },
         (old) => {
           if (!old) return old;
           const pages = old.pages.map((page) => ({
