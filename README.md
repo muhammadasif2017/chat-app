@@ -18,7 +18,7 @@ A full-stack real-time chat application built with NestJS, Next.js, and Socket.i
 - **Reply threading** — quote any message and reply in-context
 - **Emoji reactions** — react with 👍 ❤️ 😂 😮 😢 🎉; click to toggle your own
 - **File uploads** — attach images to messages
-- **Message search** — full-text search within any conversation
+- **Message search** — case-insensitive content search within any conversation
 - **Secure auth** — dual-JWT (access 15 min + refresh 7 days), bcrypt-hashed refresh tokens stored in DB
 
 ---
@@ -214,7 +214,7 @@ The API is built with **NestJS** using a layered module structure:
 - **`modules/auth`** — register, login, token refresh, logout. Two JWTs: short-lived access token + long-lived refresh token (hashed and stored in DB for revocation)
 - **`modules/users`** — profile management, user search
 - **`modules/conversations`** — DIRECT and GROUP conversations; role-based member management (OWNER / ADMIN / MEMBER)
-- **`modules/messages`** — create, edit, soft-delete, cursor-based pagination, full-text search
+- **`modules/messages`** — create, edit, soft-delete, cursor-based pagination, content search
 - **`modules/chat`** — Socket.io gateway on `/chat` namespace; authenticates connections via JWT, enforces room membership on every event, rate-limits at 10 messages / 10 s per user via Redis
 - **`modules/presence`** — Redis-backed online/offline state with heartbeat expiry and typing indicators
 - **`config/`** — extracted logger (pino) and throttler configuration
