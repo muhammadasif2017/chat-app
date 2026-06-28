@@ -39,6 +39,14 @@ export class ConversationsController {
     return this.conversationsService.findOrCreateDm(user.id, dto);
   }
 
+  @ApiOperation({ summary: 'Get a single conversation by ID (must be a member)' })
+  @ApiResponse({ status: 200, description: 'Conversation with members and unreadCount' })
+  @ApiResponse({ status: 404, description: 'Conversation not found or not a member' })
+  @Get(':id')
+  findOne(@CurrentUser() user: { id: string }, @Param('id') id: string) {
+    return this.conversationsService.findOne(user.id, id);
+  }
+
   @ApiOperation({ summary: 'Update group name or description (owner/admin only)' })
   @ApiResponse({ status: 200, description: 'Group updated' })
   @ApiResponse({ status: 403, description: 'Insufficient role' })

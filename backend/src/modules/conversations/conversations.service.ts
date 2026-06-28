@@ -69,6 +69,34 @@ export class ConversationsService {
     );
   }
 
+  async findOne(userId: string, conversationId: string) {
+    const member = await this.prisma.conversationMember.findUnique({
+      where: { conversationId_userId: { conversationId, userId } },
+      include: {
+        conversation: {
+          include: {
+            members: { include: { user: MEMBER_SELECT } },
+            messages: { orderBy: { id: 'desc' }, take: 1, where: { isDeleted: false } },
+          },
+        },
+      },
+    });
+    if (!member) throw new NotFoundException();
+
+    const unreadCount = member.lastReadAt
+      ? await this.prisma.message.count({
+          where: { conversationId, createdAt: { gt: member.lastReadAt }, isDeleted: false },
+        })
+      : await this.prisma.message.count({ where: { conversationId, isDeleted: false } });
+
+    return {
+      ...member.conversation,
+      lastMessage: member.conversation.messages[0] ?? null,
+      unreadCount,
+      myRole: member.role,
+    };
+  }
+
   async create(userId: string, dto: CreateConversationDto) {
     const uniqueIds = dto.memberIds?.length
       ? [...new Set(dto.memberIds)].filter((id) => id !== userId)

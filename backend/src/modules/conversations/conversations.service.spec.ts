@@ -73,6 +73,102 @@ function makeService(prismaOverrides = {}) {
   return new ConversationsService(prisma, events);
 }
 
+function fakeConvMemberWithConversation(
+  userId: string,
+  role: 'OWNER' | 'ADMIN' | 'MEMBER',
+  overrides: Record<string, unknown> = {},
+) {
+  return {
+    conversationId: CONV_ID,
+    userId,
+    role,
+    lastReadAt: null,
+    joinedAt: new Date(),
+    conversation: {
+      id: CONV_ID,
+      type: 'GROUP',
+      name: 'Test Group',
+      description: null,
+      isPublic: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      members: [
+        {
+          userId,
+          role,
+          user: { id: userId, username: 'alice', email: 'a@b.com', avatarUrl: null },
+        },
+      ],
+      messages: [],
+      ...overrides,
+    },
+  };
+}
+
+describe('ConversationsService.findOne', () => {
+  it('throws NotFoundException when user is not a member', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findUnique.mockResolvedValue(null);
+    const svc = makeService(prisma);
+
+    await expect(svc.findOne(MEMBER_ID, CONV_ID)).rejects.toThrow(NotFoundException);
+  });
+
+  it('returns conversation with myRole set from member record', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findUnique.mockResolvedValue(
+      fakeConvMemberWithConversation(OWNER_ID, 'OWNER'),
+    );
+    prisma.message.count.mockResolvedValue(0);
+    const svc = makeService(prisma);
+
+    const result = await svc.findOne(OWNER_ID, CONV_ID);
+
+    expect(result.myRole).toBe('OWNER');
+    expect(result.id).toBe(CONV_ID);
+  });
+
+  it('sets lastMessage to first message in the array', async () => {
+    const prisma = makePrisma();
+    const msg = { id: BigInt(99), content: 'hello', createdAt: new Date() };
+    prisma.conversationMember.findUnique.mockResolvedValue(
+      fakeConvMemberWithConversation(OWNER_ID, 'OWNER', { messages: [msg] }),
+    );
+    prisma.message.count.mockResolvedValue(0);
+    const svc = makeService(prisma);
+
+    const result = await svc.findOne(OWNER_ID, CONV_ID);
+
+    expect(result.lastMessage).toBe(msg);
+  });
+
+  it('sets lastMessage to null when no messages exist', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findUnique.mockResolvedValue(
+      fakeConvMemberWithConversation(OWNER_ID, 'OWNER', { messages: [] }),
+    );
+    prisma.message.count.mockResolvedValue(0);
+    const svc = makeService(prisma);
+
+    const result = await svc.findOne(OWNER_ID, CONV_ID);
+
+    expect(result.lastMessage).toBeNull();
+  });
+
+  it('returns unreadCount from message.count', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findUnique.mockResolvedValue(
+      fakeConvMemberWithConversation(MEMBER_ID, 'MEMBER'),
+    );
+    prisma.message.count.mockResolvedValue(5);
+    const svc = makeService(prisma);
+
+    const result = await svc.findOne(MEMBER_ID, CONV_ID);
+
+    expect(result.unreadCount).toBe(5);
+  });
+});
+
 describe('ConversationsService.markRead', () => {
   it('returns a Date', async () => {
     const svc = makeService();
