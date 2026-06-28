@@ -217,7 +217,7 @@ See [`docs/decisions/`](docs/decisions/) for full context on key design choices:
 # Backend — 97 unit tests across 7 suites
 cd backend && npm test
 
-# Frontend — 22 unit tests across 2 suites
+# Frontend — 30 unit tests across 3 suites
 cd frontend && npm test
 
 # Coverage
@@ -232,6 +232,7 @@ Key coverage areas:
 - **Users service** — search query and profile lookup
 - **Frontend hooks** — TanStack Query cache updates for real-time messages, `setQueriesData` predicate behaviour
 - **Frontend utils** — `formatRelativeTime`, `formatDaySeparator`, `cn`, `getInitials`
+- **Frontend components** — `MessageItem` conditional rendering: SYSTEM events, soft-deleted display, edited label, sender attribution
 
 ---
 
