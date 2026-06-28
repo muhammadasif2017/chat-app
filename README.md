@@ -248,6 +248,7 @@ See [`docs/decisions/`](docs/decisions/) for full context on key design choices:
 | [004](docs/decisions/004-eventemitter2-gateway-decoupling.md) | EventEmitter2 for service-to-gateway broadcast decoupling |
 | [005](docs/decisions/005-websocket-security-and-rate-limiting.md) | WebSocket security: JWT auth on connect, server-side room membership, per-event-type rate limits |
 | [006](docs/decisions/006-conversation-ordering-and-presence.md) | Conversation ordering via `updatedAt` touch on message create; last-seen via `PresenceService.setOffline` |
+| [007](docs/decisions/007-cursor-based-pagination.md) | Cursor-based (keyset) pagination for messages — stable under concurrent inserts, O(log n) with composite index |
 
 ---
 
