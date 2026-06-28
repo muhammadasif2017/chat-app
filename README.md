@@ -225,7 +225,7 @@ See [`docs/decisions/`](docs/decisions/) for full context on key design choices:
 ## Testing
 
 ```bash
-# Backend — 97 unit tests across 7 suites
+# Backend — 105 unit tests across 7 suites
 cd backend && npm test
 
 # Frontend — 30 unit tests across 3 suites

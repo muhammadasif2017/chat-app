@@ -9,9 +9,10 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY prisma.config.ts ./
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/dist ./dist
+COPY --chown=node:node --from=builder /app/prisma ./prisma
+COPY --chown=node:node prisma.config.ts ./
+USER node
 EXPOSE 3001
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/main"]
