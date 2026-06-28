@@ -27,7 +27,7 @@ A full-stack real-time chat application built with NestJS, Next.js, and Socket.i
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 15 (App Router), TypeScript, TanStack Query v5, Zustand, Tailwind CSS |
+| Frontend | Next.js 16 (App Router), TypeScript, TanStack Query v5, Zustand, Tailwind CSS |
 | Backend | NestJS 11, TypeScript, Prisma 7 (PostgreSQL adapter) |
 | Real-time | Socket.io, Redis pub/sub adapter |
 | Database | PostgreSQL |
@@ -156,6 +156,7 @@ npx prisma studio           # GUI database browser
 ```bash
 npm run dev                 # Next.js dev server
 npm run build               # production build
+npm test                    # unit tests
 npm run lint                # ESLint
 npm run lint:fix            # ESLint with auto-fix
 npm run format              # Prettier
@@ -182,7 +183,7 @@ All routes are protected by a global `JwtAuthGuard`; opt out with `@Public()`.
 
 ### Frontend
 
-Built on **Next.js 15 App Router** with two route groups:
+Built on **Next.js 16 App Router** with two route groups:
 
 - **`(auth)`** — login and register pages (public)
 - **`(dashboard)`** — all chat UI (protected)
