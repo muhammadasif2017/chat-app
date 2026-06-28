@@ -7,6 +7,10 @@ const SENDER_SELECT = {
   select: { id: true, username: true, avatarUrl: true },
 };
 
+const REACTION_SELECT = {
+  select: { userId: true, emoji: true },
+};
+
 @Injectable()
 export class MessagesService {
   constructor(private prisma: PrismaService) {}
@@ -17,7 +21,7 @@ export class MessagesService {
         where: { conversationId, isDeleted: false, content: { contains: q, mode: 'insensitive' } },
         orderBy: { id: 'desc' },
         take: 50,
-        include: { sender: SENDER_SELECT },
+        include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
       });
       return { messages: results.reverse(), nextCursor: null };
     }
@@ -29,7 +33,7 @@ export class MessagesService {
       },
       orderBy: { id: 'desc' },
       take: limit,
-      include: { sender: SENDER_SELECT },
+      include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
     });
 
     return {
@@ -51,7 +55,7 @@ export class MessagesService {
         metadata: dto.metadata as Record<string, string> | undefined,
         replyToId: dto.replyToId ? BigInt(dto.replyToId) : undefined,
       },
-      include: { sender: SENDER_SELECT },
+      include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
     });
   }
 
@@ -65,7 +69,7 @@ export class MessagesService {
     return this.prisma.message.update({
       where: { id: BigInt(messageId) },
       data: { isDeleted: true, content: null },
-      include: { sender: SENDER_SELECT },
+      include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
     });
   }
 
@@ -80,7 +84,7 @@ export class MessagesService {
     return this.prisma.message.update({
       where: { id: BigInt(messageId) },
       data: { content: sanitized, isEdited: true },
-      include: { sender: SENDER_SELECT },
+      include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
     });
   }
 }

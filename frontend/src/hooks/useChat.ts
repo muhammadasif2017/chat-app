@@ -159,6 +159,67 @@ export function useChat(conversationId?: string) {
       qc.invalidateQueries({ queryKey: ['conversations'] });
     };
 
+    const onReactionAdded = ({
+      messageId,
+      userId: uid,
+      emoji,
+      conversationId: cid,
+    }: {
+      messageId: string;
+      userId: string;
+      emoji: string;
+      conversationId: string;
+    }) => {
+      qc.setQueryData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
+        ['messages', cid],
+        (old) => {
+          if (!old) return old;
+          const pages = old.pages.map((page) => ({
+            ...page,
+            messages: page.messages.map((m) => {
+              if (m.id !== messageId) return m;
+              const reactions = m.reactions ?? [];
+              if (reactions.some((r) => r.userId === uid && r.emoji === emoji)) return m;
+              return { ...m, reactions: [...reactions, { userId: uid, emoji }] };
+            }),
+          }));
+          return { ...old, pages };
+        },
+      );
+    };
+
+    const onReactionRemoved = ({
+      messageId,
+      userId: uid,
+      emoji,
+      conversationId: cid,
+    }: {
+      messageId: string;
+      userId: string;
+      emoji: string;
+      conversationId: string;
+    }) => {
+      qc.setQueryData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
+        ['messages', cid],
+        (old) => {
+          if (!old) return old;
+          const pages = old.pages.map((page) => ({
+            ...page,
+            messages: page.messages.map((m) => {
+              if (m.id !== messageId) return m;
+              return {
+                ...m,
+                reactions: (m.reactions ?? []).filter(
+                  (r) => !(r.userId === uid && r.emoji === emoji),
+                ),
+              };
+            }),
+          }));
+          return { ...old, pages };
+        },
+      );
+    };
+
     const onNewConversation = () => {
       qc.invalidateQueries({ queryKey: ['conversations'] });
     };
@@ -197,6 +258,8 @@ export function useChat(conversationId?: string) {
     socket.on('group_updated', onGroupUpdated);
     socket.on('new_conversation', onNewConversation);
     socket.on('message_read', onMessageRead);
+    socket.on('reaction_added', onReactionAdded);
+    socket.on('reaction_removed', onReactionRemoved);
 
     return () => {
       socket.off('new_message', onNewMessage);
@@ -210,6 +273,8 @@ export function useChat(conversationId?: string) {
       socket.off('group_updated', onGroupUpdated);
       socket.off('new_conversation', onNewConversation);
       socket.off('message_read', onMessageRead);
+      socket.off('reaction_added', onReactionAdded);
+      socket.off('reaction_removed', onReactionRemoved);
     };
   }, [isAuthenticated, conversationId, qc, currentUser?.id, router]);
 

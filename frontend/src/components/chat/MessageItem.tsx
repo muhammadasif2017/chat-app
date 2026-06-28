@@ -4,7 +4,10 @@ import { useState, useRef } from 'react';
 import { Avatar } from '../ui/Avatar';
 import { formatTime } from '../../lib/utils';
 import { getSocket } from '../../lib/socket';
+import { useAuthStore } from '../../store/auth.store';
 import type { ConversationMember, Message } from '../../types';
+
+const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
 
 const MAX_RECEIPT_AVATARS = 3;
 
@@ -23,6 +26,7 @@ export function MessageItem({
   onReply,
   replyToMessage,
 }: MessageItemProps) {
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const seenBy = isOwn
     ? (members?.filter(
         (m) =>
@@ -34,7 +38,14 @@ export function MessageItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content ?? '');
   const [showMenu, setShowMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const editRef = useRef<HTMLTextAreaElement>(null);
+
+  const reactionGroups = (message.reactions ?? []).reduce<Record<string, string[]>>((acc, r) => {
+    if (!acc[r.emoji]) acc[r.emoji] = [];
+    acc[r.emoji].push(r.userId);
+    return acc;
+  }, {});
 
   if (message.isDeleted) {
     return (
@@ -79,6 +90,36 @@ export function MessageItem({
           )}
           <span className="text-xs text-gray-400">{formatTime(message.createdAt)}</span>
           {message.isEdited && <span className="text-xs text-gray-400">(edited)</span>}
+          {!isEditing && (
+            <div className="relative">
+              <button
+                onClick={() => setShowEmojiPicker((v) => !v)}
+                title="React"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 text-xs px-1"
+              >
+                😊
+              </button>
+              {showEmojiPicker && (
+                <div
+                  className="absolute bottom-6 left-0 z-20 bg-white rounded-xl shadow-lg border border-gray-200 p-1.5 flex gap-1"
+                  onMouseLeave={() => setShowEmojiPicker(false)}
+                >
+                  {QUICK_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => {
+                        getSocket().emit('add_reaction', { messageId: message.id, emoji });
+                        setShowEmojiPicker(false);
+                      }}
+                      className="text-base hover:scale-125 transition-transform px-0.5"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {onReply && !isEditing && (
             <button
               onClick={onReply}
@@ -184,6 +225,31 @@ export function MessageItem({
             ) : (
               message.content
             )}
+          </div>
+        )}
+        {Object.keys(reactionGroups).length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {Object.entries(reactionGroups).map(([emoji, userIds]) => {
+              const reacted = userIds.includes(currentUserId ?? '');
+              return (
+                <button
+                  key={emoji}
+                  onClick={() =>
+                    getSocket().emit(reacted ? 'remove_reaction' : 'add_reaction', {
+                      messageId: message.id,
+                      emoji,
+                    })
+                  }
+                  className={`flex items-center gap-1 text-xs rounded-full px-2 py-0.5 border transition-colors ${
+                    reacted
+                      ? 'bg-indigo-100 border-indigo-300 text-indigo-700'
+                      : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {emoji} {userIds.length}
+                </button>
+              );
+            })}
           </div>
         )}
         {seenBy.length > 0 && (

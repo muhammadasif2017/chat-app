@@ -36,6 +36,11 @@ export interface Conversation {
   myRole: MemberRole;
 }
 
+export interface MessageReaction {
+  userId: string;
+  emoji: string;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -48,6 +53,7 @@ export interface Message {
   metadata: Record<string, unknown> | null;
   createdAt: string;
   sender: Pick<User, 'id' | 'username' | 'avatarUrl'>;
+  reactions: MessageReaction[];
 }
 
 export interface MessagesPage {

@@ -218,6 +218,50 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await client.join(`conversation:${conversationId}`);
   }
 
+  @SubscribeMessage('add_reaction')
+  async handleAddReaction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { messageId, emoji }: { messageId: string; emoji: string },
+  ) {
+    const userId = client.data.userId as string;
+    await this.checkRateLimit(userId, 'ws_rl_reaction', 20);
+    const msg = await this.prisma.message.findUnique({
+      where: { id: BigInt(messageId) },
+      select: { conversationId: true },
+    });
+    if (!msg) throw new WsException('Message not found');
+    await this.assertMember(msg.conversationId, userId);
+    await this.prisma.messageReaction.upsert({
+      where: { messageId_userId_emoji: { messageId: BigInt(messageId), userId, emoji } },
+      create: { messageId: BigInt(messageId), userId, emoji },
+      update: {},
+    });
+    this.server
+      .to(`conversation:${msg.conversationId}`)
+      .emit('reaction_added', { messageId, userId, emoji, conversationId: msg.conversationId });
+  }
+
+  @SubscribeMessage('remove_reaction')
+  async handleRemoveReaction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { messageId, emoji }: { messageId: string; emoji: string },
+  ) {
+    const userId = client.data.userId as string;
+    await this.checkRateLimit(userId, 'ws_rl_reaction', 20);
+    const msg = await this.prisma.message.findUnique({
+      where: { id: BigInt(messageId) },
+      select: { conversationId: true },
+    });
+    if (!msg) throw new WsException('Message not found');
+    await this.assertMember(msg.conversationId, userId);
+    await this.prisma.messageReaction.deleteMany({
+      where: { messageId: BigInt(messageId), userId, emoji },
+    });
+    this.server
+      .to(`conversation:${msg.conversationId}`)
+      .emit('reaction_removed', { messageId, userId, emoji, conversationId: msg.conversationId });
+  }
+
   @OnEvent('internal.group.created')
   handleGroupCreated({
     conversationId,
