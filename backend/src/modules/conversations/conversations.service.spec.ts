@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
+import type { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { ConversationsService } from './conversations.service';
 
 const OWNER_ID = 'owner-uuid';
@@ -70,7 +71,7 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
 }
 
 function makeService(prismaOverrides = {}) {
-  const prisma = makePrisma(prismaOverrides) as any;
+  const prisma = makePrisma(prismaOverrides) as unknown as PrismaService;
   const events = { emit: jest.fn() } as unknown as EventEmitter2;
   return new ConversationsService(prisma, events);
 }
@@ -267,7 +268,11 @@ describe('ConversationsService.markRead', () => {
 
     const result = await svc.markRead(CONV_ID, MEMBER_ID);
 
-    const updateCall = prisma.conversationMember.update.mock.calls[0][0];
+    type UpdateArgs = {
+      where: { conversationId_userId: { conversationId: string; userId: string } };
+      data: { lastReadAt: Date };
+    };
+    const [updateCall] = prisma.conversationMember.update.mock.calls[0] as [UpdateArgs];
     expect(updateCall.where).toEqual({
       conversationId_userId: { conversationId: CONV_ID, userId: MEMBER_ID },
     });
@@ -302,7 +307,8 @@ describe('ConversationsService.getConversationMemberIds', () => {
     const result = await svc.getConversationMemberIds(OWNER_ID);
 
     expect(result).toEqual(['user-b', 'user-c']);
-    const call = prisma.conversationMember.findMany.mock.calls[0][0];
+    type FindManyArgs = { where: { userId: { not: string } } };
+    const [call] = prisma.conversationMember.findMany.mock.calls[0] as [FindManyArgs];
     expect(call.where.userId).toEqual({ not: OWNER_ID });
   });
 
@@ -570,8 +576,9 @@ describe('ConversationsService.create', () => {
       memberIds: [OWNER_ID, MEMBER_ID],
     });
 
-    const call = prisma.conversationMember.createMany.mock.calls[0][0];
-    const insertedIds = call.data.map((d: { userId: string }) => d.userId);
+    type CreateManyArgs = { data: Array<{ userId: string }> };
+    const [call] = prisma.conversationMember.createMany.mock.calls[0] as [CreateManyArgs];
+    const insertedIds = call.data.map((d) => d.userId);
     expect(insertedIds).not.toContain(OWNER_ID);
     expect(insertedIds).toContain(MEMBER_ID);
   });

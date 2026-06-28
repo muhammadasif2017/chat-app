@@ -1,17 +1,23 @@
+import type Redis from 'ioredis';
+import type { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { PresenceService } from './presence.service';
 
 const USER_ID = 'user-uuid';
 const SOCKET_ID = 'socket-uuid';
 const CONV_ID = 'conv-uuid';
 
-function makePipeline(results: Array<[null, number]> = []) {
+type MockPipeline = { exists: jest.Mock; exec: jest.Mock };
+type MockRedis = { set: jest.Mock; del: jest.Mock; expire: jest.Mock; pipeline: jest.Mock };
+type MockPrisma = { user: { update: jest.Mock } };
+
+function makePipeline(results: Array<[null, number]> = []): MockPipeline {
   return {
     exists: jest.fn().mockReturnThis(),
     exec: jest.fn().mockResolvedValue(results),
   };
 }
 
-function makeRedis(pipelineResults: Array<[null, number]> = []) {
+function makeRedis(pipelineResults: Array<[null, number]> = []): MockRedis {
   return {
     set: jest.fn().mockResolvedValue('OK'),
     del: jest.fn().mockResolvedValue(1),
@@ -20,16 +26,23 @@ function makeRedis(pipelineResults: Array<[null, number]> = []) {
   };
 }
 
-function makePrisma() {
+function makePrisma(): MockPrisma {
   return {
     user: { update: jest.fn().mockResolvedValue({}) },
   };
 }
 
-function makeService(redisOverrides = {}, prismaOverrides = {}) {
-  const redis = { ...makeRedis(), ...redisOverrides } as any;
-  const prisma = { ...makePrisma(), ...prismaOverrides } as any;
-  return { svc: new PresenceService(redis, prisma), redis, prisma };
+function makeService(
+  redisOverrides: Partial<MockRedis> = {},
+  prismaOverrides: Partial<MockPrisma> = {},
+) {
+  const redis: MockRedis = { ...makeRedis(), ...redisOverrides };
+  const prisma: MockPrisma = { ...makePrisma(), ...prismaOverrides };
+  return {
+    svc: new PresenceService(redis as unknown as Redis, prisma as unknown as PrismaService),
+    redis,
+    prisma,
+  };
 }
 
 describe('PresenceService.setOnline', () => {
@@ -60,7 +73,9 @@ describe('PresenceService.setOffline', () => {
     const { svc, prisma } = makeService();
     await svc.setOffline(USER_ID);
     const after = Date.now();
-    const ts: Date = prisma.user.update.mock.calls[0][0].data.lastSeenAt;
+    type UpdateArgs = { data: { lastSeenAt: Date } };
+    const [{ data }] = prisma.user.update.mock.calls[0] as [UpdateArgs];
+    const ts = data.lastSeenAt;
     expect(ts.getTime()).toBeGreaterThanOrEqual(before);
     expect(ts.getTime()).toBeLessThanOrEqual(after);
   });

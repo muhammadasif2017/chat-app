@@ -48,6 +48,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @Inject(REDIS_CLIENT) private redis: Redis,
   ) {}
 
+  private getUserId(client: Socket): string {
+    return (client.data as { userId: string }).userId;
+  }
+
   private async assertMember(conversationId: string, userId: string): Promise<void> {
     const isMember = await this.conversationsService.isMember(conversationId, userId);
     if (!isMember) throw new WsException('Not a member');
@@ -81,7 +85,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       if (!user) return client.disconnect();
 
-      client.data.userId = payload.sub;
+      (client.data as { userId: string }).userId = payload.sub;
 
       await client.join(`user:${payload.sub}`);
       const roomIds = await this.conversationsService.getUserRooms(payload.sub);
@@ -106,7 +110,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
-    const userId = client.data.userId as string | undefined;
+    const userId = (client.data as { userId?: string }).userId;
     if (!userId) return;
 
     await this.presenceService.setOffline(userId);
@@ -119,7 +123,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('send_message')
   async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: SendMessageDto) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
     await this.assertMember(dto.conversationId, userId);
 
@@ -136,7 +140,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('edit_message')
   async handleEditMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: EditMessageDto) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
     const message = await this.messagesService.update(dto.messageId, userId, dto.content);
     const serialized = {
@@ -153,7 +157,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() { messageId }: { messageId: string },
   ) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
     const message = await this.messagesService.softDelete(messageId, userId);
     const serialized = {
@@ -170,7 +174,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_typing', 30);
     await this.assertMember(conversationId, userId);
     await this.presenceService.setTyping(conversationId, userId);
@@ -182,7 +186,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_typing', 30);
     await this.assertMember(conversationId, userId);
     await this.presenceService.clearTyping(conversationId, userId);
@@ -196,7 +200,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
     await this.assertMember(conversationId, userId);
     const lastReadAt = await this.conversationsService.markRead(conversationId, userId);
@@ -207,7 +211,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('ping')
   async handlePing(@ConnectedSocket() client: Socket) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     if (userId) {
       await this.checkRateLimit(userId, 'ws_rl_ping', 6);
       await this.presenceService.refreshHeartbeat(userId);
@@ -220,7 +224,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() { conversationId }: { conversationId: string },
   ) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
     await this.assertMember(conversationId, userId);
     await client.join(`conversation:${conversationId}`);
@@ -231,7 +235,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() { messageId, emoji }: { messageId: string; emoji: string },
   ) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_reaction', 20);
     const msg = await this.prisma.message.findUnique({
       where: { id: BigInt(messageId) },
@@ -254,7 +258,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() { messageId, emoji }: { messageId: string; emoji: string },
   ) {
-    const userId = client.data.userId as string;
+    const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_reaction', 20);
     const msg = await this.prisma.message.findUnique({
       where: { id: BigInt(messageId) },

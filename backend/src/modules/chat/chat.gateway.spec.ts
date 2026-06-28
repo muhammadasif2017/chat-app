@@ -2,6 +2,11 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { WsException } from '@nestjs/websockets';
 import type { Socket, Server } from 'socket.io';
+import type { ConversationsService } from '../conversations/conversations.service.js';
+import type { MessagesService } from '../messages/messages.service.js';
+import type { PresenceService } from '../presence/presence.service.js';
+import type { PrismaService } from '../../infra/prisma/prisma.service.js';
+import type Redis from 'ioredis';
 import { ChatGateway } from './chat.gateway.js';
 
 const USER_ID = 'user-uuid';
@@ -89,11 +94,11 @@ function makeGateway() {
   const gateway = new ChatGateway(
     deps.jwt,
     deps.config,
-    deps.conversationsService as any,
-    deps.messagesService as any,
-    deps.presenceService as any,
-    deps.prisma as any,
-    deps.redis as any,
+    deps.conversationsService as unknown as ConversationsService,
+    deps.messagesService as unknown as MessagesService,
+    deps.presenceService as unknown as PresenceService,
+    deps.prisma as unknown as PrismaService,
+    deps.redis as unknown as Redis,
   );
   gateway.server = makeServer();
   return { gateway, ...deps };
@@ -173,7 +178,9 @@ describe('ChatGateway.handleSendMessage', () => {
     await gateway.handleSendMessage(socket, { conversationId: CONV_ID, content: 'hello' });
 
     expect(gateway.server.to).toHaveBeenCalledWith(`conversation:${CONV_ID}`);
-    const roomEmit = (gateway.server.to as jest.Mock).mock.results[0].value.emit as jest.Mock;
+    const roomEmit = (
+      (gateway.server.to as jest.Mock).mock.results[0] as { value: { emit: jest.Mock } }
+    ).value.emit;
     expect(roomEmit).toHaveBeenCalledWith('new_message', expect.objectContaining({ id: MSG_ID }));
   });
 
@@ -182,10 +189,10 @@ describe('ChatGateway.handleSendMessage', () => {
     const socket = makeSocket('valid-token');
     socket.data = { userId: USER_ID };
 
-    const result = await gateway.handleSendMessage(socket, {
+    const result = (await gateway.handleSendMessage(socket, {
       conversationId: CONV_ID,
       content: 'hello',
-    });
+    })) as { event: string; data: { id: string } };
 
     expect(typeof result.data.id).toBe('string');
   });
@@ -211,7 +218,7 @@ describe('ChatGateway.handleAddReaction', () => {
     await gateway.handleAddReaction(socket, { messageId: MSG_ID, emoji: '❤️' });
 
     expect(prisma.messageReaction.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ create: expect.objectContaining({ emoji: '❤️' }) }),
+      expect.objectContaining({ create: expect.objectContaining({ emoji: '❤️' }) as unknown }),
     );
     expect(gateway.server.to).toHaveBeenCalledWith(`conversation:${CONV_ID}`);
   });
