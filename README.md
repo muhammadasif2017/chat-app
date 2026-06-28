@@ -299,7 +299,7 @@ Rate limits use a Redis sliding-window counter per user per event class. Exceedi
 ## Testing
 
 ```bash
-# Backend — 105 unit tests across 7 suites
+# Backend — 116 unit tests across 8 suites
 cd backend && npm test
 
 # Frontend — 30 unit tests across 3 suites

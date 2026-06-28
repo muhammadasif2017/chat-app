@@ -109,25 +109,25 @@ npm run lint                  # ESLint
 **WebSocket:**
 - `ChatGateway` on namespace `/chat` using `@nestjs/websockets` + Socket.io.
 - Redis adapter (`@socket.io/redis-adapter`) via `RedisIoAdapter` for multi-instance pub/sub.
-- JWT validated on `handleConnection` from `socket.handshake.auth.token`; user attached to `socket.data.user`.
+- JWT read from `access_token` cookie on `handleConnection`; user attached to `socket.data.userId`.
 - Room membership verified server-side on every WS event — never trust client-declared conversation IDs.
 
 **TypeScript imports:** All source imports use `.js` extensions (`import { X } from './foo.js'`). Intentional — NestJS ESM convention.
 
-### Frontend (Next.js 15 App Router)
+### Frontend (Next.js 16 App Router)
 
 **Routing:**
-- `proxy.ts` (not `middleware.ts`) with `export function proxy()` — Next.js 15 convention. Protects routes via `ca_authed` cookie.
+- `proxy.ts` (not `middleware.ts`) with `export function proxy()` — Next.js 16 convention. Protects routes via `ca_authed` cookie.
 - Route groups `(auth)` and `(dashboard)` do **not** add path segments.
 
 **Auth state:**
-1. `lib/auth.ts` — `tokenStorage` reads/writes `localStorage` keys `ca_access` / `ca_refresh`.
-2. `store/auth.store.ts` — Zustand + persist for `user`, `isAuthenticated`, and `ca_authed` cookie.
-3. `lib/api.ts` — Axios instance: request interceptor attaches Bearer token; response interceptor handles 401 → refresh → retry.
+1. `lib/auth.ts` — empty; auth tokens are HTTP-only cookies set by the backend. No localStorage.
+2. `store/auth.store.ts` — Zustand + persist for `user`, `isAuthenticated`; sets `ca_authed=1` non-HttpOnly cookie for middleware route guard.
+3. `lib/api.ts` — Axios instance with `withCredentials: true`; response interceptor handles 401 → POST `/auth/refresh` → retry.
 
 **WebSocket:**
-- `lib/socket.ts` — singleton `io()` connecting to `NEXT_PUBLIC_WS_URL/chat` with `auth: { token }`.
-- `hooks/useChat.ts` — subscribes to `new_message`, `user_online`, `user_offline`, `user_typing`; updates TanStack Query cache.
+- `lib/socket.ts` — singleton `io()` connecting to `NEXT_PUBLIC_WS_URL/chat` with `withCredentials: true` (sends `access_token` cookie automatically).
+- `hooks/useChat.ts` — subscribes to all WS events (`new_message`, `reaction_added/removed`, `member_added/removed`, `group_updated`, `message_read`, `user_typing`, etc.); updates TanStack Query cache.
 
 **Data fetching:** TanStack Query v5, `staleTime: 60_000`. Cursor-based infinite queries for message history.
 
