@@ -1,10 +1,13 @@
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class EditMessageDto {
+  @ApiProperty({ example: '42', description: 'Numeric message ID as string' })
   @IsString()
   @IsNotEmpty()
   messageId: string;
 
+  @ApiProperty({ example: 'Updated message content', maxLength: 4000 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(4000)
