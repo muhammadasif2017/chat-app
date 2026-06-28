@@ -36,4 +36,11 @@ export default tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
+  {
+    files: ['**/*.spec.ts', '**/*.test.ts'],
+    rules: {
+      // jest expect(fn).toHaveBeenCalledWith() triggers this rule as a false positive
+      '@typescript-eslint/unbound-method': 'off',
+    },
+  },
 );

@@ -32,7 +32,11 @@ export function ConversationHeader({
         <h2 className="font-semibold text-gray-900 text-sm">
           {conversation.type === 'CHANNEL' ? `# ${title}` : title}
         </h2>
-        <p className="text-xs text-gray-500">{conversation.members.length} members</p>
+        <p className="text-xs text-gray-500">
+          {conversation.type === 'DIRECT'
+            ? 'Direct message'
+            : `${conversation.members.length} members`}
+        </p>
       </div>
 
       {showSearch ? (
