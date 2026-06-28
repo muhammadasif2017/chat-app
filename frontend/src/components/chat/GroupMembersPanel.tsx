@@ -42,6 +42,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
   const [editDesc, setEditDesc] = useState(conversation.description ?? '');
   const [infoLoading, setInfoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
 
   const handleSaveInfo = async () => {
     setError(null);
@@ -73,13 +74,13 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
 
   const handleLeave = async () => {
     if (!currentUser) return;
-    if (!confirm('Leave this group?')) return;
     setError(null);
     try {
       await removeMember(conversation.id, currentUser.id);
       await qc.invalidateQueries({ queryKey: ['conversations'] });
       router.push('/');
     } catch (err) {
+      setConfirmingLeave(false);
       setError(extractErrorMessage(err));
     }
   };
@@ -205,12 +206,27 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
             + Add members
           </button>
         )}
-        <button
-          onClick={handleLeave}
-          className="w-full text-sm text-red-500 hover:text-red-700 text-left"
-        >
-          Leave group
-        </button>
+        {confirmingLeave ? (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600 flex-1">Leave this group?</span>
+            <button onClick={handleLeave} className="text-red-600 font-medium hover:text-red-800">
+              Yes
+            </button>
+            <button
+              onClick={() => setConfirmingLeave(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmingLeave(true)}
+            className="w-full text-sm text-red-500 hover:text-red-700 text-left"
+          >
+            Leave group
+          </button>
+        )}
       </div>
 
       {showAddMembers && (
