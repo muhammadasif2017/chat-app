@@ -1,4 +1,13 @@
-import { IsEnum, IsInt, IsObject, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  ValidateIf,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SendMessageDto {
@@ -6,10 +15,12 @@ export class SendMessageDto {
   @IsUUID()
   conversationId: string;
 
-  @ApiProperty({ example: 'Hello, world!', maxLength: 4000 })
+  @ApiProperty({ example: 'Hello, world!', maxLength: 4000, required: false })
+  @IsOptional()
+  @ValidateIf((o) => o.type === 'TEXT' || !o.type)
   @IsString()
   @MaxLength(4000)
-  content: string;
+  content?: string;
 
   @ApiPropertyOptional({ example: 42, description: 'ID of the message being replied to' })
   @IsOptional()
