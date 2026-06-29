@@ -29,11 +29,17 @@ import { ChatModule } from './modules/chat/chat.module.js';
         PORT: Joi.number().default(3001),
         JWT_SECRET: Joi.string()
           .min(32)
-          .invalid('replace-with-first-output-of-openssl-rand-base64-64')
+          .invalid(
+            'replace-with-output-of-openssl-rand-base64-64',
+            'replace-with-first-output-of-openssl-rand-base64-64',
+          )
           .required(),
         JWT_REFRESH_SECRET: Joi.string()
           .min(32)
-          .invalid('replace-with-second-output-of-openssl-rand-base64-64')
+          .invalid(
+            'replace-with-output-of-openssl-rand-base64-64',
+            'replace-with-second-output-of-openssl-rand-base64-64',
+          )
           .required(),
         JWT_EXPIRES_IN: Joi.string().default('15m'),
         JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
