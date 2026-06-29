@@ -51,18 +51,22 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
 
   if (status === 'pending') {
     return (
-      <div className="flex-1 flex flex-col gap-3 px-4 py-4">
+      <div
+        className="flex-1 flex flex-col gap-1 px-4 py-4"
+        aria-busy="true"
+        aria-label="Loading messages"
+      >
         {[...Array(6)].map((_, i) => (
-          <div key={i} className={`flex gap-3 ${i % 3 === 2 ? 'flex-row-reverse' : ''}`}>
-            <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
-            <div className="flex flex-col gap-1.5" style={{ maxWidth: '60%' }}>
+          <div key={i} className="flex gap-3 py-1">
+            <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse flex-shrink-0 mt-0.5" />
+            <div className="flex flex-col gap-1.5 flex-1">
+              <div className="flex items-baseline gap-2">
+                <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+                <div className="h-2.5 w-10 bg-gray-100 rounded animate-pulse" />
+              </div>
               <div
-                className="h-3 w-16 bg-gray-200 rounded animate-pulse"
-                style={{ alignSelf: i % 3 === 2 ? 'flex-end' : 'flex-start' }}
-              />
-              <div
-                className="h-9 bg-gray-200 rounded-2xl animate-pulse"
-                style={{ width: `${120 + ((i * 37) % 80)}px` }}
+                className="h-4 bg-gray-100 rounded animate-pulse"
+                style={{ width: `${30 + ((i * 37) % 50)}%` }}
               />
             </div>
           </div>
@@ -77,13 +81,13 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
         <button
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
-          className="mx-auto my-2 text-xs text-indigo-600 hover:underline disabled:opacity-50"
+          className="mx-auto my-2 text-xs text-indigo-600 hover:underline disabled:opacity-50 px-3 py-1 rounded-full hover:bg-indigo-50 transition-colors"
         >
           {isFetchingNextPage ? 'Loading…' : 'Load earlier messages'}
         </button>
       )}
       {isSearching && allMessages.length === 0 && (
-        <p className="text-sm text-gray-400 text-center mt-8">No messages found.</p>
+        <p className="text-sm text-gray-500 text-center mt-8">No messages found.</p>
       )}
       {allMessages.map((msg, i) => {
         const prevMsg = allMessages[i - 1];
@@ -94,13 +98,13 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
           <div
             key={msg.id}
             style={
-              { contentVisibility: 'auto', containIntrinsicSize: 'auto 72px' } as CSSProperties
+              { contentVisibility: 'auto', containIntrinsicSize: 'auto 56px' } as CSSProperties
             }
           >
             {showSeparator && (
-              <div className="flex items-center gap-3 px-4 py-2">
+              <div className="flex items-center gap-3 px-4 py-3">
                 <div className="flex-1 border-t border-gray-200" />
-                <span className="text-xs text-gray-400 font-medium">
+                <span className="text-xs text-gray-500 font-medium">
                   {formatDaySeparator(msg.createdAt)}
                 </span>
                 <div className="flex-1 border-t border-gray-200" />

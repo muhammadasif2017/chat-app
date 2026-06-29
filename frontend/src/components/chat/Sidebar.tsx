@@ -46,16 +46,16 @@ function ConvLink({
   return (
     <Link
       href={`/conversations/${conv.id}`}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+      className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
         isActive
-          ? 'bg-indigo-100 text-indigo-900 font-medium'
-          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+          ? 'bg-indigo-50 text-indigo-700 font-medium'
+          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
       }`}
     >
       {otherMember && <PresenceIndicator online={isOnline} />}
-      <span className="truncate">{conv.type === 'CHANNEL' ? `# ${label}` : label}</span>
+      <span className="truncate flex-1">{conv.type === 'CHANNEL' ? `# ${label}` : label}</span>
       {conv.unreadCount > 0 && (
-        <span className="ml-auto bg-indigo-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+        <span className="ml-auto bg-indigo-600 text-white text-[10px] font-semibold rounded-full px-1.5 py-0.5 leading-none tabular-nums">
           {conv.unreadCount}
         </span>
       )}
@@ -78,9 +78,9 @@ function Section({
 }) {
   if (!items.length && !action) return null;
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       <div className="flex items-center px-3 mb-1">
-        <p className="flex-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <p className="flex-1 text-[11px] font-semibold text-gray-500 uppercase tracking-widest">
           {title}
         </p>
         {action}
@@ -91,6 +91,18 @@ function Section({
         ))}
       </div>
     </div>
+  );
+}
+
+function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      className="w-4 h-4 rounded flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors text-sm leading-none"
+    >
+      +
+    </button>
   );
 }
 
@@ -116,59 +128,53 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-gray-800 flex flex-col h-full flex-shrink-0">
-      <div className="px-4 py-4 border-b border-gray-700">
-        <h1 className="text-white font-bold text-lg">Chat App</h1>
+    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0">
+      <div className="px-4 py-4 border-b border-gray-100">
+        <h1 className="text-gray-900 font-semibold text-base tracking-tight">Chat App</h1>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
+      <nav className="flex-1 overflow-y-auto px-2 py-4">
         <Section title="Channels" items={channels} userId={user?.id} pathname={pathname} />
         <Section
           title="Groups"
           items={groups}
           userId={user?.id}
           pathname={pathname}
-          action={
-            <button
-              onClick={() => setShowCreateGroup(true)}
-              className="text-gray-400 hover:text-gray-200 text-base leading-none"
-              title="New group"
-            >
-              +
-            </button>
-          }
+          action={<AddButton onClick={() => setShowCreateGroup(true)} label="New group" />}
         />
         <Section
           title="Direct Messages"
           items={dms}
           userId={user?.id}
           pathname={pathname}
-          action={
-            <button
-              onClick={() => setShowNewDm(true)}
-              className="text-gray-400 hover:text-gray-200 text-base leading-none"
-              title="New direct message"
-            >
-              +
-            </button>
-          }
+          action={<AddButton onClick={() => setShowNewDm(true)} label="New direct message" />}
         />
         {!conversations.length && (
           <p className="px-3 text-xs text-gray-500">No conversations yet.</p>
         )}
       </nav>
 
-      <div className="border-t border-gray-700 px-3 py-3 flex items-center gap-2">
-        <Link href="/profile" title="Profile settings">
+      <div className="border-t border-gray-100 px-3 py-3 flex items-center gap-2.5">
+        <Link href="/profile" title="Profile settings" className="flex-shrink-0">
           <Avatar username={user?.username ?? '?'} avatarUrl={user?.avatarUrl} size="sm" />
         </Link>
-        <span className="flex-1 text-sm text-gray-300 truncate">{user?.username}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">{user?.username}</p>
+        </div>
         <button
           onClick={handleLogout}
-          className="text-xs text-gray-400 hover:text-white"
           title="Sign out"
+          className="flex-shrink-0 p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          aria-label="Sign out"
         >
-          ⏏
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
         </button>
       </div>
 

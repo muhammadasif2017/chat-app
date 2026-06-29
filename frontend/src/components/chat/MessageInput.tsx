@@ -74,11 +74,11 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
   );
 
   return (
-    <div className="border-t border-gray-200 px-4 py-3">
+    <div className="px-4 pb-4 pt-2">
       {replyTo && (
-        <div className="flex items-center gap-2 mb-2 pl-3 border-l-2 border-indigo-400 text-xs text-gray-500">
-          <span className="flex-1 truncate">
-            Replying to <span className="font-medium text-gray-700">{replyTo.sender.username}</span>
+        <div className="flex items-center gap-2 mb-2 pl-3 border-l-2 border-indigo-400 bg-indigo-50 rounded-r-lg pr-3 py-1.5">
+          <span className="flex-1 truncate text-xs text-gray-600">
+            Replying to <span className="font-medium text-gray-800">{replyTo.sender.username}</span>
             {': '}
             {replyTo.isDeleted
               ? 'Message deleted'
@@ -88,19 +88,29 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           </span>
           <button
             onClick={onCancelReply}
-            className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+            className="flex-shrink-0 text-gray-400 hover:text-gray-600"
             title="Cancel reply"
+            aria-label="Cancel reply"
           >
-            ✕
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
       )}
-      <div className="flex items-end gap-2 bg-gray-100 rounded-xl px-3 py-2">
+
+      <div className="flex items-end gap-2 border border-gray-200 rounded-xl bg-white px-3 py-2 focus-within:border-indigo-300 focus-within:ring-1 focus-within:ring-indigo-200 transition-colors">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
           title="Attach image"
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600 disabled:opacity-40"
+          aria-label="Attach image"
+          className="flex-shrink-0 text-gray-500 hover:text-gray-700 disabled:opacity-40 transition-colors"
         >
           {uploading ? (
             <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -129,6 +139,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
             </svg>
           )}
         </button>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -136,6 +147,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           className="hidden"
           onChange={handleFileChange}
         />
+
         <textarea
           value={value}
           onChange={(e) => {
@@ -152,16 +164,30 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           placeholder="Type a message…"
           className="flex-1 bg-transparent resize-none text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none max-h-32"
         />
+
         <button
           onClick={sendMessage}
           disabled={!value.trim()}
-          className="flex-shrink-0 bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 disabled:opacity-40"
+          aria-label="Send message"
+          className="flex-shrink-0 bg-indigo-600 text-white rounded-lg p-1.5 hover:bg-indigo-700 disabled:opacity-40 transition-colors"
         >
-          Send
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+            />
+          </svg>
         </button>
       </div>
-      {uploadError && <p className="text-xs text-red-500 mt-1">{uploadError}</p>}
-      <p className="text-xs text-gray-400 mt-1">Enter to send · Shift+Enter for newline</p>
+
+      {uploadError && (
+        <p role="alert" className="text-xs text-red-500 mt-1 px-1">
+          {uploadError}
+        </p>
+      )}
+      <p className="text-[11px] text-gray-500 mt-1 px-1">Enter to send · Shift+Enter for newline</p>
     </div>
   );
 }

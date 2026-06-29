@@ -19,8 +19,6 @@ export function NewDmModal({ onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Derive displayed results from query so clearing the input hides stale results
-  // without calling setState synchronously inside the effect.
   const displayedResults = query.trim() ? results : [];
 
   useEffect(() => {
@@ -50,41 +48,69 @@ export function NewDmModal({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-5"
+        className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-semibold text-gray-900 mb-3">New Direct Message</h2>
-        <input
-          autoFocus
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by username or email…"
-          disabled={loading}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-        />
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">New Direct Message</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div className="px-5 py-3">
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by username or email…"
+            disabled={loading}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+          />
+        </div>
+
         {displayedResults.length > 0 && (
-          <ul className="mt-2 border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-52 overflow-y-auto">
+          <ul className="border-t border-gray-100 max-h-52 overflow-y-auto divide-y divide-gray-50">
             {displayedResults.map((u) => (
               <li key={u.id}>
                 <button
                   onClick={() => handleSelect(u)}
                   disabled={loading}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-50 text-left disabled:opacity-50"
+                  className="flex items-center gap-3 w-full px-5 py-2.5 text-sm hover:bg-gray-50 text-left disabled:opacity-50 transition-colors"
                 >
                   <Avatar username={u.username} avatarUrl={u.avatarUrl} size="sm" />
-                  <span className="font-medium text-gray-900">{u.username}</span>
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{u.username}</p>
+                    <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                  </div>
                 </button>
               </li>
             ))}
           </ul>
         )}
+
         {query.trim() && displayedResults.length === 0 && (
-          <p className="mt-3 text-sm text-gray-400 text-center">No users found.</p>
+          <p className="px-5 py-4 text-sm text-gray-400 text-center border-t border-gray-100">
+            No users found.
+          </p>
         )}
+
+        <div className="px-5 py-3 border-t border-gray-100" />
       </div>
     </div>
   );
