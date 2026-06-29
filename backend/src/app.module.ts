@@ -27,8 +27,14 @@ import { ChatModule } from './modules/chat/chat.module.js';
         DATABASE_URL: Joi.string().required(),
         REDIS_URL: Joi.string().required(),
         PORT: Joi.number().default(3001),
-        JWT_SECRET: Joi.string().min(32).required(),
-        JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+        JWT_SECRET: Joi.string()
+          .min(32)
+          .invalid('replace-with-first-output-of-openssl-rand-base64-64')
+          .required(),
+        JWT_REFRESH_SECRET: Joi.string()
+          .min(32)
+          .invalid('replace-with-second-output-of-openssl-rand-base64-64')
+          .required(),
         JWT_EXPIRES_IN: Joi.string().default('15m'),
         JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
         FRONTEND_URL: Joi.string().default('http://localhost:3000'),

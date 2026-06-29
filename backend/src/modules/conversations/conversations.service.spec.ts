@@ -153,6 +153,23 @@ describe('ConversationsService.findAll', () => {
 
     expect(conv.myRole).toBe('ADMIN');
   });
+
+  it('does not select email from member users', async () => {
+    const prisma = makePrisma();
+    const svc = makeService(prisma);
+
+    await svc.findAll(OWNER_ID);
+
+    const call = prisma.conversationMember.findMany.mock.calls[0][0] as {
+      include: {
+        conversation: {
+          include: { members: { include: { user: { select: Record<string, unknown> } } } };
+        };
+      };
+    };
+    const userSelect = call.include.conversation.include.members.include.user.select;
+    expect(userSelect).not.toHaveProperty('email');
+  });
 });
 
 describe('ConversationsService.findOrCreateDm', () => {

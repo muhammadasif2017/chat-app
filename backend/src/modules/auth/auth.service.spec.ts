@@ -115,6 +115,12 @@ describe('AuthService.validateLocalUser', () => {
     expect(result).toBeNull();
   });
 
+  it('initializes dummyHash as a bcrypt hash so compare always runs (timing-attack guard)', async () => {
+    const { svc } = await makeService();
+    const hash = (svc as unknown as { dummyHash: string }).dummyHash;
+    expect(hash).toMatch(/^\$2[ab]\$/);
+  });
+
   it('returns null when password does not match', async () => {
     const { svc, prisma } = await makeService();
     const hashed = await bcrypt.hash('correctpassword', 10);

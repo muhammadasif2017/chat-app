@@ -10,7 +10,7 @@ import { RegisterDto } from './dto/register.dto.js';
 @Injectable()
 export class AuthService implements OnModuleInit {
   // Computed once at startup; ensures bcrypt.compare always runs to prevent timing-based email enumeration
-  private dummyHash: string;
+  private dummyHash!: string;
 
   constructor(
     private prisma: PrismaService,
