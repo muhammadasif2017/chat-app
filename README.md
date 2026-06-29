@@ -322,6 +322,39 @@ Key coverage areas:
 
 ---
 
+## Production Deployment
+
+### Database migrations
+
+**Never run `prisma migrate dev` in production** — it creates shadow databases and may prompt interactively.
+
+Use the deploy command instead:
+
+```bash
+cd backend
+npx prisma migrate deploy   # applies all pending migrations; safe to run on every deploy
+```
+
+Run this before starting the new application version. In the Docker setup this happens automatically via the `migrate` service in `docker-compose.yml`.
+
+### Rollback
+
+Prisma does not support automatic schema rollback. If a migration must be reverted:
+
+1. Deploy the previous application version (git revert + redeploy).
+2. Write and apply a corrective migration manually (`prisma migrate dev --name revert-xxx` in a dev environment, then deploy the resulting migration file to prod).
+
+### Checklist before first prod deploy
+
+- [ ] Set `NODE_ENV=production` in the backend environment
+- [ ] Set strong `JWT_SECRET` and `JWT_REFRESH_SECRET` (≥ 32 chars, generated with `openssl rand -base64 64`)
+- [ ] Set `FRONTEND_URL` to your frontend's origin (not `localhost`)
+- [ ] Run `npx prisma migrate deploy` before starting the backend
+- [ ] Confirm `GET /health` returns `{"status":"ok"}` after startup
+- [ ] Confirm Swagger (`/api/docs`) is **not** accessible (disabled when `NODE_ENV=production`)
+
+---
+
 ## Contributing
 
 ### Commit convention

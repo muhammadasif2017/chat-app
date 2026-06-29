@@ -2,6 +2,7 @@ import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
 
 @ApiTags('Users')
 @ApiCookieAuth('access_token')
@@ -20,10 +21,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Updated profile' })
   @ApiResponse({ status: 409, description: 'Username already taken' })
   @Patch('me')
-  updateProfile(
-    @CurrentUser() user: { id: string },
-    @Body() dto: { username?: string; avatarUrl?: string },
-  ) {
+  updateProfile(@CurrentUser() user: { id: string }, @Body() dto: UpdateProfileDto) {
     return this.usersService.updateProfile(user.id, dto);
   }
 

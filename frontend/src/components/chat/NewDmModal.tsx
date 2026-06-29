@@ -77,7 +77,6 @@ export function NewDmModal({ onClose }: Props) {
                 >
                   <Avatar username={u.username} avatarUrl={u.avatarUrl} size="sm" />
                   <span className="font-medium text-gray-900">{u.username}</span>
-                  <span className="text-gray-400 text-xs ml-auto">{u.email}</span>
                 </button>
               </li>
             ))}

@@ -24,7 +24,7 @@ export class UsersService {
   async updateProfile(userId: string, dto: { username?: string; avatarUrl?: string }) {
     return this.prisma.user.update({
       where: { id: userId },
-      data: dto,
+      data: { username: dto.username, avatarUrl: dto.avatarUrl },
       select: { id: true, username: true, email: true, avatarUrl: true },
     });
   }
@@ -42,7 +42,7 @@ export class UsersService {
           },
         ],
       },
-      select: { id: true, username: true, email: true, avatarUrl: true },
+      select: { id: true, username: true, avatarUrl: true },
       take: 20,
     });
   }
