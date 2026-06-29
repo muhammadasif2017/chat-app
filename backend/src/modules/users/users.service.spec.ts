@@ -95,9 +95,9 @@ describe('UsersService.search', () => {
     await svc.search('alice', USER_ID);
 
     const call = (prisma.user.findMany as jest.Mock).mock.calls[0] as [
-      { where: { AND: Array<{ id?: { not: string } }> } },
+      { where: { id: { not: string } } },
     ];
-    expect(call[0].where.AND[0]?.id?.not).toBe(USER_ID);
+    expect(call[0].where.id.not).toBe(USER_ID);
   });
 
   it('returns array of matching users', async () => {
