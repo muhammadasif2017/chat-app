@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -8,18 +8,25 @@ import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
+  // Computed once at startup; ensures bcrypt.compare always runs to prevent timing-based email enumeration
+  private dummyHash: string;
+
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
   ) {}
 
+  async onModuleInit() {
+    this.dummyHash = await bcrypt.hash('dummy-constant-time-guard', 10);
+  }
+
   async validateLocalUser(email: string, password: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) return null;
-    const matches = await bcrypt.compare(password, user.password);
-    return matches ? user : null;
+    const hash = user?.password ?? this.dummyHash;
+    const matches = await bcrypt.compare(password, hash);
+    return user && matches ? user : null;
   }
 
   async register(dto: RegisterDto) {
