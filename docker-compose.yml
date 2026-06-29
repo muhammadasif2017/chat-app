@@ -1,6 +1,8 @@
 services:
   redis:
     image: redis:7-alpine
+    networks:
+      - internal
     volumes:
       - redis_data:/data
     healthcheck:
@@ -11,3 +13,8 @@ services:
 
 volumes:
   redis_data:
+
+networks:
+  internal:
+    internal: true
+  web:

@@ -15,6 +15,9 @@ services:
     env_file: ./backend/.env
     environment:
       NODE_ENV: production
+    networks:
+      - internal
+      - web
     ports:
       - '3001:3001'
     restart: unless-stopped
@@ -34,6 +37,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+    networks:
+      - web
     ports:
       - '3000:3000'
     restart: unless-stopped
