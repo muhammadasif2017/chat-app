@@ -32,15 +32,8 @@ export class UsersService {
   async search(query: string, excludeUserId: string) {
     return this.prisma.user.findMany({
       where: {
-        AND: [
-          { id: { not: excludeUserId } },
-          {
-            OR: [
-              { username: { contains: query, mode: 'insensitive' } },
-              { email: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-        ],
+        id: { not: excludeUserId },
+        username: { contains: query, mode: 'insensitive' },
       },
       select: { id: true, username: true, avatarUrl: true },
       take: 20,
