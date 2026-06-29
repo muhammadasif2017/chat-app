@@ -69,8 +69,14 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ### Infrastructure
 ```bash
-docker compose up -d          # start PostgreSQL (5432) + Redis (6379)
-docker compose down           # stop containers
+# Local dev (hot-reload, DB ports exposed to host)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+# Production (built images, DB ports not exposed)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down   # stop dev
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down  # stop prod
 ```
 
 ### Backend (`/backend`)
