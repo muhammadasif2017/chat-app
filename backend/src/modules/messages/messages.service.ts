@@ -30,6 +30,7 @@ export class MessagesService {
     const messages = await this.prisma.message.findMany({
       where: {
         conversationId,
+        isDeleted: false,
         ...(cursor ? { id: { lt: BigInt(cursor) } } : {}),
       },
       orderBy: { id: 'desc' },
