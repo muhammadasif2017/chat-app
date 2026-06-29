@@ -39,7 +39,19 @@ export function useChat(conversationId?: string) {
       ) {
         socket.emit('mark_read', { conversationId: message.conversationId });
       }
-      qc.invalidateQueries({ queryKey: ['conversations'] });
+      qc.setQueryData<Conversation[]>(['conversations'], (old) => {
+        if (!old) return old;
+        return old.map((c) =>
+          c.id === message.conversationId
+            ? {
+                ...c,
+                lastMessage: message,
+                unreadCount:
+                  message.senderId !== currentUser?.id ? c.unreadCount + 1 : c.unreadCount,
+              }
+            : c,
+        );
+      });
     };
 
     const onMessageUpdated = (message: Message) => {

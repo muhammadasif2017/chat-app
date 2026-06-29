@@ -2,18 +2,22 @@
 
 import { use, useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import api from '../../../../lib/api';
 import { getSocket } from '../../../../lib/socket';
 import { ConversationHeader } from '../../../../components/chat/ConversationHeader';
-import { GroupMembersPanel } from '../../../../components/chat/GroupMembersPanel';
+import dynamic from 'next/dynamic';
+
+const GroupMembersPanel = dynamic(() =>
+  import('../../../../components/chat/GroupMembersPanel').then((m) => m.GroupMembersPanel),
+);
 import { MessageList } from '../../../../components/chat/MessageList';
 import { MessageInput } from '../../../../components/chat/MessageInput';
 import { TypingIndicator } from '../../../../components/chat/TypingIndicator';
 import { useChat } from '../../../../hooks/useChat';
 import { useAuthStore } from '../../../../store/auth.store';
-import type { Conversation, Message } from '../../../../types';
+import type { Conversation, Message, MessagesPage } from '../../../../types';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -22,6 +26,7 @@ interface Props {
 export default function ConversationPage({ params }: Props) {
   const { id } = use(params);
   const user = useAuthStore((s) => s.user);
+  const qc = useQueryClient();
   const { typing } = useChat(id);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMembers, setShowMembers] = useState(false);
@@ -30,6 +35,19 @@ export default function ConversationPage({ params }: Props) {
   useEffect(() => {
     getSocket().emit('mark_read', { conversationId: id });
   }, [id]);
+
+  useEffect(() => {
+    qc.prefetchInfiniteQuery({
+      queryKey: ['messages', id, ''],
+      queryFn: async ({ pageParam }) => {
+        const params = new URLSearchParams({ limit: '50' });
+        if (pageParam) params.set('cursor', String(pageParam));
+        const res = await api.get<MessagesPage>(`/conversations/${id}/messages?${params}`);
+        return res.data;
+      },
+      initialPageParam: undefined as string | undefined,
+    });
+  }, [id, qc]);
 
   const {
     data: conversation,

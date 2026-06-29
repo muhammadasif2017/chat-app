@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { formatDaySeparator } from '../../lib/utils';
@@ -18,6 +18,7 @@ interface MessageListProps {
 export function MessageList({ conversationId, searchQuery, members, onReply }: MessageListProps) {
   const user = useAuthStore((s) => s.user);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const prevPageCount = useRef(0);
   const isSearching = Boolean(searchQuery?.trim());
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } = useInfiniteQuery({
@@ -36,10 +37,17 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
   });
 
   useEffect(() => {
-    if (!isSearching) {
+    if (isSearching) return;
+    const pages = data?.pages ?? [];
+    const isHistoryLoad = pages.length > 1 && pages.length > prevPageCount.current;
+    prevPageCount.current = pages.length;
+    if (!isHistoryLoad) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [data?.pages, isSearching]);
+
+  const allMessages = useMemo(() => data?.pages.flatMap((p) => p.messages) ?? [], [data?.pages]);
+  const msgById = useMemo(() => new Map(allMessages.map((m) => [m.id, m])), [allMessages]);
 
   if (status === 'pending') {
     return (
@@ -63,8 +71,6 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
     );
   }
 
-  const allMessages = data?.pages.flatMap((p) => p.messages) ?? [];
-
   return (
     <div className="flex-1 overflow-y-auto flex flex-col py-2">
       {!isSearching && hasNextPage && (
@@ -85,7 +91,12 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
         const prevDay = prevMsg ? new Date(prevMsg.createdAt).toDateString() : null;
         const showSeparator = msgDay !== prevDay;
         return (
-          <div key={msg.id}>
+          <div
+            key={msg.id}
+            style={
+              { contentVisibility: 'auto', containIntrinsicSize: 'auto 72px' } as CSSProperties
+            }
+          >
             {showSeparator && (
               <div className="flex items-center gap-3 px-4 py-2">
                 <div className="flex-1 border-t border-gray-200" />
@@ -100,9 +111,7 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
               isOwn={msg.senderId === user?.id}
               members={members}
               onReply={onReply ? () => onReply(msg) : undefined}
-              replyToMessage={
-                msg.replyToId ? (allMessages.find((m) => m.id === msg.replyToId) ?? null) : null
-              }
+              replyToMessage={msg.replyToId ? (msgById.get(msg.replyToId) ?? null) : null}
             />
           </div>
         );

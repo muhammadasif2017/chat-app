@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Conversation } from '../../types';
-import { usePresence } from '../../hooks/usePresence';
+import { usePresenceStore } from '../../store/presence.store';
 import { formatRelativeTime } from '../../lib/utils';
 
 interface ConversationHeaderProps {
@@ -21,7 +21,6 @@ export function ConversationHeader({
   onToggleMembers,
 }: ConversationHeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
-  const presence = usePresence();
 
   const otherMember =
     conversation.type === 'DIRECT'
@@ -29,9 +28,13 @@ export function ConversationHeader({
       : null;
   const title = otherMember?.user.username ?? conversation.name ?? 'Unnamed';
 
+  const isOtherOnline = usePresenceStore((s) =>
+    otherMember ? (s.presence[otherMember.userId] ?? false) : false,
+  );
+
   const subtitle =
     conversation.type === 'DIRECT'
-      ? (presence.get(otherMember?.userId ?? '') ?? false)
+      ? isOtherOnline
         ? 'Online'
         : `Last seen ${formatRelativeTime(otherMember?.user.lastSeenAt)}`
       : `${conversation.members.length} members`;

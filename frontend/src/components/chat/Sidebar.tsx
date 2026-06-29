@@ -7,10 +7,14 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { useAuthStore } from '../../store/auth.store';
 import { Avatar } from '../ui/Avatar';
-import { CreateGroupModal } from './CreateGroupModal';
-import { NewDmModal } from './NewDmModal';
+import dynamic from 'next/dynamic';
+
+const CreateGroupModal = dynamic(() =>
+  import('./CreateGroupModal').then((m) => m.CreateGroupModal),
+);
+const NewDmModal = dynamic(() => import('./NewDmModal').then((m) => m.NewDmModal));
 import { PresenceIndicator } from './PresenceIndicator';
-import { usePresence } from '../../hooks/usePresence';
+import { usePresenceStore } from '../../store/presence.store';
 import type { Conversation } from '../../types';
 
 function useConversations() {
@@ -27,17 +31,17 @@ function ConvLink({
   conv,
   userId,
   pathname,
-  presence,
 }: {
   conv: Conversation;
   userId: string | undefined;
   pathname: string;
-  presence: Map<string, boolean>;
 }) {
   const isActive = pathname === `/conversations/${conv.id}`;
   const otherMember = conv.type === 'DIRECT' ? conv.members.find((m) => m.userId !== userId) : null;
   const label = otherMember?.user.username ?? conv.name ?? 'Unnamed';
-  const isOnline = otherMember ? (presence.get(otherMember.userId) ?? false) : false;
+  const isOnline = usePresenceStore((s) =>
+    otherMember ? (s.presence[otherMember.userId] ?? false) : false,
+  );
 
   return (
     <Link
@@ -65,14 +69,12 @@ function Section({
   action,
   userId,
   pathname,
-  presence,
 }: {
   title: string;
   items: Conversation[];
   action?: React.ReactNode;
   userId: string | undefined;
   pathname: string;
-  presence: Map<string, boolean>;
 }) {
   if (!items.length && !action) return null;
   return (
@@ -85,7 +87,7 @@ function Section({
       </div>
       <div className="space-y-0.5">
         {items.map((c) => (
-          <ConvLink key={c.id} conv={c} userId={userId} pathname={pathname} presence={presence} />
+          <ConvLink key={c.id} conv={c} userId={userId} pathname={pathname} />
         ))}
       </div>
     </div>
@@ -96,7 +98,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const { data: conversations = [] } = useConversations();
-  const presence = usePresence();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showNewDm, setShowNewDm] = useState(false);
 
@@ -121,19 +122,12 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        <Section
-          title="Channels"
-          items={channels}
-          userId={user?.id}
-          pathname={pathname}
-          presence={presence}
-        />
+        <Section title="Channels" items={channels} userId={user?.id} pathname={pathname} />
         <Section
           title="Groups"
           items={groups}
           userId={user?.id}
           pathname={pathname}
-          presence={presence}
           action={
             <button
               onClick={() => setShowCreateGroup(true)}
@@ -149,7 +143,6 @@ export function Sidebar() {
           items={dms}
           userId={user?.id}
           pathname={pathname}
-          presence={presence}
           action={
             <button
               onClick={() => setShowNewDm(true)}
