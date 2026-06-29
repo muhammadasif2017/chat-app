@@ -38,7 +38,8 @@ export class MessagesController {
   ) {
     const isMember = await this.conversationsService.isMember(conversationId, user.id);
     if (!isMember) throw new ForbiddenException();
-    const parsedLimit = limit ? Math.min(Math.max(1, parseInt(limit, 10)), 100) : 50;
+    const raw = limit ? parseInt(limit, 10) : NaN;
+    const parsedLimit = Number.isFinite(raw) ? Math.min(Math.max(1, raw), 100) : 50;
     return this.messagesService.findMany(conversationId, cursor, parsedLimit, q);
   }
 }
