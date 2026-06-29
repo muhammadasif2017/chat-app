@@ -1,14 +1,22 @@
 import {
   IsEnum,
   IsInt,
-  IsObject,
+  IsNotEmpty,
   IsOptional,
   IsString,
+  IsUrl,
   IsUUID,
   MaxLength,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+class MessageMetadataDto {
+  @IsUrl({ protocols: ['https'], require_tld: true })
+  url: string;
+}
 
 export class SendMessageDto {
   @ApiProperty({ example: 'b6b4c3e2-1234-4567-8901-abcdef012345' })
@@ -16,7 +24,6 @@ export class SendMessageDto {
   conversationId: string;
 
   @ApiProperty({ example: 'Hello, world!', maxLength: 4000, required: false })
-  @IsOptional()
   @ValidateIf((o) => o.type === 'TEXT' || !o.type)
   @IsString()
   @MaxLength(4000)
@@ -36,7 +43,9 @@ export class SendMessageDto {
     example: { url: 'https://example.com/img.png' },
     description: 'Extra data for IMAGE/FILE messages',
   })
-  @IsOptional()
-  @IsObject()
-  metadata?: Record<string, unknown>;
+  @ValidateIf((o) => o.type === 'IMAGE' || o.type === 'FILE')
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => MessageMetadataDto)
+  metadata?: MessageMetadataDto;
 }

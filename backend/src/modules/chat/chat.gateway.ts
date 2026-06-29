@@ -22,6 +22,7 @@ import { WsExceptionFilter } from '../../common/filters/ws-exception.filter.js';
 import { SendMessageDto } from '../messages/dto/send-message.dto.js';
 import { EditMessageDto } from '../messages/dto/edit-message.dto.js';
 import { REDIS_CLIENT } from '../../infra/redis/redis.module.js';
+import { ConversationIdDto, MessageIdDto, ReactionDto } from './dto/ws-events.dto.js';
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
@@ -155,7 +156,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('delete_message')
   async handleDeleteMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { messageId }: { messageId: string },
+    @MessageBody() { messageId }: MessageIdDto,
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
@@ -172,7 +173,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('typing_start')
   async handleTypingStart(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { conversationId }: { conversationId: string },
+    @MessageBody() { conversationId }: ConversationIdDto,
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_typing', 30);
@@ -184,7 +185,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('typing_stop')
   async handleTypingStop(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { conversationId }: { conversationId: string },
+    @MessageBody() { conversationId }: ConversationIdDto,
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_typing', 30);
@@ -198,7 +199,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('mark_read')
   async handleMarkRead(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { conversationId }: { conversationId: string },
+    @MessageBody() { conversationId }: ConversationIdDto,
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
@@ -222,7 +223,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('join_conversation')
   async handleJoinConversation(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { conversationId }: { conversationId: string },
+    @MessageBody() { conversationId }: ConversationIdDto,
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
@@ -233,7 +234,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('add_reaction')
   async handleAddReaction(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { messageId, emoji }: { messageId: string; emoji: string },
+    @MessageBody() { messageId, emoji }: ReactionDto,
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_reaction', 20);
@@ -256,7 +257,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('remove_reaction')
   async handleRemoveReaction(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { messageId, emoji }: { messageId: string; emoji: string },
+    @MessageBody() { messageId, emoji }: ReactionDto,
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_reaction', 20);

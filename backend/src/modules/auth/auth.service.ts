@@ -27,9 +27,7 @@ export class AuthService {
       where: { OR: [{ email: dto.email }, { username: dto.username }] },
     });
     if (exists) {
-      throw new BadRequestException(
-        exists.email === dto.email ? 'Email already in use' : 'Username already taken',
-      );
+      throw new BadRequestException('Email or username already in use');
     }
 
     const hashed = await bcrypt.hash(dto.password, 10);
