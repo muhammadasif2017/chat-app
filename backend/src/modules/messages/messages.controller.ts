@@ -1,9 +1,15 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MessagesService } from './messages.service.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ConversationsService } from '../conversations/conversations.service.js';
-import { ForbiddenException } from '@nestjs/common';
 
 @ApiTags('Messages')
 @ApiCookieAuth('access_token')
@@ -38,6 +44,7 @@ export class MessagesController {
   ) {
     const isMember = await this.conversationsService.isMember(conversationId, user.id);
     if (!isMember) throw new ForbiddenException();
+    if (cursor && !/^\d+$/.test(cursor)) throw new BadRequestException('Invalid cursor');
     const raw = limit ? parseInt(limit, 10) : NaN;
     const parsedLimit = Number.isFinite(raw) ? Math.min(Math.max(1, raw), 100) : 50;
     return this.messagesService.findMany(conversationId, cursor, parsedLimit, q);
