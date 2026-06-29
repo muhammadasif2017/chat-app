@@ -45,6 +45,7 @@ export class MessagesController {
     const isMember = await this.conversationsService.isMember(conversationId, user.id);
     if (!isMember) throw new ForbiddenException();
     if (cursor && !/^\d+$/.test(cursor)) throw new BadRequestException('Invalid cursor');
+    if (q && q.length > 100) throw new BadRequestException('Search query too long');
     const raw = limit ? parseInt(limit, 10) : NaN;
     const parsedLimit = Number.isFinite(raw) ? Math.min(Math.max(1, raw), 100) : 50;
     return this.messagesService.findMany(conversationId, cursor, parsedLimit, q);
