@@ -30,6 +30,7 @@ export class UsersService {
   }
 
   async search(query: string, excludeUserId: string) {
+    if (query.length < 2) return [];
     return this.prisma.user.findMany({
       where: {
         id: { not: excludeUserId },
