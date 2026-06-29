@@ -21,6 +21,7 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.useLogger(app.get(Logger));
+  app.use(helmet());
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   const config = app.get(ConfigService);
@@ -44,7 +45,6 @@ async function bootstrap() {
     });
   }
 
-  app.use(helmet());
   app.enableCors({
     origin: config.get('FRONTEND_URL'),
     credentials: true,
