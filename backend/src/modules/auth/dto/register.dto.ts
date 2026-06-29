@@ -8,8 +8,9 @@ export class RegisterDto {
   @MaxLength(30)
   username: string;
 
-  @ApiProperty({ example: 'alice@example.com' })
+  @ApiProperty({ example: 'alice@example.com', maxLength: 254 })
   @IsEmail()
+  @MaxLength(254)
   email: string;
 
   @ApiProperty({
