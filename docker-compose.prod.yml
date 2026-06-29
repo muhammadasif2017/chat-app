@@ -1,7 +1,4 @@
 services:
-  postgres:
-    profiles: [local]
-
   redis:
     restart: unless-stopped
 
