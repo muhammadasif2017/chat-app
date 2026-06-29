@@ -3,6 +3,11 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service.js';
 
+jest.mock('bcrypt', () => {
+  const real = jest.requireActual<typeof import('bcrypt')>('bcrypt');
+  return { ...real, compare: jest.fn().mockImplementation(real.compare) };
+});
+
 const USER_ID = 'user-uuid';
 const EMAIL = 'user@example.com';
 const RAW_PASSWORD = 'hunter2';
@@ -118,7 +123,14 @@ describe('AuthService.validateLocalUser', () => {
   it('initializes dummyHash as a bcrypt hash so compare always runs (timing-attack guard)', async () => {
     const { svc } = await makeService();
     const hash = (svc as unknown as { dummyHash: string }).dummyHash;
-    expect(hash).toMatch(/^\$2[ab]\$/);
+    expect(hash).toMatch(/^\$2[ab]\$\d+\$/);
+  });
+
+  it('calls bcrypt.compare even when user does not exist (timing-attack guard)', async () => {
+    const { svc } = await makeService();
+    (bcrypt.compare as jest.Mock).mockClear();
+    await svc.validateLocalUser('nobody@example.com', 'anypassword');
+    expect(bcrypt.compare).toHaveBeenCalledTimes(1);
   });
 
   it('returns null when password does not match', async () => {
