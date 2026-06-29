@@ -1,4 +1,10 @@
 services:
+  postgres:
+    profiles: [local]
+
+  redis:
+    profiles: [local]
+
   backend:
     build: ./backend
     env_file: ./backend/.env
@@ -7,11 +13,7 @@ services:
     ports:
       - '3001:3001'
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    depends_on: []
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://localhost:3001/health || exit 1']
       interval: 10s
