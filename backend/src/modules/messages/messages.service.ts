@@ -21,7 +21,7 @@ export class MessagesService {
       const results = await this.prisma.message.findMany({
         where: { conversationId, isDeleted: false, content: { contains: q, mode: 'insensitive' } },
         orderBy: { id: 'desc' },
-        take: 50,
+        take: limit,
         include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
       });
       return { messages: results.reverse(), nextCursor: null };
