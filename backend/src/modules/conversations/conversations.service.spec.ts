@@ -99,7 +99,7 @@ function fakeConvMemberWithConversation(
         {
           userId,
           role,
-          user: { id: userId, username: 'alice', email: 'a@b.com', avatarUrl: null },
+          user: { id: userId, username: 'alice', avatarUrl: null },
         },
       ],
       messages: [],
@@ -260,6 +260,27 @@ describe('ConversationsService.findOne', () => {
     const result = await svc.findOne(MEMBER_ID, CONV_ID);
 
     expect(result.unreadCount).toBe(5);
+  });
+
+  it('does not select email from member users', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findUnique.mockResolvedValue(
+      fakeConvMemberWithConversation(OWNER_ID, 'OWNER'),
+    );
+    prisma.message.count.mockResolvedValue(0);
+    const svc = makeService(prisma);
+
+    await svc.findOne(OWNER_ID, CONV_ID);
+
+    const call = prisma.conversationMember.findUnique.mock.calls[0][0] as {
+      include: {
+        conversation: {
+          include: { members: { include: { user: { select: Record<string, unknown> } } } };
+        };
+      };
+    };
+    const userSelect = call.include.conversation.include.members.include.user.select;
+    expect(userSelect).not.toHaveProperty('email');
   });
 });
 
