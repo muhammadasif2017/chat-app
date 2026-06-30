@@ -8,7 +8,7 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { Inject, UseFilters } from '@nestjs/common';
+import { Inject, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -25,6 +25,7 @@ import { REDIS_CLIENT } from '../../infra/redis/redis.module.js';
 import { ConversationIdDto, MessageIdDto, ReactionDto } from './dto/ws-events.dto.js';
 
 @UseFilters(WsExceptionFilter)
+@UsePipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }))
 @WebSocketGateway({
   namespace: '/chat',
   cors: {
