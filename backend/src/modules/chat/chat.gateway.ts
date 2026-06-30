@@ -153,6 +153,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleEditMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: EditMessageDto) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
+    const msg = await this.prisma.message.findUnique({
+      where: { id: BigInt(dto.messageId) },
+      select: { conversationId: true },
+    });
+    if (!msg) throw new WsException('Message not found');
+    await this.assertMember(msg.conversationId, userId);
     const message = await this.messagesService.update(dto.messageId, userId, dto.content);
     const serialized = {
       ...message,
@@ -170,6 +176,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
+    const msg = await this.prisma.message.findUnique({
+      where: { id: BigInt(messageId) },
+      select: { conversationId: true },
+    });
+    if (!msg) throw new WsException('Message not found');
+    await this.assertMember(msg.conversationId, userId);
     const message = await this.messagesService.softDelete(messageId, userId);
     const serialized = {
       ...message,
