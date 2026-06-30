@@ -10,6 +10,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Sidebar */
+  --color-sidebar: #0f1117;
+  --color-sidebar-border: #1e2130;
+  --color-sidebar-fg: #8892a4;
+  --color-sidebar-fg-active: #f1f5f9;
+
+  /* Accent — orange */
+  --color-accent: #f97316;
+  --color-accent-dark: #ea6c0c;
+  --color-accent-subtle: #fff7ed;
+  --color-accent-text: #c2410c;
+
+  /* Content */
+  --color-surface: #fafaf9;
 }
 
 body {

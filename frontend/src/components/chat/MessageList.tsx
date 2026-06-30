@@ -81,7 +81,7 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
         <button
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
-          className="mx-auto my-2 text-xs text-indigo-600 hover:underline disabled:opacity-50 px-3 py-1 rounded-full hover:bg-indigo-50 transition-colors"
+          className="mx-auto my-2 text-xs text-orange-600 hover:underline disabled:opacity-50 px-3 py-1 rounded-full hover:bg-orange-50 transition-colors"
         >
           {isFetchingNextPage ? 'Loading…' : 'Load earlier messages'}
         </button>
@@ -94,6 +94,15 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
         const msgDay = new Date(msg.createdAt).toDateString();
         const prevDay = prevMsg ? new Date(prevMsg.createdAt).toDateString() : null;
         const showSeparator = msgDay !== prevDay;
+        const isGrouped = Boolean(
+          prevMsg &&
+          !showSeparator &&
+          prevMsg.type !== 'SYSTEM' &&
+          msg.type !== 'SYSTEM' &&
+          !msg.isDeleted &&
+          prevMsg.senderId === msg.senderId &&
+          new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000,
+        );
         return (
           <div
             key={msg.id}
@@ -113,6 +122,7 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
             <MessageItem
               message={msg}
               isOwn={msg.senderId === user?.id}
+              isGrouped={isGrouped}
               members={members}
               onReply={onReply ? () => onReply(msg) : undefined}
               replyToMessage={msg.replyToId ? (msgById.get(msg.replyToId) ?? null) : null}

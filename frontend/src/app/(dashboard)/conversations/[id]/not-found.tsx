@@ -6,7 +6,7 @@ export default function ConversationNotFound() {
       <p className="text-gray-500 text-sm">Conversation not found or you are not a member.</p>
       <Link
         href="/"
-        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 transition-colors"
+        className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent-dark transition-colors"
       >
         Back to conversations
       </Link>

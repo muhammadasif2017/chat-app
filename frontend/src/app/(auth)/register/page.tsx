@@ -63,7 +63,7 @@ export default function RegisterPage() {
             {...register('username')}
             autoComplete="username"
             placeholder="2–30 characters"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
           {errors.username && (
             <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>
@@ -79,7 +79,7 @@ export default function RegisterPage() {
             type="email"
             autoComplete="email"
             placeholder="you@example.com"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
           {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
         </div>
@@ -93,7 +93,7 @@ export default function RegisterPage() {
             type="password"
             autoComplete="new-password"
             placeholder="Min. 8 characters"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
           {errors.password && (
             <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
@@ -109,7 +109,7 @@ export default function RegisterPage() {
             type="password"
             autoComplete="new-password"
             placeholder="Re-enter password"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
           {errors.confirmPassword && (
             <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>
@@ -126,14 +126,14 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-md bg-indigo-600 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+          className="w-full rounded-md bg-accent py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dark disabled:opacity-50"
         >
           {isSubmitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
       <p className="mt-6 text-center text-sm text-gray-500">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">
+        <Link href="/login" className="font-medium text-orange-600 hover:text-orange-700">
           Sign in
         </Link>
       </p>

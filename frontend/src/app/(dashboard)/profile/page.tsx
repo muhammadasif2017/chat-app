@@ -108,7 +108,7 @@ export default function ProfilePage() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving || !username.trim()}
-            className="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+            className="bg-accent text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-accent-dark disabled:opacity-40 transition-colors"
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>

@@ -143,19 +143,19 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
               onChange={(e) => setEditName(e.target.value)}
               maxLength={100}
               placeholder="Group name"
-              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
             <input
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
               placeholder="Description"
-              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleSaveInfo}
                 disabled={infoLoading}
-                className="text-xs px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium transition-colors"
+                className="text-xs px-3 py-1.5 bg-accent text-white rounded-lg hover:bg-accent-dark disabled:opacity-50 font-medium transition-colors"
               >
                 Save
               </button>
@@ -219,7 +219,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
         {canManage && (
           <button
             onClick={() => setShowAddMembers(true)}
-            className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+            className="flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-800 font-medium transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -310,7 +310,7 @@ function MemberRow({
         <select
           value={member.role}
           onChange={(e) => onRoleChange(member, e.target.value as 'ADMIN' | 'MEMBER')}
-          className="text-xs border border-gray-200 rounded-lg px-1.5 py-0.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          className="text-xs border border-gray-200 rounded-lg px-1.5 py-0.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-400"
           title="Change role"
         >
           <option value="MEMBER">member</option>
@@ -410,7 +410,7 @@ function AddMembersSheet({
             if (!e.target.value.trim()) setResults([]);
           }}
           placeholder="Search by username or email…"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
         />
       </div>
       {addError && <p className="px-4 pb-2 text-xs text-red-600">{addError}</p>}
@@ -425,7 +425,7 @@ function AddMembersSheet({
             <button
               onClick={() => handleAdd(u)}
               disabled={adding === u.id}
-              className="text-xs px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium transition-colors"
+              className="text-xs px-3 py-1 bg-accent text-white rounded-lg hover:bg-accent-dark disabled:opacity-50 font-medium transition-colors"
             >
               {adding === u.id ? '…' : 'Add'}
             </button>

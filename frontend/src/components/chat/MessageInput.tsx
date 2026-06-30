@@ -76,7 +76,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
   return (
     <div className="px-4 pb-4 pt-2">
       {replyTo && (
-        <div className="flex items-center gap-2 mb-2 pl-3 border-l-2 border-indigo-400 bg-indigo-50 rounded-r-lg pr-3 py-1.5">
+        <div className="flex items-center gap-2 mb-2 pl-3 border-l-2 border-orange-400 bg-orange-50 rounded-r-lg pr-3 py-1.5">
           <span className="flex-1 truncate text-xs text-gray-600">
             Replying to <span className="font-medium text-gray-800">{replyTo.sender.username}</span>
             {': '}
@@ -104,7 +104,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
         </div>
       )}
 
-      <div className="flex items-end gap-2 border border-gray-200 rounded-xl bg-white px-3 py-2 focus-within:border-indigo-300 focus-within:ring-1 focus-within:ring-indigo-200 transition-colors">
+      <div className="flex items-end gap-2 border border-gray-200 rounded-xl bg-white px-3 py-2 focus-within:border-orange-300 focus-within:ring-1 focus-within:ring-orange-200 transition-colors">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
@@ -169,7 +169,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           onClick={sendMessage}
           disabled={!value.trim()}
           aria-label="Send message"
-          className="flex-shrink-0 bg-indigo-600 text-white rounded-lg p-1.5 hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+          className="flex-shrink-0 bg-accent text-white rounded-lg p-1.5 hover:bg-accent-dark disabled:opacity-40 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

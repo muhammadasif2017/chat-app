@@ -105,7 +105,7 @@ export function CreateGroupModal({ onClose }: Props) {
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
               placeholder="e.g. Team Design"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
             />
           </div>
 
@@ -118,7 +118,7 @@ export function CreateGroupModal({ onClose }: Props) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
             />
           </div>
 
@@ -129,14 +129,14 @@ export function CreateGroupModal({ onClose }: Props) {
                 {selected.map((u) => (
                   <span
                     key={u.id}
-                    className="flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs rounded-full px-2.5 py-1 font-medium"
+                    className="flex items-center gap-1 bg-orange-50 text-orange-700 text-xs rounded-full px-2.5 py-1 font-medium"
                   >
                     {u.username}
                     <button
                       type="button"
                       onClick={() => toggleUser(u)}
                       aria-label={`Remove ${u.username}`}
-                      className="hover:text-indigo-500 leading-none ml-0.5"
+                      className="hover:text-orange-500 leading-none ml-0.5"
                     >
                       <svg
                         className="w-3 h-3"
@@ -163,7 +163,7 @@ export function CreateGroupModal({ onClose }: Props) {
                 if (!e.target.value.trim()) setResults([]);
               }}
               placeholder="Search by username or email…"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
             />
             {results.length > 0 && (
               <ul className="mt-1 border border-gray-200 rounded-lg divide-y divide-gray-50 max-h-40 overflow-y-auto">
@@ -206,7 +206,7 @@ export function CreateGroupModal({ onClose }: Props) {
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="px-4 py-2 text-sm bg-accent text-white rounded-lg hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               {loading ? 'Creating…' : 'Create Group'}
             </button>

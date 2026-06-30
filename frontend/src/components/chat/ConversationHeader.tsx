@@ -61,7 +61,7 @@ export function ConversationHeader({
               }
             }}
             placeholder="Search messages…"
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48"
+            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 w-48"
           />
         )}
 
@@ -72,7 +72,7 @@ export function ConversationHeader({
             title={showMembers ? 'Hide members' : 'Show members'}
             className={`p-1.5 rounded-lg transition-colors ${
               showMembers
-                ? 'bg-indigo-50 text-indigo-600'
+                ? 'bg-orange-50 text-orange-600'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
             }`}
           >
@@ -96,7 +96,7 @@ export function ConversationHeader({
           title={showSearch ? 'Close search' : 'Search messages'}
           className={`p-1.5 rounded-lg transition-colors ${
             showSearch
-              ? 'bg-indigo-50 text-indigo-600'
+              ? 'bg-orange-50 text-orange-600'
               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
           }`}
         >

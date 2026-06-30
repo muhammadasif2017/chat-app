@@ -14,6 +14,7 @@ const MAX_RECEIPT_AVATARS = 3;
 interface MessageItemProps {
   message: Message;
   isOwn: boolean;
+  isGrouped?: boolean;
   members?: ConversationMember[];
   onReply?: () => void;
   replyToMessage?: Message | null;
@@ -22,6 +23,7 @@ interface MessageItemProps {
 export function MessageItem({
   message,
   isOwn,
+  isGrouped = false,
   members,
   onReply,
   replyToMessage,
@@ -98,100 +100,112 @@ export function MessageItem({
   };
 
   return (
-    <div className="flex gap-3 px-4 py-1 hover:bg-gray-50 group">
-      <div className="flex-shrink-0 mt-0.5">
-        <Avatar username={message.sender.username} avatarUrl={message.sender.avatarUrl} size="sm" />
+    <div className={`flex gap-3 px-4 ${isGrouped ? 'py-0.5' : 'py-1'} hover:bg-gray-50 group`}>
+      <div className="flex-shrink-0 w-7 mt-0.5 relative">
+        {isGrouped ? (
+          <span className="absolute right-0 top-0.5 text-[9px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            {formatTime(message.createdAt)}
+          </span>
+        ) : (
+          <Avatar
+            username={message.sender.username}
+            avatarUrl={message.sender.avatarUrl}
+            size="sm"
+          />
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
-        {/* Header row */}
-        <div className="flex items-baseline gap-2 mb-0.5">
-          <span className="text-sm font-semibold text-gray-900">{message.sender.username}</span>
-          <span className="text-xs text-gray-500">{formatTime(message.createdAt)}</span>
-          {message.isEdited && <span className="text-xs text-gray-500">(edited)</span>}
+        {/* Header row — only for first message in a group */}
+        {!isGrouped && (
+          <div className="flex items-baseline gap-2 mb-0.5">
+            <span className="text-sm font-semibold text-gray-900">{message.sender.username}</span>
+            <span className="text-xs text-gray-500">{formatTime(message.createdAt)}</span>
+            {message.isEdited && <span className="text-xs text-gray-500">(edited)</span>}
 
-          {!isEditing && (
-            <div className="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              {/* emoji reaction */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowEmojiPicker((v) => !v)}
-                  title="React"
-                  className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 text-xs transition-colors"
-                >
-                  😊
-                </button>
-                {showEmojiPicker && (
-                  <div
-                    className="absolute bottom-7 right-0 z-20 bg-white rounded-xl shadow-lg border border-gray-200 p-1.5 flex gap-1"
-                    onMouseLeave={() => setShowEmojiPicker(false)}
-                  >
-                    {QUICK_EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        onClick={() => {
-                          getSocket().emit('add_reaction', { messageId: message.id, emoji });
-                          setShowEmojiPicker(false);
-                        }}
-                        className="text-base hover:scale-125 transition-transform px-0.5"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* reply */}
-              {onReply && (
-                <button
-                  onClick={onReply}
-                  title="Reply"
-                  className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 text-xs transition-colors"
-                >
-                  ↩
-                </button>
-              )}
-
-              {/* edit/delete menu (own messages only) */}
-              {isOwn && (
+            {!isEditing && (
+              <div className="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* emoji reaction */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowMenu((v) => !v)}
-                    className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors leading-none"
+                    onClick={() => setShowEmojiPicker((v) => !v)}
+                    title="React"
+                    className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 text-xs transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <circle cx="4" cy="10" r="1.5" />
-                      <circle cx="10" cy="10" r="1.5" />
-                      <circle cx="16" cy="10" r="1.5" />
-                    </svg>
+                    😊
                   </button>
-                  {showMenu && (
+                  {showEmojiPicker && (
                     <div
-                      className="absolute right-0 top-7 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-28 z-10"
-                      onMouseLeave={() => setShowMenu(false)}
+                      className="absolute bottom-7 right-0 z-20 bg-white rounded-xl shadow-lg border border-gray-200 p-1.5 flex gap-1"
+                      onMouseLeave={() => setShowEmojiPicker(false)}
                     >
-                      {message.type !== 'IMAGE' && (
+                      {QUICK_EMOJIS.map((emoji) => (
                         <button
-                          onClick={handleEdit}
-                          className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                          key={emoji}
+                          onClick={() => {
+                            getSocket().emit('add_reaction', { messageId: message.id, emoji });
+                            setShowEmojiPicker(false);
+                          }}
+                          className="text-base hover:scale-125 transition-transform px-0.5"
                         >
-                          Edit
+                          {emoji}
                         </button>
-                      )}
-                      <button
-                        onClick={handleDelete}
-                        className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        Delete
-                      </button>
+                      ))}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+
+                {/* reply */}
+                {onReply && (
+                  <button
+                    onClick={onReply}
+                    title="Reply"
+                    className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 text-xs transition-colors"
+                  >
+                    ↩
+                  </button>
+                )}
+
+                {/* edit/delete menu (own messages only) */}
+                {isOwn && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowMenu((v) => !v)}
+                      className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors leading-none"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <circle cx="4" cy="10" r="1.5" />
+                        <circle cx="10" cy="10" r="1.5" />
+                        <circle cx="16" cy="10" r="1.5" />
+                      </svg>
+                    </button>
+                    {showMenu && (
+                      <div
+                        className="absolute right-0 top-7 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-28 z-10"
+                        onMouseLeave={() => setShowMenu(false)}
+                      >
+                        {message.type !== 'IMAGE' && (
+                          <button
+                            onClick={handleEdit}
+                            className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            Edit
+                          </button>
+                        )}
+                        <button
+                          onClick={handleDelete}
+                          className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Message content */}
         {isEditing ? (
@@ -208,12 +222,12 @@ export function MessageItem({
                 if (e.key === 'Escape') setIsEditing(false);
               }}
               rows={2}
-              className="rounded-lg border border-indigo-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="rounded-lg border border-orange-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
             />
             <div className="flex gap-2 text-xs">
               <button
                 onClick={handleSaveEdit}
-                className="text-indigo-600 font-medium hover:underline"
+                className="text-orange-600 font-medium hover:underline"
               >
                 Save
               </button>
@@ -278,7 +292,7 @@ export function MessageItem({
                   }
                   className={`flex items-center gap-1 text-xs rounded-full px-2 py-0.5 border transition-colors ${
                     reacted
-                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                      ? 'bg-orange-50 border-orange-200 text-orange-700'
                       : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >

@@ -80,7 +80,7 @@ export function NewDmModal({ onClose }: Props) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by username or email…"
             disabled={loading}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent disabled:opacity-50"
           />
         </div>
 

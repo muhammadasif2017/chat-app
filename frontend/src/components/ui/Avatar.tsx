@@ -30,7 +30,7 @@ export function Avatar({ username, avatarUrl, size = 'md', online }: AvatarProps
         />
       ) : (
         <div
-          className={`${sizeClasses[size]} rounded-full bg-indigo-100 text-indigo-700 font-semibold flex items-center justify-center`}
+          className={`${sizeClasses[size]} rounded-full bg-orange-100 text-orange-700 font-semibold flex items-center justify-center`}
         >
           {getInitials(username)}
         </div>

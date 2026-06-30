@@ -48,14 +48,14 @@ function ConvLink({
       href={`/conversations/${conv.id}`}
       className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
         isActive
-          ? 'bg-indigo-50 text-indigo-700 font-medium'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          ? 'bg-white/8 text-sidebar-fg-active font-medium'
+          : 'text-sidebar-fg hover:bg-white/5 hover:text-sidebar-fg-active'
       }`}
     >
       {otherMember && <PresenceIndicator online={isOnline} />}
       <span className="truncate flex-1">{conv.type === 'CHANNEL' ? `# ${label}` : label}</span>
       {conv.unreadCount > 0 && (
-        <span className="ml-auto bg-indigo-600 text-white text-[10px] font-semibold rounded-full px-1.5 py-0.5 leading-none tabular-nums">
+        <span className="ml-auto bg-accent text-white text-[10px] font-semibold rounded-full px-1.5 py-0.5 leading-none tabular-nums">
           {conv.unreadCount}
         </span>
       )}
@@ -80,7 +80,7 @@ function Section({
   return (
     <div className="mb-5">
       <div className="flex items-center px-3 mb-1">
-        <p className="flex-1 text-[11px] font-semibold text-gray-500 uppercase tracking-widest">
+        <p className="flex-1 text-[11px] font-semibold text-sidebar-fg uppercase tracking-widest">
           {title}
         </p>
         {action}
@@ -99,7 +99,7 @@ function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
     <button
       onClick={onClick}
       aria-label={label}
-      className="w-4 h-4 rounded flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors text-sm leading-none"
+      className="w-4 h-4 rounded flex items-center justify-center text-sidebar-fg hover:text-sidebar-fg-active hover:bg-white/10 transition-colors text-sm leading-none"
     >
       +
     </button>
@@ -128,9 +128,9 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0">
-      <div className="px-4 py-4 border-b border-gray-100">
-        <h1 className="text-gray-900 font-semibold text-base tracking-tight">Chat App</h1>
+    <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-full flex-shrink-0">
+      <div className="px-4 py-4 border-b border-sidebar-border">
+        <h1 className="text-sidebar-fg-active font-semibold text-base tracking-tight">Chat App</h1>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-4">
@@ -154,17 +154,17 @@ export function Sidebar() {
         )}
       </nav>
 
-      <div className="border-t border-gray-100 px-3 py-3 flex items-center gap-2.5">
+      <div className="border-t border-sidebar-border px-3 py-3 flex items-center gap-2.5">
         <Link href="/profile" title="Profile settings" className="flex-shrink-0">
           <Avatar username={user?.username ?? '?'} avatarUrl={user?.avatarUrl} size="sm" />
         </Link>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{user?.username}</p>
+          <p className="text-sm font-medium text-sidebar-fg-active truncate">{user?.username}</p>
         </div>
         <button
           onClick={handleLogout}
           title="Sign out"
-          className="flex-shrink-0 p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          className="flex-shrink-0 p-1 rounded text-sidebar-fg hover:text-sidebar-fg-active hover:bg-white/10 transition-colors"
           aria-label="Sign out"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
