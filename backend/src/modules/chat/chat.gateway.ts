@@ -92,11 +92,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const roomIds = await this.conversationsService.getUserRooms(payload.sub);
       await client.join(roomIds.map((id) => `conversation:${id}`));
 
+      const userSockets = await this.server.in(`user:${payload.sub}`).fetchSockets();
+      const isFirstConnection = userSockets.length === 1;
+
       await this.presenceService.setOnline(payload.sub, client.id);
 
-      roomIds.forEach((id) => {
-        client.to(`conversation:${id}`).emit('user_online', { userId: payload.sub });
-      });
+      if (isFirstConnection) {
+        roomIds.forEach((id) => {
+          client.to(`conversation:${id}`).emit('user_online', { userId: payload.sub });
+        });
+      }
 
       const memberIds = await this.conversationsService.getConversationMemberIds(payload.sub);
       const roster = await this.presenceService.getPresence(memberIds);
@@ -113,6 +118,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleDisconnect(client: Socket) {
     const userId = (client.data as { userId?: string }).userId;
     if (!userId) return;
+
+    const userSockets = await this.server.in(`user:${userId}`).fetchSockets();
+    if (userSockets.length > 0) return;
 
     await this.presenceService.setOffline(userId);
 
