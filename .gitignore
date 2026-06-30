@@ -28,3 +28,6 @@ Thumbs.db
 !.vscode/settings.json
 .idea/
 
+# Learning notes (personal, untracked)
+learning/
+

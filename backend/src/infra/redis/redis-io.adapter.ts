@@ -4,7 +4,7 @@ import { createClient } from 'redis';
 import { Server, ServerOptions } from 'socket.io';
 
 export class RedisIoAdapter extends IoAdapter {
-  private adapterConstructor: ReturnType<typeof createAdapter>;
+  private adapterConstructor!: ReturnType<typeof createAdapter>;
 
   async connectToRedis(url: string): Promise<void> {
     const pubClient = createClient({ url });
