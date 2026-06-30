@@ -8,7 +8,7 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { Inject, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Inject, Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -39,6 +39,8 @@ import { ConversationIdDto, MessageIdDto, ReactionDto } from './dto/ws-events.dt
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+
+  private readonly logger = new Logger(ChatGateway.name);
 
   constructor(
     private jwt: JwtService,
@@ -313,9 +315,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     conversationId: string;
     memberIds: string[];
   }) {
-    for (const userId of memberIds) {
-      this.server.in(`user:${userId}`).socketsJoin(`conversation:${conversationId}`);
-      this.server.to(`user:${userId}`).emit('new_conversation', { conversationId });
+    try {
+      for (const userId of memberIds) {
+        this.server.in(`user:${userId}`).socketsJoin(`conversation:${conversationId}`);
+        this.server.to(`user:${userId}`).emit('new_conversation', { conversationId });
+      }
+    } catch (err: unknown) {
+      this.logger.error(`internal.group.created failed: ${String(err)}`);
     }
   }
 
@@ -330,19 +336,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
     systemMessage: Record<string, unknown>;
   }) {
-    this.server
-      .in(`user:${payload.member.userId}`)
-      .socketsJoin(`conversation:${payload.conversationId}`);
-    this.server
-      .to(`user:${payload.member.userId}`)
-      .emit('new_conversation', { conversationId: payload.conversationId });
-    this.server.to(`conversation:${payload.conversationId}`).emit('member_added', {
-      conversationId: payload.conversationId,
-      member: payload.member,
-    });
-    this.server
-      .to(`conversation:${payload.conversationId}`)
-      .emit('new_message', payload.systemMessage);
+    try {
+      this.server
+        .in(`user:${payload.member.userId}`)
+        .socketsJoin(`conversation:${payload.conversationId}`);
+      this.server
+        .to(`user:${payload.member.userId}`)
+        .emit('new_conversation', { conversationId: payload.conversationId });
+      this.server.to(`conversation:${payload.conversationId}`).emit('member_added', {
+        conversationId: payload.conversationId,
+        member: payload.member,
+      });
+      this.server
+        .to(`conversation:${payload.conversationId}`)
+        .emit('new_message', payload.systemMessage);
+    } catch (err: unknown) {
+      this.logger.error(`internal.member.added failed: ${String(err)}`);
+    }
   }
 
   @OnEvent('internal.member.removed')
@@ -351,14 +361,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     userId: string;
     systemMessage: Record<string, unknown>;
   }) {
-    this.server.to(`conversation:${payload.conversationId}`).emit('member_removed', {
-      conversationId: payload.conversationId,
-      userId: payload.userId,
-    });
-    this.server
-      .to(`conversation:${payload.conversationId}`)
-      .emit('new_message', payload.systemMessage);
-    this.server.in(`user:${payload.userId}`).socketsLeave(`conversation:${payload.conversationId}`);
+    try {
+      this.server.to(`conversation:${payload.conversationId}`).emit('member_removed', {
+        conversationId: payload.conversationId,
+        userId: payload.userId,
+      });
+      this.server
+        .to(`conversation:${payload.conversationId}`)
+        .emit('new_message', payload.systemMessage);
+      this.server
+        .in(`user:${payload.userId}`)
+        .socketsLeave(`conversation:${payload.conversationId}`);
+    } catch (err: unknown) {
+      this.logger.error(`internal.member.removed failed: ${String(err)}`);
+    }
   }
 
   @OnEvent('internal.group.updated')
