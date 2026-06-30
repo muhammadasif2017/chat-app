@@ -87,7 +87,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       if (!user) return client.disconnect();
 
-      (client.data as { userId: string }).userId = payload.sub;
+      (client.data as { userId: string; token: string }).userId = payload.sub;
+      (client.data as { userId: string; token: string }).token = token;
 
       await client.join(`user:${payload.sub}`);
       const roomIds = await this.conversationsService.getUserRooms(payload.sub);
@@ -224,6 +225,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = this.getUserId(client);
     if (userId) {
       await this.checkRateLimit(userId, 'ws_rl_ping', 6);
+      const token = (client.data as { token?: string }).token;
+      try {
+        this.jwt.verify(token!, { secret: this.config.get<string>('JWT_SECRET') });
+      } catch {
+        client.emit('error', { message: 'Session expired' });
+        client.disconnect();
+        return;
+      }
       await this.presenceService.refreshHeartbeat(userId);
     }
     return { event: 'pong' };
