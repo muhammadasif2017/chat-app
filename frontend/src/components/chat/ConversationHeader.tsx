@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import type { Conversation } from '../../types';
 import { usePresenceStore } from '../../store/presence.store';

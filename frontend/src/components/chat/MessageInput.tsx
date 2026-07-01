@@ -41,7 +41,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
     }
     isTyping.current = false;
     const payload: Record<string, unknown> = { conversationId, content };
-    if (replyTo) payload.replyToId = Number(replyTo.id);
+    if (replyTo) payload.replyToId = replyTo.id;
     getSocket().emit('send_message', payload);
     onCancelReply?.();
   }, [value, conversationId, replyTo, onCancelReply]);

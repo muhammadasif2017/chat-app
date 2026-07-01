@@ -6,11 +6,6 @@ export interface User {
   lastSeenAt?: string | null;
 }
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-}
-
 export type ConversationType = 'DIRECT' | 'GROUP' | 'CHANNEL';
 export type MemberRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 export type MessageType = 'TEXT' | 'IMAGE' | 'FILE' | 'SYSTEM';

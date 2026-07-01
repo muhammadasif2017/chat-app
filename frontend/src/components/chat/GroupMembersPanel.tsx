@@ -57,8 +57,9 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       setEditingInfo(false);
     } catch (err) {
       setError(extractErrorMessage(err));
+    } finally {
+      setInfoLoading(false);
     }
-    setInfoLoading(false);
   };
 
   const handleRemove = async (member: ConversationMember) => {

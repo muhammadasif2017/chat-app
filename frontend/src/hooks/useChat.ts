@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSocket } from '../lib/socket';
@@ -13,6 +13,7 @@ export function useChat(conversationId?: string) {
   const qc = useQueryClient();
   const router = useRouter();
   const [typing, setTyping] = useState<Map<string, boolean>>(new Map());
+  const typingTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -77,13 +78,14 @@ export function useChat(conversationId?: string) {
     }) => {
       if (cid === conversationId) {
         setTyping((prev) => new Map(prev).set(userId, true));
-        setTimeout(() => {
+        const t = setTimeout(() => {
           setTyping((prev) => {
             const next = new Map(prev);
             next.delete(userId);
             return next;
           });
         }, 3500);
+        typingTimers.current.push(t);
       }
     };
 
@@ -264,6 +266,7 @@ export function useChat(conversationId?: string) {
 
     socket.on('new_message', onNewMessage);
     socket.on('message_updated', onMessageUpdated);
+    // server emits full updated message with isDeleted: true
     socket.on('message_deleted', onMessageUpdated);
     socket.on('user_typing', onTyping);
     socket.on('user_stopped_typing', onStoppedTyping);
@@ -277,6 +280,8 @@ export function useChat(conversationId?: string) {
     socket.on('reaction_removed', onReactionRemoved);
 
     return () => {
+      typingTimers.current.forEach(clearTimeout);
+      typingTimers.current = [];
       socket.off('new_message', onNewMessage);
       socket.off('message_updated', onMessageUpdated);
       socket.off('message_deleted', onMessageUpdated);

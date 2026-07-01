@@ -12,7 +12,6 @@ export function useUnreadTitle() {
       const res = await api.get<Conversation[]>('/conversations');
       return res.data;
     },
-    staleTime: 60_000,
   });
 
   useEffect(() => {
