@@ -26,6 +26,7 @@ export class SendMessageDto {
   @ApiProperty({ example: 'Hello, world!', maxLength: 4000, required: false })
   @ValidateIf((o) => o.type === 'TEXT' || !o.type)
   @IsString()
+  @IsNotEmpty()
   @MaxLength(4000)
   content?: string;
 
