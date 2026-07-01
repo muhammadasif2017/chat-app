@@ -29,5 +29,6 @@ Thumbs.db
 .idea/
 
 # Learning notes (personal, untracked)
-learning/
+backend/learning/
+frontend/learning/
 
