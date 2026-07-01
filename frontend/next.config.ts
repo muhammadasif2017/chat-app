@@ -7,9 +7,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   images: {
-    remotePatterns: [
-      { protocol: 'http', hostname: 'localhost', port: '3001' },
-    ],
+    remotePatterns: [{ protocol: 'http', hostname: 'localhost', port: '3001' }],
   },
 };
 
