@@ -58,6 +58,7 @@ model RefreshToken {
 model Conversation {
   id          String           @id @default(uuid())
   type        ConversationType
+  dmKey       String?          @unique
   name        String?
   description String?
   isPublic    Boolean          @default(false)

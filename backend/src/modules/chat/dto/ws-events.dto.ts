@@ -1,4 +1,4 @@
-import { IsNumberString, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsNumberString, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class MessageIdDto {
   @IsNumberString()
@@ -15,6 +15,7 @@ export class ReactionDto {
   messageId: string;
 
   @IsString()
+  @IsNotEmpty()
   @MaxLength(10)
   emoji: string;
 }

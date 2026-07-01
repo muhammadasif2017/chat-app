@@ -144,7 +144,7 @@ export class ConversationsService {
     if (uniqueIds.length) {
       this.events.emit('internal.group.created', {
         conversationId: conversation.id,
-        memberIds: uniqueIds,
+        memberIds: [userId, ...uniqueIds],
       });
     }
 
@@ -152,35 +152,47 @@ export class ConversationsService {
   }
 
   async findOrCreateDm(userId: string, dto: CreateDmDto) {
+    if (dto.targetUserId === userId) {
+      throw new BadRequestException('Cannot start a DM with yourself');
+    }
+
     const [a, b] = [userId, dto.targetUserId].sort();
+    const dmKey = `dm:${a}:${b}`;
 
-    const existing = await this.prisma.conversation.findFirst({
-      where: {
-        type: 'DIRECT',
-        members: { every: { userId: { in: [a, b] } } },
-      },
-      include: {
-        members: {
-          where: { userId: { in: [a, b] } },
-          include: { user: MEMBER_SELECT },
-        },
-      },
+    const memberInclude = {
+      where: { userId: { in: [a, b] } },
+      include: { user: MEMBER_SELECT },
+    };
+
+    const existing = await this.prisma.conversation.findUnique({
+      where: { dmKey },
+      include: { members: memberInclude },
     });
-
     if (existing) return existing;
 
-    return this.prisma.conversation.create({
-      data: {
-        type: 'DIRECT',
-        members: {
-          create: [
-            { userId: a, role: 'MEMBER' },
-            { userId: b, role: 'MEMBER' },
-          ],
+    try {
+      return await this.prisma.conversation.create({
+        data: {
+          type: 'DIRECT',
+          dmKey,
+          members: {
+            create: [
+              { userId: a, role: 'MEMBER' },
+              { userId: b, role: 'MEMBER' },
+            ],
+          },
         },
-      },
-      include: { members: { include: { user: MEMBER_SELECT } } },
-    });
+        include: { members: { include: { user: MEMBER_SELECT } } },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        return this.prisma.conversation.findUniqueOrThrow({
+          where: { dmKey },
+          include: { members: memberInclude },
+        });
+      }
+      throw err;
+    }
   }
 
   async updateGroup(conversationId: string, requesterId: string, dto: UpdateGroupDto) {

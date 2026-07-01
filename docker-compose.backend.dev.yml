@@ -1,11 +1,11 @@
 services:
   postgres:
     ports:
-      - '127.0.0.1:5433:5432'
+      - '5433:5432'
 
   redis:
     ports:
-      - '127.0.0.1:6379:6379'
+      - '6379:6379'
 
   backend:
     build:

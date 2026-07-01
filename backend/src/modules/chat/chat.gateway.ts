@@ -30,7 +30,8 @@ import { ConversationIdDto, MessageIdDto, ReactionDto } from './dto/ws-events.dt
   namespace: '/chat',
   cors: {
     origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin || origin === process.env.FRONTEND_URL) cb(null, true);
+      if (!origin || origin === (process.env.FRONTEND_URL ?? 'http://localhost:3000'))
+        cb(null, true);
       else cb(new Error('CORS: origin not allowed'));
     },
     credentials: true,
@@ -61,6 +62,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!isMember) throw new WsException('Not a member');
   }
 
+  private async assertMessageMember(messageId: string, userId: string): Promise<string> {
+    const msg = await this.prisma.message.findUnique({
+      where: { id: BigInt(messageId) },
+      select: { conversationId: true },
+    });
+    if (!msg) throw new WsException('Message not found');
+    await this.assertMember(msg.conversationId, userId);
+    return msg.conversationId;
+  }
+
   private async checkRateLimit(userId: string, prefix = 'ws_rl', limit = 10): Promise<void> {
     const window = Math.floor(Date.now() / 10000);
     const key = `${prefix}:${userId}:${window}`;
@@ -89,8 +100,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       if (!user) return client.disconnect();
 
-      (client.data as { userId: string; token: string }).userId = payload.sub;
-      (client.data as { userId: string; token: string }).token = token;
+      const data = client.data as { userId: string; token: string };
+      data.userId = payload.sub;
+      data.token = token;
 
       await client.join(`user:${payload.sub}`);
       const roomIds = await this.conversationsService.getUserRooms(payload.sub);
@@ -109,11 +121,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const memberIds = await this.conversationsService.getConversationMemberIds(payload.sub);
       const roster = await this.presenceService.getPresence(memberIds);
-      const rosterObj: Record<string, boolean> = {};
-      roster.forEach((online, uid) => {
-        rosterObj[uid] = online;
-      });
-      client.emit('presence_roster', rosterObj);
+      client.emit('presence_roster', Object.fromEntries(roster));
     } catch {
       client.disconnect();
     }
@@ -155,12 +163,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleEditMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: EditMessageDto) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
-    const msg = await this.prisma.message.findUnique({
-      where: { id: BigInt(dto.messageId) },
-      select: { conversationId: true },
-    });
-    if (!msg) throw new WsException('Message not found');
-    await this.assertMember(msg.conversationId, userId);
+    await this.assertMessageMember(dto.messageId, userId);
     const message = await this.messagesService.update(dto.messageId, userId, dto.content);
     const serialized = {
       ...message,
@@ -178,12 +181,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
-    const msg = await this.prisma.message.findUnique({
-      where: { id: BigInt(messageId) },
-      select: { conversationId: true },
-    });
-    if (!msg) throw new WsException('Message not found');
-    await this.assertMember(msg.conversationId, userId);
+    await this.assertMessageMember(messageId, userId);
     const message = await this.messagesService.softDelete(messageId, userId);
     const serialized = {
       ...message,
@@ -270,20 +268,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_reaction', 20);
-    const msg = await this.prisma.message.findUnique({
-      where: { id: BigInt(messageId) },
-      select: { conversationId: true },
-    });
-    if (!msg) throw new WsException('Message not found');
-    await this.assertMember(msg.conversationId, userId);
+    const conversationId = await this.assertMessageMember(messageId, userId);
     await this.prisma.messageReaction.upsert({
       where: { messageId_userId_emoji: { messageId: BigInt(messageId), userId, emoji } },
       create: { messageId: BigInt(messageId), userId, emoji },
       update: {},
     });
     this.server
-      .to(`conversation:${msg.conversationId}`)
-      .emit('reaction_added', { messageId, userId, emoji, conversationId: msg.conversationId });
+      .to(`conversation:${conversationId}`)
+      .emit('reaction_added', { messageId, userId, emoji, conversationId });
   }
 
   @SubscribeMessage('remove_reaction')
@@ -293,18 +286,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId, 'ws_rl_reaction', 20);
-    const msg = await this.prisma.message.findUnique({
-      where: { id: BigInt(messageId) },
-      select: { conversationId: true },
-    });
-    if (!msg) throw new WsException('Message not found');
-    await this.assertMember(msg.conversationId, userId);
+    const conversationId = await this.assertMessageMember(messageId, userId);
     await this.prisma.messageReaction.deleteMany({
       where: { messageId: BigInt(messageId), userId, emoji },
     });
     this.server
-      .to(`conversation:${msg.conversationId}`)
-      .emit('reaction_removed', { messageId, userId, emoji, conversationId: msg.conversationId });
+      .to(`conversation:${conversationId}`)
+      .emit('reaction_removed', { messageId, userId, emoji, conversationId });
   }
 
   @OnEvent('internal.group.created')
@@ -383,11 +371,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     name: string | null;
     description: string | null;
   }) {
-    this.server.to(`conversation:${payload.conversationId}`).emit('group_updated', payload);
+    try {
+      this.server.to(`conversation:${payload.conversationId}`).emit('group_updated', payload);
+    } catch (err: unknown) {
+      this.logger.error(`internal.group.updated failed: ${String(err)}`);
+    }
   }
 
   @OnEvent('internal.member.role_changed')
   handleMemberRoleChanged(payload: { conversationId: string; userId: string; role: string }) {
-    this.server.to(`conversation:${payload.conversationId}`).emit('member_role_changed', payload);
+    try {
+      this.server.to(`conversation:${payload.conversationId}`).emit('member_role_changed', payload);
+    } catch (err: unknown) {
+      this.logger.error(`internal.member.role_changed failed: ${String(err)}`);
+    }
   }
 }

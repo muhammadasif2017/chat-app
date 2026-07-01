@@ -9,6 +9,7 @@ export const loggerConfig: Params = {
     autoLogging: true,
     redact: [
       'req.headers.authorization',
+      'req.headers.cookie',
       'req.body.password',
       'req.body.refreshToken',
       'req.body.content',
