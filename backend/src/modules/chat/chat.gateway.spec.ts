@@ -174,6 +174,20 @@ describe('ChatGateway.handleSendMessage', () => {
     ).rejects.toThrow(WsException);
   });
 
+  it('disconnects and throws when the access token has expired', async () => {
+    const { gateway, jwt } = makeGateway();
+    (jwt.verify as jest.Mock).mockImplementation(() => {
+      throw new Error('jwt expired');
+    });
+    const socket = makeSocket('expired-token');
+    socket.data = { userId: USER_ID, token: 'expired-token' };
+
+    await expect(
+      gateway.handleSendMessage(socket, { conversationId: CONV_ID, content: 'hi' }),
+    ).rejects.toThrow(WsException);
+    expect(socket.disconnect).toHaveBeenCalled();
+  });
+
   it('broadcasts new_message to conversation room on success', async () => {
     const { gateway } = makeGateway();
     const socket = makeSocket('valid-token');

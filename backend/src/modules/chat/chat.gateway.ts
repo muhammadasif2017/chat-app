@@ -54,7 +54,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   private getUserId(client: Socket): string {
-    return (client.data as { userId: string }).userId;
+    const data = client.data as { userId: string; token?: string };
+    try {
+      this.jwt.verify(data.token!, { secret: this.config.get<string>('JWT_SECRET') });
+    } catch {
+      client.disconnect();
+      throw new WsException('Session expired');
+    }
+    return data.userId;
   }
 
   private async assertMember(conversationId: string, userId: string): Promise<void> {
@@ -235,18 +242,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('ping')
   async handlePing(@ConnectedSocket() client: Socket) {
     const userId = this.getUserId(client);
-    if (userId) {
-      await this.checkRateLimit(userId, 'ws_rl_ping', 6);
-      const token = (client.data as { token?: string }).token;
-      try {
-        this.jwt.verify(token!, { secret: this.config.get<string>('JWT_SECRET') });
-      } catch {
-        client.emit('error', { message: 'Session expired' });
-        client.disconnect();
-        return;
-      }
-      await this.presenceService.refreshHeartbeat(userId);
-    }
+    await this.checkRateLimit(userId, 'ws_rl_ping', 6);
+    await this.presenceService.refreshHeartbeat(userId);
     return { event: 'pong' };
   }
 
