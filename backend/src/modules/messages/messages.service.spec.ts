@@ -93,6 +93,7 @@ describe('MessagesService.create', () => {
 
   it('converts replyToId number to BigInt', async () => {
     const { svc, prisma } = makeService();
+    (prisma.message.findUnique as jest.Mock).mockResolvedValue({ conversationId: CONV_ID });
 
     await svc.create(SENDER_ID, { conversationId: CONV_ID, content: 'reply', replyToId: 7 });
 

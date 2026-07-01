@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service.js';
@@ -230,7 +231,8 @@ describe('AuthService.refresh', () => {
   it('deletes the old token and issues new pair on valid refresh', async () => {
     const { svc, prisma } = await makeService();
     const rawToken = 'valid-refresh-token';
-    const hash = await bcrypt.hash(rawToken, 10);
+    const rawDigest = createHash('sha256').update(rawToken).digest('hex');
+    const hash = await bcrypt.hash(rawDigest, 10);
     (prisma.refreshToken.findUnique as jest.Mock).mockResolvedValue({
       id: JTI,
       userId: USER_ID,
