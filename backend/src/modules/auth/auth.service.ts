@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, OnModuleInit } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -34,7 +34,7 @@ export class AuthService implements OnModuleInit {
   async register(dto: RegisterDto) {
     const exists = await this.users.findByEmailOrUsername(dto.email, dto.username);
     if (exists) {
-      throw new BadRequestException('Email or username already in use');
+      throw new BadRequestException('Registration failed');
     }
 
     const hashed = await bcrypt.hash(dto.password, 10);
@@ -60,10 +60,14 @@ export class AuthService implements OnModuleInit {
   async refresh(userId: string, email: string, rawRefreshToken: string, jti: string) {
     const stored = await this.prisma.refreshToken.findUnique({ where: { id: jti } });
     if (!stored || stored.userId !== userId || stored.expiresAt < new Date()) {
+      // jti not found after a valid JWT signature means the token was already rotated —
+      // a second presenter means one copy was stolen. Revoke all sessions for this user.
+      await this.prisma.refreshToken.deleteMany({ where: { userId } });
       throw new ForbiddenException();
     }
 
-    const valid = await bcrypt.compare(rawRefreshToken, stored.tokenHash);
+    const rawDigest = createHash('sha256').update(rawRefreshToken).digest('hex');
+    const valid = await bcrypt.compare(rawDigest, stored.tokenHash);
     if (!valid) throw new ForbiddenException();
 
     await this.prisma.refreshToken.delete({ where: { id: jti } });
@@ -92,7 +96,8 @@ export class AuthService implements OnModuleInit {
       ),
     ]);
 
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const tokenDigest = createHash('sha256').update(refreshToken).digest('hex');
+    const tokenHash = await bcrypt.hash(tokenDigest, 10);
     const refreshExpiry = this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d';
     const expiresAt = new Date(Date.now() + ms(refreshExpiry as StringValue));
     await this.prisma.refreshToken.create({
