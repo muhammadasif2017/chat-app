@@ -68,15 +68,33 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ## Commands
 
 ### Infrastructure
-```bash
-# Local dev (hot-reload, DB ports exposed to host)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
-# Production (built images, DB ports not exposed)
+Compose files: `docker-compose.yml` is the base. Overlay with one of:
+- `docker-compose.backend.dev.yml` — adds backend + exposes DB/Redis ports to host
+- `docker-compose.frontend.dev.yml` — adds frontend (hot-reload)
+- `docker-compose.prod.yml` — production builds, restart policies, healthchecks
+
+```bash
+# Dev — backend + DB + Redis (hot-reload, DB on host :5433)
+docker compose -f docker-compose.yml -f docker-compose.backend.dev.yml up -d
+
+# Dev — full stack (backend + frontend + DB + Redis)
+docker compose -f docker-compose.yml -f docker-compose.backend.dev.yml -f docker-compose.frontend.dev.yml up -d
+
+# Production — full stack
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-docker compose -f docker-compose.yml -f docker-compose.dev.yml down   # stop dev
-docker compose -f docker-compose.yml -f docker-compose.prod.yml down  # stop prod
+# Stop (replace up flags with down)
+docker compose -f docker-compose.yml -f docker-compose.backend.dev.yml down
+docker compose -f docker-compose.yml -f docker-compose.backend.dev.yml -f docker-compose.frontend.dev.yml down
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+```
+
+**Note:** DB data persists in the `postgres_data` named volume across restarts. Only `down -v` deletes it.
+
+**Note:** On Windows/WSL2 Docker Desktop, postgres port `5433` binds to `127.0.0.1` inside the engine — `docker ps` won't show it but it is bound. Run migrations via `docker exec` if host can't reach it:
+```bash
+docker exec chat-app-backend-1 npx prisma db push
 ```
 
 ### Backend (`/backend`)
