@@ -28,7 +28,11 @@ function makeSocket(cookieToken?: string): Socket {
 function makeServer() {
   return {
     to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-    in: jest.fn().mockReturnValue({ socketsJoin: jest.fn(), socketsLeave: jest.fn() }),
+    in: jest.fn().mockReturnValue({
+      socketsJoin: jest.fn(),
+      socketsLeave: jest.fn(),
+      fetchSockets: jest.fn().mockResolvedValue([{}]),
+    }),
   } as unknown as Server;
 }
 

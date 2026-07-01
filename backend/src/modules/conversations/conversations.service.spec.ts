@@ -44,6 +44,7 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
         .fn()
         .mockResolvedValue({ id: CONV_ID, name: 'x', description: null, members: [] }),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       findUniqueOrThrow: jest.fn(),
     },
     message: {
@@ -176,7 +177,7 @@ describe('ConversationsService.findOrCreateDm', () => {
   it('returns existing DM without creating a new one', async () => {
     const prisma = makePrisma();
     const existing = { id: CONV_ID, type: 'DIRECT', members: [] };
-    prisma.conversation.findFirst.mockResolvedValue(existing);
+    prisma.conversation.findUnique.mockResolvedValue(existing);
     const svc = makeService(prisma);
 
     const result = await svc.findOrCreateDm(OWNER_ID, { targetUserId: MEMBER_ID });
@@ -187,7 +188,7 @@ describe('ConversationsService.findOrCreateDm', () => {
 
   it('creates a new DM when none exists', async () => {
     const prisma = makePrisma();
-    prisma.conversation.findFirst.mockResolvedValue(null);
+    prisma.conversation.findUnique.mockResolvedValue(null);
     const created = { id: 'new-conv', type: 'DIRECT', members: [] };
     prisma.conversation.create.mockResolvedValue(created);
     const svc = makeService(prisma);
