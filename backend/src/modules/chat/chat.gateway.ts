@@ -28,14 +28,6 @@ import { ConversationIdDto, MessageIdDto, ReactionDto } from './dto/ws-events.dt
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }))
 @WebSocketGateway({
   namespace: '/chat',
-  cors: {
-    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin || origin === (process.env.FRONTEND_URL ?? 'http://localhost:3000'))
-        cb(null, true);
-      else cb(new Error('CORS: origin not allowed'));
-    },
-    credentials: true,
-  },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

@@ -1,10 +1,16 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { ConfigService } from '@nestjs/config';
+import type { INestApplicationContext } from '@nestjs/common';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 import { Server, ServerOptions } from 'socket.io';
 
 export class RedisIoAdapter extends IoAdapter {
   private adapterConstructor!: ReturnType<typeof createAdapter>;
+
+  constructor(private readonly app: INestApplicationContext) {
+    super(app);
+  }
 
   async connectToRedis(url: string): Promise<void> {
     const pubClient = createClient({ url });
@@ -14,7 +20,14 @@ export class RedisIoAdapter extends IoAdapter {
   }
 
   createIOServer(port: number, options?: ServerOptions): Server {
-    const server = super.createIOServer(port, options) as Server;
+    const config = this.app.get(ConfigService);
+    const server = super.createIOServer(port, {
+      ...options,
+      cors: {
+        origin: config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000',
+        credentials: true,
+      },
+    }) as Server;
     server.adapter(this.adapterConstructor);
     return server;
   }
