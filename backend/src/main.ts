@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { AppModule } from './app.module.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter.js';
@@ -22,7 +22,12 @@ async function bootstrap() {
   });
   app.useLogger(app.get(Logger));
   app.use(helmet());
-  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads',
+    setHeaders: (res: { setHeader: (key: string, value: string) => void }, filePath: string) => {
+      res.setHeader('Content-Disposition', `attachment; filename="${basename(filePath)}"`);
+    },
+  });
 
   const config = app.get(ConfigService);
 
@@ -41,9 +46,7 @@ async function bootstrap() {
       .addCookieAuth('refresh_token')
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('api/docs', app, document, {
-      swaggerOptions: { persistAuthorization: true },
-    });
+    SwaggerModule.setup('api/docs', app, document);
   }
 
   app.enableCors({
