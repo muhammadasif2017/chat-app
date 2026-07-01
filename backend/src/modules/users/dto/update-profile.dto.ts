@@ -10,7 +10,7 @@ export class UpdateProfileDto {
   username?: string;
 
   @ApiPropertyOptional()
-  @IsUrl({ require_tld: false })
+  @IsUrl({ protocols: ['https'], require_tld: true })
   @IsOptional()
   avatarUrl?: string;
 }
