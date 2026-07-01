@@ -18,6 +18,7 @@ export class MessagesService {
 
   async findMany(conversationId: string, cursor?: string, limit = 50, q?: string) {
     if (q) {
+      // Search returns a single capped page; cursor pagination is intentionally not supported here.
       const results = await this.prisma.message.findMany({
         where: { conversationId, isDeleted: false, content: { contains: q, mode: 'insensitive' } },
         orderBy: { id: 'desc' },
