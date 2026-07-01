@@ -1,7 +1,8 @@
 # ADR-003: Two-JWT authentication with stored, hashed refresh tokens
 
 ## Status
-Accepted — updated 2026-06-28 (cookie migration)
+Accepted — updated 2026-06-28 (cookie migration). Access-token cookie storage
+superseded by ADR-008 (2026-07-01); refresh-token cookie decision still holds.
 
 ## Date
 2026-06-12
@@ -70,7 +71,7 @@ raw token.
 
 - **Pros:** Not readable by JavaScript; protected against XSS exfiltration.
 - **Cons:** Requires `SameSite` and CORS cookie configuration; complicates mobile clients.
-- ~~Rejected~~ **Implemented (2026-06-28):** Both tokens are now set as `HttpOnly; SameSite=Lax; Secure` cookies by the backend. The refresh cookie uses `path: /auth/refresh` so it is only sent on refresh requests. The frontend no longer stores tokens in localStorage or any JS-accessible storage.
+- ~~Rejected~~ **Implemented (2026-06-28), then narrowed to refresh-only (2026-07-01, ADR-008):** The refresh token is set as an `HttpOnly; SameSite=Lax; Secure` cookie with `path: /auth/refresh`, so it is only sent on refresh requests and is never readable by JS. The access token no longer uses a cookie — it is returned in the response body and sent as `Authorization: Bearer` (see ADR-008).
 
 ## Consequences
 
