@@ -16,8 +16,10 @@ export function getSocket(): Socket {
 }
 
 export function connectSocket() {
+  const token = tokenStorage.getAccess();
+  if (!token) return;
   const s = getSocket();
-  s.auth = { token: tokenStorage.getAccess() };
+  s.auth = { token };
   if (!s.connected) s.connect();
 }
 

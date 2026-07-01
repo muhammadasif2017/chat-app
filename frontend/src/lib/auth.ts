@@ -1,9 +1,14 @@
-// The access token lives in localStorage and is sent as a Bearer token.
+// The access token lives in memory only — never persisted to storage.
+// Lost on page reload; the 401 interceptor in api.ts re-acquires it via /auth/refresh.
 // The refresh token is a backend-managed HttpOnly cookie and is never stored here.
-const ACCESS_KEY = 'ca_access';
+let accessToken: string | null = null;
 
 export const tokenStorage = {
-  getAccess: () => (typeof window !== 'undefined' ? localStorage.getItem(ACCESS_KEY) : null),
-  set: (access: string) => localStorage.setItem(ACCESS_KEY, access),
-  clear: () => localStorage.removeItem(ACCESS_KEY),
+  getAccess: () => accessToken,
+  set: (access: string) => {
+    accessToken = access;
+  },
+  clear: () => {
+    accessToken = null;
+  },
 };

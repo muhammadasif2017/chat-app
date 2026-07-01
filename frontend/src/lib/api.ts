@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { tokenStorage } from './auth';
+import { connectSocket } from './socket';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -53,6 +54,7 @@ api.interceptors.response.use(
         { withCredentials: true },
       );
       tokenStorage.set(data.accessToken);
+      connectSocket();
       processQueue(null);
       original.headers.Authorization = `Bearer ${data.accessToken}`;
       return api(original);
