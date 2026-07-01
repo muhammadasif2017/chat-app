@@ -118,7 +118,10 @@ npm run lint                  # ESLint
 
 ### Backend (NestJS 11)
 
-**Module structure:** `AppModule` → `PrismaModule` (global), `AuthModule`, `UsersModule`, `ConversationsModule`, `MessagesModule`, `PresenceModule`.
+**Module structure:**
+- `infra/`: `PrismaModule`, `RedisModule`, `UploadModule`, `CleanupModule`
+- `modules/`: `AuthModule`, `UsersModule`, `ConversationsModule`, `MessagesModule`, `ChatModule` (WS gateway), `PresenceModule`
+- Cross-cutting: `ConfigModule` (global, Joi-validated env), `EventEmitterModule`, `ThrottlerModule` (HTTP rate-limit), `LoggerModule` (pino), `ScheduleModule`
 
 **Prisma 7 quirks — critical:**
 - Datasource block has **no `url` field**. Connection wired at runtime via `@prisma/adapter-pg`: `new PrismaPg({ connectionString: process.env.DATABASE_URL })` in `PrismaService`.

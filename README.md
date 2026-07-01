@@ -50,13 +50,20 @@ A full-stack real-time chat application built with NestJS, Next.js, and Socket.i
 ```bash
 git clone https://github.com/muhammadasif2017/chat-app.git
 cd chat-app
-cp backend/.env.example backend/.env   # set JWT secrets (min 32 chars each)
-docker compose up --build
+cp .env.example .env
+cp backend/.env.example backend/.env       # set JWT secrets (min 32 chars each)
+cp frontend/.env.local.example frontend/.env.local
+
+# Full stack — backend + frontend + DB + Redis
+docker compose -f docker-compose.yml \
+               -f docker-compose.backend.dev.yml \
+               -f docker-compose.frontend.dev.yml up -d
+
+# Apply DB schema on first run
+docker exec chat-app-backend-1 npx prisma db push
 ```
 
 App: http://localhost:3000 · API docs (Swagger): http://localhost:3001/api/docs
-
-On first run, the backend container automatically applies all database migrations before starting.
 
 ### Option B — Local development
 
@@ -249,50 +256,7 @@ See [`docs/decisions/`](docs/decisions/) for full context on key design choices:
 | [005](docs/decisions/005-websocket-security-and-rate-limiting.md) | WebSocket security: JWT auth on connect, server-side room membership, per-event-type rate limits |
 | [006](docs/decisions/006-conversation-ordering-and-presence.md) | Conversation ordering via `updatedAt` touch on message create; last-seen via `PresenceService.setOffline` |
 | [007](docs/decisions/007-cursor-based-pagination.md) | Cursor-based (keyset) pagination for messages — stable under concurrent inserts, O(log n) with composite index |
-
----
-
-## WebSocket API
-
-Connect to `NEXT_PUBLIC_WS_URL/chat` with `{ auth: { token: '<access_token>' } }`. The server verifies the JWT on every connection; invalid tokens are disconnected immediately.
-
-### Client → Server
-
-| Event | Payload | Rate limit |
-|---|---|---|
-| `send_message` | `{ conversationId, content?, type?, replyToId?, metadata? }` | 10 / 10 s |
-| `edit_message` | `{ messageId, content }` | 10 / 10 s |
-| `delete_message` | `{ messageId }` | 10 / 10 s |
-| `mark_read` | `{ conversationId }` | 10 / 10 s |
-| `join_conversation` | `{ conversationId }` | 10 / 10 s |
-| `add_reaction` | `{ messageId, emoji }` | 20 / 10 s |
-| `remove_reaction` | `{ messageId, emoji }` | 20 / 10 s |
-| `typing_start` | `{ conversationId }` | 30 / 10 s |
-| `typing_stop` | `{ conversationId }` | 30 / 10 s |
-| `ping` | — | 6 / 10 s |
-
-### Server → Client
-
-| Event | Payload | When |
-|---|---|---|
-| `presence_roster` | `Record<userId, boolean>` | On connect — seeds initial online state |
-| `new_message` | message object (id as string) | New message in any joined room |
-| `message_updated` | message object | Message edited |
-| `message_deleted` | message object | Message soft-deleted |
-| `reaction_added` | `{ messageId, userId, emoji, conversationId }` | Reaction added |
-| `reaction_removed` | `{ messageId, userId, emoji, conversationId }` | Reaction removed |
-| `message_read` | `{ userId, conversationId, lastReadAt }` | Someone marks conversation read |
-| `user_typing` | `{ userId, conversationId }` | Typing started |
-| `user_stopped_typing` | `{ userId, conversationId }` | Typing stopped |
-| `user_online` | `{ userId }` | User connects |
-| `user_offline` | `{ userId }` | User disconnects |
-| `new_conversation` | `{ conversationId }` | Added to a group or new DM created |
-| `member_added` | `{ conversationId, member }` | Someone joins a group |
-| `member_removed` | `{ conversationId, userId }` | Someone leaves or is removed |
-| `member_role_changed` | `{ conversationId, userId, role }` | Role updated |
-| `group_updated` | `{ conversationId, name, description }` | Group name/description changed |
-
-Rate limits use a Redis sliding-window counter per user per event class. Exceeding the limit returns a `WsException` to the emitting client.
+| [008](docs/decisions/008-access-token-bearer-body.md) | Access token delivery — response body + localStorage vs cookie |
 
 ---
 
@@ -301,24 +265,11 @@ Rate limits use a Redis sliding-window counter per user per event class. Exceedi
 ```bash
 # Backend — 116 unit tests across 8 suites
 cd backend && npm test
+cd backend && npm run test:cov   # with coverage
 
 # Frontend — 30 unit tests across 3 suites
 cd frontend && npm test
-
-# Coverage
-cd backend && npm run test:cov
 ```
-
-Key coverage areas:
-- **Auth service** — token issuance, bcrypt hashing, refresh-token rotation, revocation
-- **Chat gateway** — JWT auth on connect (invalid token, missing cookie, unknown user), rate-limit enforcement, membership guard, BigInt serialization, reaction upsert + broadcast
-- **Conversations service** — member checks, unread batch query, DM deduplication, role enforcement
-- **Messages service** — content sanitization, soft-delete, `updatedAt` touch on create, cursor pagination
-- **Presence service** — Redis key writes/deletes with correct TTLs, pipeline EXISTS batch query, typing indicators
-- **Users service** — search query and profile lookup
-- **Frontend hooks** — TanStack Query cache updates for real-time messages, `setQueriesData` predicate behaviour
-- **Frontend utils** — `formatRelativeTime`, `formatDaySeparator`, `cn`, `getInitials`
-- **Frontend components** — `MessageItem` conditional rendering: SYSTEM events, soft-deleted display, edited label, sender attribution
 
 ---
 
@@ -373,15 +324,6 @@ docs: add setup instructions for Redis
 Pre-commit runs automatically:
 - **Backend** — `tsc --noEmit` then `prettier --write` + `eslint --fix` on staged `.ts` files
 - **Frontend** — `prettier --write` + `eslint --fix` on staged `.ts`/`.tsx` files
-
-### Branch workflow
-
-```bash
-git checkout -b feat/your-feature
-# make changes, commit
-git push origin feat/your-feature
-# open a pull request against main
-```
 
 CI runs lint, type-check, and tests on every pull request.
 
