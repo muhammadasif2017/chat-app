@@ -215,20 +215,7 @@ export class ConversationsService {
 
   async addMember(conversationId: string, requesterId: string, targetUserId: string) {
     await this.assertAdminOrOwner(conversationId, requesterId);
-    const member = await (async () => {
-      try {
-        return await this.prisma.conversationMember.create({
-          data: { conversationId, userId: targetUserId, role: 'MEMBER' },
-          include: { user: SENDER_SELECT },
-        });
-      } catch (err) {
-        if (err instanceof Prisma.PrismaClientKnownRequestError) {
-          if (err.code === 'P2003') throw new BadRequestException('User does not exist');
-          if (err.code === 'P2002') throw new BadRequestException('User is already a member');
-        }
-        throw err;
-      }
-    })();
+    const member = await this.createMember(conversationId, targetUserId);
     const systemMessage = await this.prisma.message.create({
       data: {
         conversationId,
@@ -364,6 +351,21 @@ export class ConversationsService {
       throw err;
     }
     return lastReadAt;
+  }
+
+  private async createMember(conversationId: string, userId: string) {
+    try {
+      return await this.prisma.conversationMember.create({
+        data: { conversationId, userId, role: 'MEMBER' },
+        include: { user: SENDER_SELECT },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        if (err.code === 'P2003') throw new BadRequestException('User does not exist');
+        if (err.code === 'P2002') throw new BadRequestException('User is already a member');
+      }
+      throw err;
+    }
   }
 
   private async assertAdminOrOwner(conversationId: string, userId: string) {
