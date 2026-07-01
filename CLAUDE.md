@@ -1,75 +1,75 @@
 # CLAUDE.md
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+Behavioral guidelines cut common LLM coding mistakes. Merge with project-specific instructions as needed.
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+**Tradeoff:** Guidelines bias toward caution over speed. Trivial tasks: use judgment.
 
 ## 1. Think Before Coding
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+**No assume. No hide confusion. Surface tradeoffs.**
 
 Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+- State assumptions explicitly. Uncertain → ask.
+- Multiple interpretations → present all, don't pick silently.
+- Simpler approach exists → say so. Push back when warranted.
+- Unclear → stop. Name what confuses. Ask.
 
 ## 2. Simplicity First
 
-**Minimum code that solves the problem. Nothing speculative.**
+**Minimum code. Nothing speculative.**
 
-- No features beyond what was asked.
+- No features beyond what asked.
 - No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
+- No unrequested "flexibility" or "configurability".
 - No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+- 200 lines when 50 works → rewrite.
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+Ask: "Would senior engineer call this overcomplicated?" If yes, simplify.
 
 ## 3. Surgical Changes
 
-**Touch only what you must. Clean up only your own mess.**
+**Touch only what must. Clean only own mess.**
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+Editing existing code:
+- Don't "improve" adjacent code, comments, formatting.
+- Don't refactor unbroken things.
+- Match existing style even if you'd do different.
+- Notice unrelated dead code → mention, don't delete.
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
+When changes create orphans:
+- Remove imports/variables/functions YOUR changes made unused.
 - Don't remove pre-existing dead code unless asked.
 
-The test: Every changed line should trace directly to the user's request.
+Test: every changed line traces directly to user's request.
 
 ## 4. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
 
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+Transform tasks to verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make pass"
+- "Fix the bug" → "Write test reproducing it, then make pass"
 - "Refactor X" → "Ensure tests pass before and after"
 
-For multi-step tasks, state a brief plan:
+Multi-step tasks, state brief plan:
 ```
 1. [Step] → verify: [check]
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
 ```
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+Strong criteria → loop independently. Weak criteria ("make it work") → constant clarification.
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+**Guidelines working if:** fewer unnecessary diff changes, fewer rewrites from overcomplication, clarifying questions before implementation not after mistakes.
 
 
 ## Commands
 
 ### Infrastructure
 
-Compose files: `docker-compose.yml` is the base. Overlay with one of:
+Compose files: `docker-compose.yml` is base. Overlay with one of:
 - `docker-compose.backend.dev.yml` — adds backend + exposes DB/Redis ports to host
 - `docker-compose.frontend.dev.yml` — adds frontend (hot-reload)
 - `docker-compose.prod.yml` — production builds, restart policies, healthchecks
@@ -90,9 +90,9 @@ docker compose -f docker-compose.yml -f docker-compose.backend.dev.yml -f docker
 docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 ```
 
-**Note:** DB data persists in the `postgres_data` named volume across restarts. Only `down -v` deletes it.
+**Note:** DB data persists in `postgres_data` named volume across restarts. Only `down -v` deletes it.
 
-**Note:** On Windows/WSL2 Docker Desktop, postgres port `5433` binds to `127.0.0.1` inside the engine — `docker ps` won't show it but it is bound. Run migrations via `docker exec` if host can't reach it:
+**Note:** On Windows/WSL2 Docker Desktop, postgres port `5433` binds to `127.0.0.1` inside engine — `docker ps` won't show it but bound. Run migrations via `docker exec` if host can't reach:
 ```bash
 docker exec chat-app-backend-1 npx prisma db push
 ```
@@ -121,14 +121,14 @@ npm run lint                  # ESLint
 **Module structure:** `AppModule` → `PrismaModule` (global), `AuthModule`, `UsersModule`, `ConversationsModule`, `MessagesModule`, `PresenceModule`.
 
 **Prisma 7 quirks — critical:**
-- The datasource block has **no `url` field**. Connection wired at runtime via `@prisma/adapter-pg`: `new PrismaPg({ connectionString: process.env.DATABASE_URL })` in `PrismaService`.
+- Datasource block has **no `url` field**. Connection wired at runtime via `@prisma/adapter-pg`: `new PrismaPg({ connectionString: process.env.DATABASE_URL })` in `PrismaService`.
 - After every `prisma migrate dev`, run `prisma generate`.
-- `prisma.config.ts` at the backend root is required.
+- `prisma.config.ts` at backend root required.
 
 **Auth flow:**
 - Global `JwtAuthGuard` protects all routes; opt out with `@Public()`.
-- Two JWTs: access (15 min, `JWT_SECRET`) + refresh (7 days, `JWT_REFRESH_SECRET`). Refresh tokens are bcrypt-hashed in DB.
-- `issueTokens()` signs both tokens, hashes+stores refresh, returns the pair.
+- Two JWTs: access (15 min, `JWT_SECRET`) + refresh (7 days, `JWT_REFRESH_SECRET`). Refresh tokens bcrypt-hashed in DB.
+- `issueTokens()` signs both, hashes+stores refresh, returns pair.
 
 **WebSocket:**
 - `ChatGateway` on namespace `/chat` using `@nestjs/websockets` + Socket.io.
@@ -145,7 +145,7 @@ npm run lint                  # ESLint
 - Route groups `(auth)` and `(dashboard)` do **not** add path segments.
 
 **Auth state:**
-1. `lib/auth.ts` — empty; auth tokens are HTTP-only cookies set by the backend. No localStorage.
+1. `lib/auth.ts` — empty; auth tokens are HTTP-only cookies set by backend. No localStorage.
 2. `store/auth.store.ts` — Zustand + persist for `user`, `isAuthenticated`; sets `ca_authed=1` non-HttpOnly cookie for middleware route guard.
 3. `lib/api.ts` — Axios instance with `withCredentials: true`; response interceptor handles 401 → POST `/auth/refresh` → retry.
 
@@ -159,5 +159,3 @@ npm run lint                  # ESLint
 - Rate limit WS message events (10/10s per user via Redis sliding window).
 - Sanitize message content server-side before storage (`sanitize-html`).
 - Never log message content — log userId, conversationId, size only.
-
-
