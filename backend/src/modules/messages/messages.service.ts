@@ -48,22 +48,24 @@ export class MessagesService {
     const content = dto.content
       ? sanitizeHtml(dto.content, { allowedTags: [], allowedAttributes: {} })
       : null;
-    const message = await this.prisma.message.create({
-      data: {
-        conversationId: dto.conversationId,
-        senderId,
-        content,
-        type: (dto.type as MessageType) ?? MessageType.TEXT,
-        metadata: dto.metadata as Record<string, string> | undefined,
-        replyToId: dto.replyToId ? BigInt(dto.replyToId) : undefined,
-      },
-      include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
+    return this.prisma.$transaction(async (tx) => {
+      const message = await tx.message.create({
+        data: {
+          conversationId: dto.conversationId,
+          senderId,
+          content,
+          type: (dto.type as MessageType) ?? MessageType.TEXT,
+          metadata: dto.metadata as Record<string, string> | undefined,
+          replyToId: dto.replyToId ? BigInt(dto.replyToId) : undefined,
+        },
+        include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
+      });
+      await tx.conversation.update({
+        where: { id: dto.conversationId },
+        data: { updatedAt: new Date() },
+      });
+      return message;
     });
-    await this.prisma.conversation.update({
-      where: { id: dto.conversationId },
-      data: { updatedAt: new Date() },
-    });
-    return message;
   }
 
   async softDelete(messageId: string, userId: string) {

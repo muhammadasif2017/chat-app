@@ -27,7 +27,7 @@ function fakeMessage(overrides: Record<string, unknown> = {}) {
 }
 
 function makePrisma() {
-  return {
+  const prisma = {
     message: {
       findMany: jest.fn().mockResolvedValue([]),
       findUnique: jest.fn().mockResolvedValue(null),
@@ -37,7 +37,10 @@ function makePrisma() {
     conversation: {
       update: jest.fn().mockResolvedValue({}),
     },
-  } as unknown as import('../../infra/prisma/prisma.service.js').PrismaService;
+    $transaction: jest.fn(),
+  };
+  prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(prisma));
+  return prisma as unknown as import('../../infra/prisma/prisma.service.js').PrismaService;
 }
 
 type FakePrisma = ReturnType<typeof makePrisma>;
