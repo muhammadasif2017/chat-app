@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import sanitizeHtml from 'sanitize-html';
 import { MessageType } from '@prisma/client';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
@@ -50,6 +55,16 @@ export class MessagesService {
       ? sanitizeHtml(dto.content, { allowedTags: [], allowedAttributes: {} })
       : null;
     return this.prisma.$transaction(async (tx) => {
+      if (dto.replyToId) {
+        const ref = await tx.message.findUnique({
+          where: { id: BigInt(dto.replyToId) },
+          select: { conversationId: true },
+        });
+        if (!ref || ref.conversationId !== dto.conversationId) {
+          throw new BadRequestException('Invalid replyToId');
+        }
+      }
+
       const message = await tx.message.create({
         data: {
           conversationId: dto.conversationId,
