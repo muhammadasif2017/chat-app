@@ -21,6 +21,8 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: (user, accessToken) => {
         tokenStorage.set(accessToken);
+        // ca_authed is a UX-only route guard for the Next.js proxy — not a security boundary.
+        // It cannot be HttpOnly (set client-side). All data access is protected by the backend JWT.
         const secure = window.location.protocol === 'https:' ? '; Secure' : '';
         document.cookie = `ca_authed=1; path=/; max-age=604800; SameSite=Lax${secure}`;
         set({ user, isAuthenticated: true });
