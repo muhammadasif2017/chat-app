@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { tokenStorage } from './auth';
 import { connectSocket } from './socket';
+import { useAuthStore } from '../store/auth.store';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -39,6 +40,7 @@ api.interceptors.response.use(
       return new Promise<void>((resolve, reject) => {
         failedQueue.push({ resolve, reject });
       }).then(() => {
+        original._retry = true;
         original.headers.Authorization = `Bearer ${tokenStorage.getAccess()}`;
         return api(original);
       });
@@ -60,8 +62,7 @@ api.interceptors.response.use(
       return api(original);
     } catch (err) {
       processQueue(err);
-      tokenStorage.clear();
-      document.cookie = 'ca_authed=; path=/; max-age=0';
+      useAuthStore.getState().logout();
       window.location.href = '/login';
       return Promise.reject(err);
     } finally {

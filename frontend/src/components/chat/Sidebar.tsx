@@ -112,16 +112,22 @@ export function Sidebar() {
   const { data: conversations = [] } = useConversations();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showNewDm, setShowNewDm] = useState(false);
+  const [logoutError, setLogoutError] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const channels = conversations.filter((c) => c.type === 'CHANNEL');
   const groups = conversations.filter((c) => c.type === 'GROUP');
   const dms = conversations.filter((c) => c.type === 'DIRECT');
 
   const handleLogout = async () => {
+    setLogoutError(false);
+    setLoggingOut(true);
     try {
       await api.post('/auth/logout');
     } catch {
-      /* ignore */
+      setLogoutError(true);
+      setLoggingOut(false);
+      return;
     }
     logout();
     window.location.href = '/login';
@@ -154,6 +160,11 @@ export function Sidebar() {
         )}
       </nav>
 
+      {logoutError && (
+        <p className="px-3 py-1 text-xs text-red-400 bg-red-900/20 border-t border-red-900/30">
+          Sign-out failed. Try again.
+        </p>
+      )}
       <div className="border-t border-sidebar-border px-3 py-3 flex items-center gap-2.5">
         <Link href="/profile" title="Profile settings" className="flex-shrink-0">
           <Avatar username={user?.username ?? '?'} avatarUrl={user?.avatarUrl} size="sm" />
@@ -163,8 +174,9 @@ export function Sidebar() {
         </div>
         <button
           onClick={handleLogout}
+          disabled={loggingOut}
           title="Sign out"
-          className="flex-shrink-0 p-1 rounded text-sidebar-fg hover:text-sidebar-fg-active hover:bg-white/10 transition-colors"
+          className="flex-shrink-0 p-1 rounded text-sidebar-fg hover:text-sidebar-fg-active hover:bg-white/10 transition-colors disabled:opacity-50"
           aria-label="Sign out"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -32,7 +32,8 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         tokenStorage.clear();
-        document.cookie = 'ca_authed=; path=/; max-age=0';
+        const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `ca_authed=; path=/; max-age=0; SameSite=Lax${secure}`;
         set({ user: null, isAuthenticated: false });
       },
     }),
