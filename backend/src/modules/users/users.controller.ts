@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
-import { ApiCookieAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 
 @ApiTags('Users')
-@ApiCookieAuth('access_token')
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}

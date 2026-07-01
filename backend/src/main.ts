@@ -37,7 +37,8 @@ async function bootstrap() {
         'Real-time chat platform REST API. WebSocket events are documented in the README.',
       )
       .setVersion('1.0')
-      .addCookieAuth('access_token')
+      .addBearerAuth()
+      .addCookieAuth('refresh_token')
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('api/docs', app, document, {

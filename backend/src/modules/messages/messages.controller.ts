@@ -6,13 +6,13 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { ApiCookieAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MessagesService } from './messages.service.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ConversationsService } from '../conversations/conversations.service.js';
 
 @ApiTags('Messages')
-@ApiCookieAuth('access_token')
+@ApiBearerAuth()
 @Controller('conversations/:id/messages')
 export class MessagesController {
   constructor(

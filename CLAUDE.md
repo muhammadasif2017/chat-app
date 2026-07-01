@@ -129,11 +129,12 @@ npm run lint                  # ESLint
 - Global `JwtAuthGuard` protects all routes; opt out with `@Public()`.
 - Two JWTs: access (15 min, `JWT_SECRET`) + refresh (7 days, `JWT_REFRESH_SECRET`). Refresh tokens bcrypt-hashed in DB.
 - `issueTokens()` signs both, hashes+stores refresh, returns pair.
+- Access token returned in the response body; client sends it as `Authorization: Bearer`. Refresh token is an HttpOnly cookie (`refresh_token`, path `/auth/refresh`) — the only auth cookie.
 
 **WebSocket:**
 - `ChatGateway` on namespace `/chat` using `@nestjs/websockets` + Socket.io.
 - Redis adapter (`@socket.io/redis-adapter`) via `RedisIoAdapter` for multi-instance pub/sub.
-- JWT read from `access_token` cookie on `handleConnection`; user attached to `socket.data.userId`.
+- JWT read from `handshake.auth.token` on `handleConnection`; user attached to `socket.data.userId`.
 - Room membership verified server-side on every WS event — never trust client-declared conversation IDs.
 
 **TypeScript imports:** All source imports use `.js` extensions (`import { X } from './foo.js'`). Intentional — NestJS ESM convention.
@@ -145,12 +146,12 @@ npm run lint                  # ESLint
 - Route groups `(auth)` and `(dashboard)` do **not** add path segments.
 
 **Auth state:**
-1. `lib/auth.ts` — empty; auth tokens are HTTP-only cookies set by backend. No localStorage.
-2. `store/auth.store.ts` — Zustand + persist for `user`, `isAuthenticated`; sets `ca_authed=1` non-HttpOnly cookie for middleware route guard.
-3. `lib/api.ts` — Axios instance with `withCredentials: true`; response interceptor handles 401 → POST `/auth/refresh` → retry.
+1. `lib/auth.ts` — `tokenStorage` keeps the access token in `localStorage` (`ca_access`). Refresh token is a backend HttpOnly cookie, never stored client-side.
+2. `store/auth.store.ts` — Zustand + persist for `user`, `isAuthenticated`; `setAuth(user, accessToken)` stores the access token and sets `ca_authed=1` non-HttpOnly cookie for middleware route guard.
+3. `lib/api.ts` — Axios instance with `withCredentials: true` (for the refresh cookie); request interceptor attaches `Authorization: Bearer`; response interceptor handles 401 → POST `/auth/refresh` → store new access token → retry.
 
 **WebSocket:**
-- `lib/socket.ts` — singleton `io()` connecting to `NEXT_PUBLIC_WS_URL/chat` with `withCredentials: true` (sends `access_token` cookie automatically).
+- `lib/socket.ts` — singleton `io()` connecting to `NEXT_PUBLIC_WS_URL/chat`, passing the access token via `auth: { token }` (refreshed on each `connectSocket()`).
 - `hooks/useChat.ts` — subscribes to all WS events (`new_message`, `reaction_added/removed`, `member_added/removed`, `group_updated`, `message_read`, `user_typing`, etc.); updates TanStack Query cache.
 
 **Data fetching:** TanStack Query v5, `staleTime: 60_000`. Cursor-based infinite queries for message history.

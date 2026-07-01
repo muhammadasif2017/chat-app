@@ -13,11 +13,10 @@ const USER_ID = 'user-uuid';
 const CONV_ID = 'conv-uuid';
 const MSG_ID = '1';
 
-function makeSocket(cookieToken?: string): Socket {
-  const cookie = cookieToken ? `access_token=${cookieToken}` : '';
+function makeSocket(token?: string): Socket {
   return {
     data: {},
-    handshake: { headers: { cookie } },
+    handshake: { auth: token ? { token } : {} },
     disconnect: jest.fn(),
     join: jest.fn().mockResolvedValue(undefined),
     emit: jest.fn(),
@@ -109,7 +108,7 @@ function makeGateway() {
 }
 
 describe('ChatGateway.handleConnection', () => {
-  it('disconnects when no access_token cookie present', async () => {
+  it('disconnects when no access_token present', async () => {
     const { gateway } = makeGateway();
     const socket = makeSocket();
     await gateway.handleConnection(socket);

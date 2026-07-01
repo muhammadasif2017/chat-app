@@ -1,8 +1,17 @@
 import axios from 'axios';
+import { tokenStorage } from './auth';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const token = tokenStorage.getAccess();
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 let isRefreshing = false;
@@ -28,22 +37,28 @@ api.interceptors.response.use(
     if (isRefreshing) {
       return new Promise<void>((resolve, reject) => {
         failedQueue.push({ resolve, reject });
-      }).then(() => api(original));
+      }).then(() => {
+        original.headers.Authorization = `Bearer ${tokenStorage.getAccess()}`;
+        return api(original);
+      });
     }
 
     original._retry = true;
     isRefreshing = true;
 
     try {
-      await axios.post(
+      const { data } = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
         {},
         { withCredentials: true },
       );
+      tokenStorage.set(data.accessToken);
       processQueue(null);
+      original.headers.Authorization = `Bearer ${data.accessToken}`;
       return api(original);
     } catch (err) {
       processQueue(err);
+      tokenStorage.clear();
       document.cookie = 'ca_authed=; path=/; max-age=0';
       window.location.href = '/login';
       return Promise.reject(err);

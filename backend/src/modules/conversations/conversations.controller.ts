@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ConversationsService } from './conversations.service.js';
 import { AddMemberDto } from './dto/add-member.dto.js';
 import { CreateConversationDto } from './dto/create-conversation.dto.js';
@@ -9,7 +9,7 @@ import { UpdateMemberRoleDto } from './dto/update-member-role.dto.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 
 @ApiTags('Conversations')
-@ApiCookieAuth('access_token')
+@ApiBearerAuth()
 @Controller('conversations')
 export class ConversationsController {
   constructor(private conversationsService: ConversationsService) {}

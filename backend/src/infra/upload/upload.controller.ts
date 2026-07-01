@@ -5,7 +5,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiCookieAuth, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -17,7 +17,7 @@ import { fileTypeFromFile } from 'file-type';
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
 @ApiTags('Upload')
-@ApiCookieAuth('access_token')
+@ApiBearerAuth()
 @Controller('upload')
 export class UploadController {
   @ApiOperation({ summary: 'Upload an image file (max 10 MB; jpeg/png/gif/webp only)' })
