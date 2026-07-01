@@ -5,6 +5,28 @@ import { PrismaService } from '../../infra/prisma/prisma.service.js';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  // Includes the password hash — the only method that does. For credential verification only.
+  findByEmailWithPassword(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  findByEmailOrUsername(email: string, username: string) {
+    return this.prisma.user.findFirst({
+      where: { OR: [{ email }, { username }] },
+    });
+  }
+
+  create(data: { username: string; email: string; password: string }) {
+    return this.prisma.user.create({ data });
+  }
+
+  findPublicById(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, username: true, email: true, avatarUrl: true },
+    });
+  }
+
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

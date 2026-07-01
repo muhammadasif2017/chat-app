@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import ms, { type StringValue } from 'ms';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { UsersService } from '../users/users.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class AuthService implements OnModuleInit {
 
   constructor(
     private prisma: PrismaService,
+    private users: UsersService,
     private jwt: JwtService,
     private config: ConfigService,
   ) {}
@@ -23,23 +25,23 @@ export class AuthService implements OnModuleInit {
   }
 
   async validateLocalUser(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.users.findByEmailWithPassword(email);
     const hash = user?.password ?? this.dummyHash;
     const matches = await bcrypt.compare(password, hash);
     return user && matches ? user : null;
   }
 
   async register(dto: RegisterDto) {
-    const exists = await this.prisma.user.findFirst({
-      where: { OR: [{ email: dto.email }, { username: dto.username }] },
-    });
+    const exists = await this.users.findByEmailOrUsername(dto.email, dto.username);
     if (exists) {
       throw new BadRequestException('Email or username already in use');
     }
 
     const hashed = await bcrypt.hash(dto.password, 10);
-    const user = await this.prisma.user.create({
-      data: { username: dto.username, email: dto.email, password: hashed },
+    const user = await this.users.create({
+      username: dto.username,
+      email: dto.email,
+      password: hashed,
     });
 
     const tokens = await this.issueTokens(user.id, user.email);
@@ -50,10 +52,7 @@ export class AuthService implements OnModuleInit {
   }
 
   async login(userId: string, email: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, username: true, email: true, avatarUrl: true },
-    });
+    const user = await this.users.findPublicById(userId);
     const tokens = await this.issueTokens(userId, email);
     return { ...tokens, user };
   }

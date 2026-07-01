@@ -15,11 +15,6 @@ const JTI = 'jti-uuid';
 
 function makePrisma() {
   return {
-    user: {
-      findFirst: jest.fn().mockResolvedValue(null),
-      findUnique: jest.fn().mockResolvedValue(null),
-      create: jest.fn(),
-    },
     refreshToken: {
       findUnique: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue({}),
@@ -30,6 +25,17 @@ function makePrisma() {
 }
 
 type FakePrisma = ReturnType<typeof makePrisma>;
+
+function makeUsers() {
+  return {
+    findByEmailWithPassword: jest.fn().mockResolvedValue(null),
+    findByEmailOrUsername: jest.fn().mockResolvedValue(null),
+    create: jest.fn(),
+    findPublicById: jest.fn().mockResolvedValue(null),
+  } as unknown as import('../users/users.service.js').UsersService;
+}
+
+type FakeUsers = ReturnType<typeof makeUsers>;
 
 function makeJwt() {
   return {
@@ -47,16 +53,16 @@ function makeConfig() {
   return { get: (k: string) => env[k] } as unknown as import('@nestjs/config').ConfigService;
 }
 
-async function makeService(prisma: FakePrisma = makePrisma()) {
-  const svc = new AuthService(prisma, makeJwt(), makeConfig());
+async function makeService(prisma: FakePrisma = makePrisma(), users: FakeUsers = makeUsers()) {
+  const svc = new AuthService(prisma, users, makeJwt(), makeConfig());
   await svc.onModuleInit();
-  return { svc, prisma };
+  return { svc, prisma, users };
 }
 
 describe('AuthService.register', () => {
   it('throws BadRequestException when email already exists', async () => {
-    const { svc, prisma } = await makeService();
-    (prisma.user.findFirst as jest.Mock).mockResolvedValue({
+    const { svc, users } = await makeService();
+    (users.findByEmailOrUsername as jest.Mock).mockResolvedValue({
       id: USER_ID,
       email: EMAIL,
       username: 'taken',
@@ -68,8 +74,8 @@ describe('AuthService.register', () => {
   });
 
   it('throws BadRequestException when username already exists', async () => {
-    const { svc, prisma } = await makeService();
-    (prisma.user.findFirst as jest.Mock).mockResolvedValue({
+    const { svc, users } = await makeService();
+    (users.findByEmailOrUsername as jest.Mock).mockResolvedValue({
       id: USER_ID,
       email: 'other@example.com',
       username: 'taken',
@@ -81,8 +87,8 @@ describe('AuthService.register', () => {
   });
 
   it('returns user without password field', async () => {
-    const { svc, prisma } = await makeService();
-    (prisma.user.create as jest.Mock).mockResolvedValue({
+    const { svc, users } = await makeService();
+    (users.create as jest.Mock).mockResolvedValue({
       id: USER_ID,
       username: 'alice',
       email: EMAIL,
@@ -97,18 +103,16 @@ describe('AuthService.register', () => {
   });
 
   it('stores a bcrypt hash, not the raw password', async () => {
-    const { svc, prisma } = await makeService();
-    (prisma.user.create as jest.Mock).mockImplementation(({ data }) =>
+    const { svc, users } = await makeService();
+    (users.create as jest.Mock).mockImplementation((data) =>
       Promise.resolve({ id: USER_ID, ...data, avatarUrl: null }),
     );
 
     await svc.register({ username: 'alice', email: EMAIL, password: RAW_PASSWORD });
 
-    const createCall = (
-      (prisma.user.create as jest.Mock).mock.calls[0] as [{ data: { password: string } }]
-    )[0];
-    expect(createCall.data.password).not.toBe(RAW_PASSWORD);
-    const isHashed = await bcrypt.compare(RAW_PASSWORD, createCall.data.password);
+    const createArg = ((users.create as jest.Mock).mock.calls[0] as [{ password: string }])[0];
+    expect(createArg.password).not.toBe(RAW_PASSWORD);
+    const isHashed = await bcrypt.compare(RAW_PASSWORD, createArg.password);
     expect(isHashed).toBe(true);
   });
 });
@@ -134,9 +138,9 @@ describe('AuthService.validateLocalUser', () => {
   });
 
   it('returns null when password does not match', async () => {
-    const { svc, prisma } = await makeService();
+    const { svc, users } = await makeService();
     const hashed = await bcrypt.hash('correctpassword', 10);
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+    (users.findByEmailWithPassword as jest.Mock).mockResolvedValue({
       id: USER_ID,
       email: EMAIL,
       password: hashed,
@@ -147,9 +151,9 @@ describe('AuthService.validateLocalUser', () => {
   });
 
   it('returns user when credentials are valid', async () => {
-    const { svc, prisma } = await makeService();
+    const { svc, users } = await makeService();
     const hashed = await bcrypt.hash(RAW_PASSWORD, 10);
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+    (users.findByEmailWithPassword as jest.Mock).mockResolvedValue({
       id: USER_ID,
       email: EMAIL,
       password: hashed,
@@ -162,8 +166,8 @@ describe('AuthService.validateLocalUser', () => {
 
 describe('AuthService.login', () => {
   it('returns user profile and token pair', async () => {
-    const { svc, prisma } = await makeService();
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+    const { svc, users } = await makeService();
+    (users.findPublicById as jest.Mock).mockResolvedValue({
       id: USER_ID,
       username: 'alice',
       email: EMAIL,
