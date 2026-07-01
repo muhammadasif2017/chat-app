@@ -22,6 +22,7 @@ import { WsExceptionFilter } from '../../common/filters/ws-exception.filter.js';
 import { SendMessageDto } from '../messages/dto/send-message.dto.js';
 import { EditMessageDto } from '../messages/dto/edit-message.dto.js';
 import { REDIS_CLIENT } from '../../infra/redis/redis.module.js';
+import { extractCookie } from '../../common/utils/extract-cookie.js';
 import { ConversationIdDto, MessageIdDto, ReactionDto } from './dto/ws-events.dto.js';
 
 @UseFilters(WsExceptionFilter)
@@ -81,12 +82,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     try {
-      const cookieStr = (client.handshake.headers.cookie as string) ?? '';
-      const match = cookieStr
-        .split(';')
-        .map((c) => c.trim())
-        .find((c) => c.startsWith('access_token='));
-      const token = match ? match.slice('access_token='.length) : undefined;
+      const token = extractCookie(client.handshake.headers.cookie, 'access_token');
       if (!token) return client.disconnect();
 
       const payload = this.jwt.verify<{ sub: string; email: string }>(token, {
