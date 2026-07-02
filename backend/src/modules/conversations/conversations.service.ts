@@ -253,7 +253,26 @@ export class ConversationsService {
       const ownerCount = await this.prisma.conversationMember.count({
         where: { conversationId, role: 'OWNER' },
       });
-      if (ownerCount <= 1) throw new BadRequestException('Cannot remove the only owner');
+      if (ownerCount <= 1) {
+        if (requesterId !== targetUserId) {
+          throw new BadRequestException('Cannot remove the only owner');
+        }
+        const successor = await this.prisma.conversationMember.findFirst({
+          where: { conversationId, userId: { not: targetUserId } },
+          orderBy: { joinedAt: 'asc' },
+        });
+        if (successor) {
+          await this.prisma.conversationMember.update({
+            where: { conversationId_userId: { conversationId, userId: successor.userId } },
+            data: { role: 'OWNER' },
+          });
+          this.events.emit('internal.member.role_changed', {
+            conversationId,
+            userId: successor.userId,
+            role: 'OWNER',
+          });
+        }
+      }
     }
 
     await this.prisma.conversationMember.delete({

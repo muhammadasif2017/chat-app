@@ -14,7 +14,7 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class MessageMetadataDto {
-  @IsUrl({ protocols: ['https'], require_tld: true })
+  @IsUrl({ require_tld: false })
   url: string;
 }
 

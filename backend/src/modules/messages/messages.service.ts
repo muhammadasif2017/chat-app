@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import sanitizeHtml from 'sanitize-html';
-import { MessageType } from '@prisma/client';
+import { MessageType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
 
@@ -89,11 +89,12 @@ export class MessagesService {
       where: { id: BigInt(messageId) },
     });
     if (!msg) throw new NotFoundException();
+    if (msg.type === 'SYSTEM') throw new ForbiddenException();
     if (msg.senderId !== userId) throw new ForbiddenException();
 
     return this.prisma.message.update({
       where: { id: BigInt(messageId) },
-      data: { isDeleted: true, content: null },
+      data: { isDeleted: true, content: null, metadata: Prisma.DbNull },
       include: { sender: SENDER_SELECT, reactions: REACTION_SELECT },
     });
   }
@@ -103,6 +104,7 @@ export class MessagesService {
       where: { id: BigInt(messageId) },
     });
     if (!msg) throw new NotFoundException();
+    if (msg.type === 'SYSTEM') throw new ForbiddenException();
     if (msg.senderId !== userId) throw new ForbiddenException();
 
     const sanitized = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} });

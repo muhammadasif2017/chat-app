@@ -13,6 +13,7 @@ export const loggerConfig: Params = {
       'req.body.password',
       'req.body.refreshToken',
       'req.body.content',
+      'res.headers["set-cookie"]',
     ],
   },
 };

@@ -31,6 +31,7 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
   const mock = {
     conversationMember: {
       findUnique: jest.fn(),
+      findFirst: jest.fn().mockResolvedValue(null),
       findMany: jest.fn().mockResolvedValue([]),
       update: jest.fn().mockResolvedValue({}),
       count: jest.fn().mockResolvedValue(1),
@@ -424,17 +425,42 @@ describe('ConversationsService.updateMemberRole', () => {
 });
 
 describe('ConversationsService.removeMember', () => {
-  it('throws BadRequestException when removing the only OWNER', async () => {
+  it('throws BadRequestException when someone else tries to remove the only OWNER', async () => {
     const prisma = makePrisma();
     prisma.conversationMember.findUnique
-      .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')) // assertAdminOrOwner skipped (self)
+      .mockResolvedValueOnce(makeMember(ADMIN_ID, 'ADMIN')) // assertAdminOrOwner
       .mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')); // target lookup
     prisma.conversationMember.count.mockResolvedValue(1);
     const svc = makeService(prisma);
 
-    await expect(svc.removeMember(CONV_ID, OWNER_ID, OWNER_ID)).rejects.toThrow(
+    await expect(svc.removeMember(CONV_ID, ADMIN_ID, OWNER_ID)).rejects.toThrow(
       BadRequestException,
     );
+  });
+
+  it('promotes the next member and lets the only OWNER leave', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findUnique.mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')); // target lookup (self-removal skips assertAdminOrOwner)
+    prisma.conversationMember.count.mockResolvedValue(1);
+    prisma.conversationMember.findFirst.mockResolvedValue(makeMember(MEMBER_ID, 'MEMBER'));
+    const svc = makeService(prisma);
+
+    await expect(svc.removeMember(CONV_ID, OWNER_ID, OWNER_ID)).resolves.not.toThrow();
+    expect(prisma.conversationMember.update).toHaveBeenCalledWith({
+      where: { conversationId_userId: { conversationId: CONV_ID, userId: MEMBER_ID } },
+      data: { role: 'OWNER' },
+    });
+  });
+
+  it('lets the only OWNER leave with no successor when they are the last member', async () => {
+    const prisma = makePrisma();
+    prisma.conversationMember.findUnique.mockResolvedValueOnce(makeMember(OWNER_ID, 'OWNER')); // target lookup (self-removal skips assertAdminOrOwner)
+    prisma.conversationMember.count.mockResolvedValue(1);
+    prisma.conversationMember.findFirst.mockResolvedValue(null);
+    const svc = makeService(prisma);
+
+    await expect(svc.removeMember(CONV_ID, OWNER_ID, OWNER_ID)).resolves.not.toThrow();
+    expect(prisma.conversationMember.update).not.toHaveBeenCalled();
   });
 
   it('allows a member to remove themselves', async () => {
