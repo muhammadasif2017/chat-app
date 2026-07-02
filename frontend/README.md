@@ -14,5 +14,5 @@ npm test           # unit tests
 ## Notes
 
 - Route protection via `proxy.ts` (not `middleware.ts`) — Next.js 16 convention.
-- Access token stored in `localStorage` (`ca_access`); refresh token is an HttpOnly cookie managed by the backend.
+- Access token held in memory only (lost on reload, re-acquired via `/auth/refresh`); refresh token is an HttpOnly cookie managed by the backend.
 - Before writing any Next.js code, check `node_modules/next/dist/docs/` — this version has breaking API changes.

@@ -147,15 +147,17 @@ npm run lint                  # ESLint
 **Routing:**
 - `proxy.ts` (not `middleware.ts`) with `export function proxy()` — Next.js 16 convention. Protects routes via `ca_authed` cookie.
 - Route groups `(auth)` and `(dashboard)` do **not** add path segments.
+- `proxy.ts` also mints a per-request CSP nonce and sets `Content-Security-Policy` on every response path (login redirect, authed redirect, pass-through) — required because Next's inline RSC hydration scripts need `'nonce-{value}'`, which can only be generated per-request, not baked into `next.config.ts`. See ADR-010.
 
 **Auth state:**
-1. `lib/auth.ts` — `tokenStorage` keeps the access token in `localStorage` (`ca_access`). Refresh token is a backend HttpOnly cookie, never stored client-side.
+1. `lib/auth.ts` — `tokenStorage` keeps the access token in an in-memory variable only (lost on reload, re-acquired via `/auth/refresh`). Refresh token is a backend HttpOnly cookie, never stored client-side. See ADR-009.
 2. `store/auth.store.ts` — Zustand + persist for `user`, `isAuthenticated`; `setAuth(user, accessToken)` stores the access token and sets `ca_authed=1` non-HttpOnly cookie for middleware route guard.
-3. `lib/api.ts` — Axios instance with `withCredentials: true` (for the refresh cookie); request interceptor attaches `Authorization: Bearer`; response interceptor handles 401 → POST `/auth/refresh` → store new access token → retry.
+3. `lib/api.ts` — Axios instance with `withCredentials: true` (for the refresh cookie); request interceptor attaches `Authorization: Bearer`; response interceptor handles 401 → `refreshAccessToken()` → POST `/auth/refresh` → store new access token → retry. `refreshAccessToken()` is exported and shared with `useSocket.ts`'s reconnect path so an expired token doesn't trigger two concurrent refreshes.
 
 **WebSocket:**
-- `lib/socket.ts` — singleton `io()` connecting to `NEXT_PUBLIC_WS_URL/chat`, passing the access token via `auth: { token }` (refreshed on each `connectSocket()`).
+- `lib/socket.ts` — singleton `io()` connecting to `NEXT_PUBLIC_WS_URL/chat`, passing the access token via `auth: { token }` (refreshed on each `connectSocket()`); `emitReliable()` wraps emits with an ack timeout and a delivery-failure toast.
 - `hooks/useChat.ts` — subscribes to all WS events (`new_message`, `reaction_added/removed`, `member_added/removed`, `group_updated`, `message_read`, `user_typing`, etc.); updates TanStack Query cache.
+- `hooks/useSocket.ts` — on server-initiated disconnect (expired token), manually refreshes and reconnects (socket.io's auto-reconnect doesn't fire for that disconnect reason); on any reconnect after a real disconnect, invalidates the `conversations`/`messages` query caches to resync missed events; surfaces gateway `error` events and connection-outage state via `store/toast.store.ts`. See ADR-011.
 
 **Data fetching:** TanStack Query v5, `staleTime: 60_000`. Cursor-based infinite queries for message history.
 

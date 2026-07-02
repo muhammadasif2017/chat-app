@@ -1,7 +1,9 @@
 # ADR-008: Access token in response body + Bearer auth (reverses cookie storage)
 
 ## Status
-Accepted — supersedes the access-token half of ADR-003's cookie migration (2026-06-28)
+Accepted — supersedes the access-token half of ADR-003's cookie migration (2026-06-28).
+Its client-storage choice (`localStorage`) is superseded by ADR-009 (2026-07-01); the
+body+Bearer transport decision below still holds.
 
 ## Date
 2026-07-01
@@ -34,7 +36,7 @@ Split the two tokens by transport:
 
 | Token | Lifetime | Transport | Client storage |
 |---|---|---|---|
-| Access | 15 min | Returned in login/register/refresh **response body** | `localStorage` (`ca_access`), sent as `Authorization: Bearer` |
+| Access | 15 min | Returned in login/register/refresh **response body** | `localStorage` (`ca_access`) at the time — see ADR-009 for the current storage location |
 | Refresh | 7 days | `HttpOnly; SameSite=Lax; Secure` cookie, path `/auth/refresh` | none (browser-managed) |
 
 Concretely:
@@ -75,6 +77,7 @@ Concretely:
   before any request can be made; WS reconnect races the refresh.
 - **Rejected:** Adds a refresh dependency to cold loads for marginal gain over a
   15-minute token; can revisit if XSS hardening demands it.
+- **Revisited (2026-07-01, ADR-009):** adopted after all — see ADR-009.
 
 ## Consequences
 
