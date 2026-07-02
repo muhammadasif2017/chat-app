@@ -1,4 +1,3 @@
-// pg-types returns BigInt as strings via pg; patch to guard against future behaviour changes
 (BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function (this: bigint) {
   return this.toString();
 };

@@ -10,7 +10,6 @@ import { RegisterDto } from './dto/register.dto.js';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
-  // Computed once at startup; ensures bcrypt.compare always runs to prevent timing-based email enumeration
   private dummyHash!: string;
 
   constructor(
@@ -60,8 +59,6 @@ export class AuthService implements OnModuleInit {
   async refresh(userId: string, email: string, rawRefreshToken: string, jti: string) {
     const stored = await this.prisma.refreshToken.findUnique({ where: { id: jti } });
     if (!stored || stored.userId !== userId || stored.expiresAt < new Date()) {
-      // jti not found after a valid JWT signature means the token was already rotated —
-      // a second presenter means one copy was stolen. Revoke all sessions for this user.
       await this.prisma.refreshToken.deleteMany({ where: { userId } });
       throw new ForbiddenException();
     }

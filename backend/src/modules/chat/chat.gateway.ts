@@ -150,7 +150,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
 
     this.server.to(`conversation:${dto.conversationId}`).emit('new_message', serialized);
-    return { event: 'message_sent', data: serialized };
+    return serialized;
   }
 
   @SubscribeMessage('edit_message')
@@ -165,7 +165,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       replyToId: message.replyToId != null ? String(message.replyToId) : null,
     };
     this.server.to(`conversation:${message.conversationId}`).emit('message_updated', serialized);
-    return { event: 'message_edited', data: serialized };
+    return serialized;
   }
 
   @SubscribeMessage('delete_message')
@@ -183,7 +183,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       replyToId: message.replyToId != null ? String(message.replyToId) : null,
     };
     this.server.to(`conversation:${message.conversationId}`).emit('message_deleted', serialized);
-    return { event: 'message_deleted_ack', data: serialized };
+    return serialized;
   }
 
   @SubscribeMessage('typing_start')
@@ -261,6 +261,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server
       .to(`conversation:${conversationId}`)
       .emit('reaction_added', { messageId, userId, emoji, conversationId });
+    return { ok: true };
   }
 
   @SubscribeMessage('remove_reaction')
@@ -277,6 +278,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server
       .to(`conversation:${conversationId}`)
       .emit('reaction_removed', { messageId, userId, emoji, conversationId });
+    return { ok: true };
   }
 
   @OnEvent('internal.group.created')

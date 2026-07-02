@@ -250,6 +250,5 @@ describe('MessagesService.findMany', () => {
     expect(call[0].where.content.contains).toBe('hello');
   });
 
-  // suppress unused variable warning for SENDER_SELECT_SHAPE
   void SENDER_SELECT_SHAPE;
 });

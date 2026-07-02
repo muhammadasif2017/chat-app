@@ -32,7 +32,6 @@ describe('RegisterDto.password', () => {
 
 describe('RegisterDto.email', () => {
   it('accepts email exactly 254 characters — RFC 5321 max', async () => {
-    // 'a@' + b62.b62.b62.b60.bb = 2+62+1+62+1+62+1+60+3 = 254, all labels ≤63
     const domain =
       'b'.repeat(62) + '.' + 'b'.repeat(62) + '.' + 'b'.repeat(62) + '.' + 'b'.repeat(60) + '.bb';
     const email = 'a@' + domain;
@@ -42,7 +41,6 @@ describe('RegisterDto.email', () => {
   });
 
   it('rejects email longer than 254 characters', async () => {
-    // 'aa@' + same domain = 255 chars
     const domain =
       'b'.repeat(62) + '.' + 'b'.repeat(62) + '.' + 'b'.repeat(62) + '.' + 'b'.repeat(60) + '.bb';
     const email = 'aa@' + domain;
