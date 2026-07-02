@@ -17,6 +17,10 @@ const authThrottle = {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  // Only the refresh token is a cookie. The access token is returned in the response
+  // body and sent by the client as a Bearer token.
+  // SameSite=Lax assumes frontend and backend share a registrable domain in prod.
+  // If they're on separate eTLD+1s, switch to SameSite=None + Secure.
   private setRefreshCookie(res: Response, refreshToken: string): void {
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,

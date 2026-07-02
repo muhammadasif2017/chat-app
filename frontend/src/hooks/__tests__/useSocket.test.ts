@@ -11,6 +11,7 @@ jest.mock('../../lib/socket', () => ({
   connectSocket: jest.fn(),
   disconnectSocket: jest.fn(),
   getSocket: jest.fn(),
+  markGatewayErrorHandled: jest.fn(),
 }));
 
 jest.mock('../../lib/api', () => ({
@@ -51,7 +52,7 @@ describe('useSocket', () => {
     qc = new QueryClient();
     invalidateSpy = jest.spyOn(qc, 'invalidateQueries');
     wrapper = ({ children }) => createElement(QueryClientProvider, { client: qc }, children);
-    useToastStore.setState({ message: null, lastShownAt: 0 });
+    useToastStore.setState({ message: null });
   });
 
   it('connects and subscribes to lifecycle events on mount', () => {

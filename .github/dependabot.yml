@@ -6,6 +6,9 @@ updates:
       interval: weekly
     groups:
       backend-dependencies:
+        update-types:
+          - minor
+          - patch
         patterns:
           - "*"
 
@@ -15,6 +18,9 @@ updates:
       interval: weekly
     groups:
       frontend-dependencies:
+        update-types:
+          - minor
+          - patch
         patterns:
           - "*"
 

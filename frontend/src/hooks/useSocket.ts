@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { connectSocket, disconnectSocket, getSocket } from '../lib/socket';
+import { connectSocket, disconnectSocket, getSocket, markGatewayErrorHandled } from '../lib/socket';
 import { refreshAccessToken } from '../lib/api';
 import { useAuthStore } from '../store/auth.store';
 import { useToastStore } from '../store/toast.store';
@@ -42,6 +42,7 @@ export function useSocket(): void {
     // The gateway emits 'error' for rejected actions (rate limit, not a member,
     // session expired, validation) — surface it instead of failing silently.
     const onError = ({ message }: { message: string | string[] }) => {
+      markGatewayErrorHandled();
       useToastStore.getState().show(Array.isArray(message) ? message.join(', ') : message);
     };
 
