@@ -1,34 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f0f1f3;
+  --foreground: #1b1d22;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-body: var(--font-body);
+  --font-display: var(--font-display);
+  --font-meta: var(--font-meta);
 
-  /* Sidebar */
-  --color-sidebar: #0f1117;
-  --color-sidebar-border: #1e2130;
-  --color-sidebar-fg: #8892a4;
-  --color-sidebar-fg-active: #f1f5f9;
+  /* Logbook palette */
+  --color-paper: #f0f1f3;
+  --color-paper-raised: #ffffff;
+  --color-ink: #1b1d22;
+  --color-muted: #6b6e76;
+  --color-rule: #d9dadc;
 
-  /* Accent — orange */
-  --color-accent: #f97316;
-  --color-accent-dark: #ea6c0c;
-  --color-accent-subtle: #fff7ed;
-  --color-accent-text: #c2410c;
+  --color-cobalt: #2b3f8c;
+  --color-cobalt-dark: #22326f;
+  --color-cobalt-subtle: #e7eaf6;
 
-  /* Content */
-  --color-surface: #fafaf9;
+  --color-ember: #e0562e;
+  --color-ember-subtle: #fbe9e3;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes signal-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.signal-ring {
+  animation: signal-pulse 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-ring {
+    animation: none;
+    opacity: 0;
+  }
 }

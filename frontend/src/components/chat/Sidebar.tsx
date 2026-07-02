@@ -46,16 +46,16 @@ function ConvLink({
   return (
     <Link
       href={`/conversations/${conv.id}`}
-      className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+      className={`flex items-center gap-2.5 pl-2.5 pr-3 py-1.5 border-l-2 text-sm transition-colors ${
         isActive
-          ? 'bg-white/8 text-sidebar-fg-active font-medium'
-          : 'text-sidebar-fg hover:bg-white/5 hover:text-sidebar-fg-active'
+          ? 'border-cobalt bg-cobalt-subtle text-ink font-medium'
+          : 'border-transparent text-muted hover:border-rule hover:text-ink'
       }`}
     >
       {otherMember && <PresenceIndicator online={isOnline} />}
       <span className="truncate flex-1">{conv.type === 'CHANNEL' ? `# ${label}` : label}</span>
       {conv.unreadCount > 0 && (
-        <span className="ml-auto bg-accent text-white text-[10px] font-semibold rounded-full px-1.5 py-0.5 leading-none tabular-nums">
+        <span className="ml-auto font-meta text-[10px] font-medium text-ember bg-ember-subtle rounded px-1.5 py-0.5 leading-none tabular-nums">
           {conv.unreadCount}
         </span>
       )}
@@ -79,8 +79,8 @@ function Section({
   if (!items.length && !action) return null;
   return (
     <div className="mb-5">
-      <div className="flex items-center px-3 mb-1">
-        <p className="flex-1 text-[11px] font-semibold text-sidebar-fg uppercase tracking-widest">
+      <div className="flex items-center pl-2.5 pr-3 mb-1">
+        <p className="flex-1 font-meta text-[10px] font-medium text-muted uppercase tracking-widest">
           {title}
         </p>
         {action}
@@ -99,7 +99,7 @@ function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
     <button
       onClick={onClick}
       aria-label={label}
-      className="w-4 h-4 rounded flex items-center justify-center text-sidebar-fg hover:text-sidebar-fg-active hover:bg-white/10 transition-colors text-sm leading-none"
+      className="w-4 h-4 rounded flex items-center justify-center text-muted hover:text-cobalt hover:bg-cobalt-subtle transition-colors text-sm leading-none"
     >
       +
     </button>
@@ -134,9 +134,12 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-full flex-shrink-0">
-      <div className="px-4 py-4 border-b border-sidebar-border">
-        <h1 className="text-sidebar-fg-active font-semibold text-base tracking-tight">Chat App</h1>
+    <aside className="w-64 bg-paper border-r border-rule flex flex-col h-full flex-shrink-0">
+      <div className="px-4 py-4 border-b border-rule flex items-center gap-2">
+        <span className="w-2 h-2 bg-cobalt flex-shrink-0" aria-hidden="true" />
+        <h1 className="font-display font-semibold text-base tracking-tight text-ink uppercase">
+          Chat App
+        </h1>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-4">
@@ -156,27 +159,27 @@ export function Sidebar() {
           action={<AddButton onClick={() => setShowNewDm(true)} label="New direct message" />}
         />
         {!conversations.length && (
-          <p className="px-3 text-xs text-gray-500">No conversations yet.</p>
+          <p className="pl-2.5 pr-3 text-xs text-muted">No conversations yet.</p>
         )}
       </nav>
 
       {logoutError && (
-        <p className="px-3 py-1 text-xs text-red-400 bg-red-900/20 border-t border-red-900/30">
+        <p className="px-3 py-1 text-xs font-meta text-ember bg-ember-subtle border-t border-rule">
           Sign-out failed. Try again.
         </p>
       )}
-      <div className="border-t border-sidebar-border px-3 py-3 flex items-center gap-2.5">
+      <div className="border-t border-rule px-3 py-3 flex items-center gap-2.5">
         <Link href="/profile" title="Profile settings" className="flex-shrink-0">
           <Avatar username={user?.username ?? '?'} avatarUrl={user?.avatarUrl} size="sm" />
         </Link>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-sidebar-fg-active truncate">{user?.username}</p>
+          <p className="text-sm font-medium text-ink truncate">{user?.username}</p>
         </div>
         <button
           onClick={handleLogout}
           disabled={loggingOut}
           title="Sign out"
-          className="flex-shrink-0 p-1 rounded text-sidebar-fg hover:text-sidebar-fg-active hover:bg-white/10 transition-colors disabled:opacity-50"
+          className="flex-shrink-0 p-1 rounded text-muted hover:text-cobalt hover:bg-cobalt-subtle transition-colors disabled:opacity-50"
           aria-label="Sign out"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

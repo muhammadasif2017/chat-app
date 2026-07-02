@@ -15,10 +15,10 @@ export default function DashboardError({
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center p-8">
-      <p className="text-gray-500 text-sm">Something went wrong.</p>
+      <p className="text-muted text-sm">Something went wrong.</p>
       <button
         onClick={reset}
-        className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent-dark transition-colors"
+        className="rounded bg-cobalt px-4 py-2 text-sm text-paper-raised hover:bg-cobalt-dark transition-colors"
       >
         Try again
       </button>

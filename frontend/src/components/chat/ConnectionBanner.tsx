@@ -11,11 +11,11 @@ export function ConnectionBanner() {
     <div
       role="status"
       aria-live="polite"
-      className={`px-4 py-1.5 text-xs font-medium text-center ${
-        status === 'connecting' ? 'bg-yellow-400 text-yellow-900' : 'bg-red-500 text-white'
+      className={`px-4 py-1.5 text-xs font-meta tracking-wide text-center ${
+        status === 'connecting' ? 'bg-ember-subtle text-ember' : 'bg-ember text-paper-raised'
       }`}
     >
-      {status === 'connecting' ? 'Reconnecting…' : 'Disconnected — check your connection'}
+      {status === 'connecting' ? 'RECONNECTING…' : 'DISCONNECTED — CHECK YOUR CONNECTION'}
     </div>
   );
 }

@@ -70,7 +70,7 @@ export default function ConversationPage({ params }: Props) {
 
   if (status === 'pending') {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading…</div>
+      <div className="flex-1 flex items-center justify-center text-muted text-sm">Loading…</div>
     );
   }
 
@@ -80,7 +80,7 @@ export default function ConversationPage({ params }: Props) {
 
   if (!conversation) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+      <div className="flex-1 flex items-center justify-center text-muted text-sm">
         Something went wrong
       </div>
     );

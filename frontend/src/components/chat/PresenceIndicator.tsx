@@ -6,7 +6,15 @@ export function PresenceIndicator({ online }: PresenceIndicatorProps) {
   return (
     <span
       title={online ? 'Online' : 'Offline'}
-      className={`inline-block w-2 h-2 rounded-full ${online ? 'bg-green-500' : 'bg-gray-300'}`}
-    />
+      className="relative inline-flex items-center justify-center w-2 h-2 flex-shrink-0"
+    >
+      {online && (
+        <span
+          className="signal-ring absolute w-1.5 h-1.5 rounded-full bg-ember"
+          aria-hidden="true"
+        />
+      )}
+      <span className={`relative w-1.5 h-1.5 rounded-full ${online ? 'bg-ember' : 'bg-rule'}`} />
+    </span>
   );
 }

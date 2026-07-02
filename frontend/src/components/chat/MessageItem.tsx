@@ -6,6 +6,7 @@ import { Avatar } from '../ui/Avatar';
 import { formatTime } from '../../lib/utils';
 import { getSocket } from '../../lib/socket';
 import { useAuthStore } from '../../store/auth.store';
+import { usePresenceStore } from '../../store/presence.store';
 import type { ConversationMember, Message } from '../../types';
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
@@ -29,6 +30,7 @@ export function MessageItem({
   replyToMessage,
 }: MessageItemProps) {
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const isSenderOnline = usePresenceStore((s) => s.presence[message.senderId] ?? false);
   const seenBy = isOwn
     ? (members?.filter(
         (m) =>
@@ -63,7 +65,7 @@ export function MessageItem({
           : 'System message';
     return (
       <div className="flex justify-center px-4 py-2">
-        <span className="text-xs text-gray-500 italic">{text}</span>
+        <span className="font-meta text-xs text-muted">{text}</span>
       </div>
     );
   }
@@ -72,7 +74,7 @@ export function MessageItem({
     return (
       <div className="flex gap-3 px-4 py-1">
         <div className="w-7 flex-shrink-0" />
-        <p className="text-xs text-gray-500 italic self-center">Message deleted</p>
+        <p className="font-meta text-xs text-muted self-center">Message deleted</p>
       </div>
     );
   }
@@ -100,10 +102,10 @@ export function MessageItem({
   };
 
   return (
-    <div className={`flex gap-3 px-4 ${isGrouped ? 'py-0.5' : 'py-1'} hover:bg-gray-50 group`}>
+    <div className={`flex gap-3 px-4 ${isGrouped ? 'py-0.5' : 'py-1'} hover:bg-paper group`}>
       <div className="flex-shrink-0 w-7 mt-0.5 relative">
         {isGrouped ? (
-          <span className="absolute right-0 top-0.5 text-[9px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <span className="absolute right-0 top-0.5 font-meta text-[9px] text-muted opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             {formatTime(message.createdAt)}
           </span>
         ) : (
@@ -111,6 +113,7 @@ export function MessageItem({
             username={message.sender.username}
             avatarUrl={message.sender.avatarUrl}
             size="sm"
+            online={isSenderOnline}
           />
         )}
       </div>
@@ -119,9 +122,9 @@ export function MessageItem({
         {/* Header row — only for first message in a group */}
         {!isGrouped && (
           <div className="flex items-baseline gap-2 mb-0.5">
-            <span className="text-sm font-semibold text-gray-900">{message.sender.username}</span>
-            <span className="text-xs text-gray-500">{formatTime(message.createdAt)}</span>
-            {message.isEdited && <span className="text-xs text-gray-500">(edited)</span>}
+            <span className="text-sm font-semibold text-ink">{message.sender.username}</span>
+            <span className="font-meta text-xs text-muted">{formatTime(message.createdAt)}</span>
+            {message.isEdited && <span className="font-meta text-xs text-muted">(edited)</span>}
 
             {!isEditing && (
               <div className="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -130,13 +133,13 @@ export function MessageItem({
                   <button
                     onClick={() => setShowEmojiPicker((v) => !v)}
                     title="React"
-                    className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 text-xs transition-colors"
+                    className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors"
                   >
                     😊
                   </button>
                   {showEmojiPicker && (
                     <div
-                      className="absolute bottom-7 right-0 z-20 bg-white rounded-xl shadow-lg border border-gray-200 p-1.5 flex gap-1"
+                      className="absolute bottom-7 right-0 z-20 bg-paper-raised rounded-lg shadow-lg border border-rule p-1.5 flex gap-1"
                       onMouseLeave={() => setShowEmojiPicker(false)}
                     >
                       {QUICK_EMOJIS.map((emoji) => (
@@ -160,7 +163,7 @@ export function MessageItem({
                   <button
                     onClick={onReply}
                     title="Reply"
-                    className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 text-xs transition-colors"
+                    className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors"
                   >
                     ↩
                   </button>
@@ -171,7 +174,7 @@ export function MessageItem({
                   <div className="relative">
                     <button
                       onClick={() => setShowMenu((v) => !v)}
-                      className="p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors leading-none"
+                      className="p-1 rounded text-muted hover:text-ink hover:bg-rule transition-colors leading-none"
                     >
                       <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                         <circle cx="4" cy="10" r="1.5" />
@@ -181,13 +184,13 @@ export function MessageItem({
                     </button>
                     {showMenu && (
                       <div
-                        className="absolute right-0 top-7 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-28 z-10"
+                        className="absolute right-0 top-7 bg-paper-raised rounded-lg shadow-lg border border-rule py-1 w-28 z-10"
                         onMouseLeave={() => setShowMenu(false)}
                       >
                         {message.type !== 'IMAGE' && (
                           <button
                             onClick={handleEdit}
-                            className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                            className="w-full text-left px-3 py-1.5 text-sm text-ink hover:bg-paper"
                           >
                             Edit
                           </button>
@@ -222,30 +225,24 @@ export function MessageItem({
                 if (e.key === 'Escape') setIsEditing(false);
               }}
               rows={2}
-              className="rounded-lg border border-orange-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              className="rounded border border-cobalt px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-cobalt resize-none"
             />
             <div className="flex gap-2 text-xs">
-              <button
-                onClick={handleSaveEdit}
-                className="text-orange-600 font-medium hover:underline"
-              >
+              <button onClick={handleSaveEdit} className="text-cobalt font-medium hover:underline">
                 Save
               </button>
-              <span className="text-gray-300">·</span>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
+              <span className="text-rule">·</span>
+              <button onClick={() => setIsEditing(false)} className="text-muted hover:text-ink">
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <div className="text-sm text-gray-800 whitespace-pre-wrap break-words max-w-2xl">
+          <div className="text-sm text-ink whitespace-pre-wrap break-words max-w-2xl">
             {/* reply context */}
             {replyToMessage && (
-              <div className="mb-1.5 pl-2.5 border-l-2 border-gray-300 text-xs text-gray-500 truncate">
-                <span className="font-medium text-gray-700">{replyToMessage.sender.username}</span>
+              <div className="mb-1.5 pl-2.5 border-l-2 border-rule text-xs text-muted truncate">
+                <span className="font-medium text-ink">{replyToMessage.sender.username}</span>
                 {': '}
                 {replyToMessage.isDeleted
                   ? 'Message deleted'
@@ -255,7 +252,7 @@ export function MessageItem({
               </div>
             )}
             {message.replyToId && !replyToMessage && (
-              <div className="mb-1.5 pl-2.5 border-l-2 border-gray-300 text-xs text-gray-500">
+              <div className="mb-1.5 pl-2.5 border-l-2 border-rule text-xs text-muted">
                 Reply to earlier message
               </div>
             )}
@@ -290,10 +287,10 @@ export function MessageItem({
                       emoji,
                     })
                   }
-                  className={`flex items-center gap-1 text-xs rounded-full px-2 py-0.5 border transition-colors ${
+                  className={`flex items-center gap-1 font-meta text-xs rounded px-2 py-0.5 border transition-colors ${
                     reacted
-                      ? 'bg-orange-50 border-orange-200 text-orange-700'
-                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                      ? 'bg-cobalt-subtle border-cobalt text-cobalt'
+                      : 'bg-paper-raised border-rule text-muted hover:bg-paper'
                   }`}
                 >
                   {emoji} {userIds.length}
@@ -312,7 +309,7 @@ export function MessageItem({
               </span>
             ))}
             {seenBy.length > MAX_RECEIPT_AVATARS && (
-              <span className="text-[10px] text-gray-500 ml-0.5">
+              <span className="font-meta text-[10px] text-muted ml-0.5">
                 +{seenBy.length - MAX_RECEIPT_AVATARS}
               </span>
             )}

@@ -52,15 +52,15 @@ export function NewDmModal({ onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden"
+        className="bg-paper-raised rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">New Direct Message</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-rule">
+          <h2 className="font-display text-base font-semibold text-ink">New Direct Message</h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -80,23 +80,23 @@ export function NewDmModal({ onClose }: Props) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by username or email…"
             disabled={loading}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent disabled:opacity-50"
+            className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors disabled:opacity-50"
           />
         </div>
 
         {displayedResults.length > 0 && (
-          <ul className="border-t border-gray-100 max-h-52 overflow-y-auto divide-y divide-gray-50">
+          <ul className="border-t border-rule max-h-52 overflow-y-auto divide-y divide-rule">
             {displayedResults.map((u) => (
               <li key={u.id}>
                 <button
                   onClick={() => handleSelect(u)}
                   disabled={loading}
-                  className="flex items-center gap-3 w-full px-5 py-2.5 text-sm hover:bg-gray-50 text-left disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-3 w-full px-5 py-2.5 text-sm hover:bg-paper text-left disabled:opacity-50 transition-colors"
                 >
                   <Avatar username={u.username} avatarUrl={u.avatarUrl} size="sm" />
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{u.username}</p>
-                    <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                    <p className="font-medium text-ink truncate">{u.username}</p>
+                    <p className="text-xs text-muted truncate">{u.email}</p>
                   </div>
                 </button>
               </li>
@@ -105,12 +105,12 @@ export function NewDmModal({ onClose }: Props) {
         )}
 
         {query.trim() && displayedResults.length === 0 && (
-          <p className="px-5 py-4 text-sm text-gray-400 text-center border-t border-gray-100">
+          <p className="px-5 py-4 text-sm text-muted text-center border-t border-rule">
             No users found.
           </p>
         )}
 
-        <div className="px-5 py-3 border-t border-gray-100" />
+        <div className="px-5 py-3 border-t border-rule" />
       </div>
     </div>
   );

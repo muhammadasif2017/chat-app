@@ -58,14 +58,14 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
       >
         {[...Array(6)].map((_, i) => (
           <div key={i} className="flex gap-3 py-1">
-            <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse flex-shrink-0 mt-0.5" />
+            <div className="w-7 h-7 rounded-full bg-rule animate-pulse flex-shrink-0 mt-0.5" />
             <div className="flex flex-col gap-1.5 flex-1">
               <div className="flex items-baseline gap-2">
-                <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
-                <div className="h-2.5 w-10 bg-gray-100 rounded animate-pulse" />
+                <div className="h-3 w-20 bg-rule rounded animate-pulse" />
+                <div className="h-2.5 w-10 bg-paper rounded animate-pulse" />
               </div>
               <div
-                className="h-4 bg-gray-100 rounded animate-pulse"
+                className="h-4 bg-paper rounded animate-pulse"
                 style={{ width: `${30 + ((i * 37) % 50)}%` }}
               />
             </div>
@@ -81,13 +81,13 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
         <button
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
-          className="mx-auto my-2 text-xs text-orange-600 hover:underline disabled:opacity-50 px-3 py-1 rounded-full hover:bg-orange-50 transition-colors"
+          className="mx-auto my-2 font-meta text-xs text-cobalt hover:underline disabled:opacity-50 px-3 py-1 rounded hover:bg-cobalt-subtle transition-colors"
         >
           {isFetchingNextPage ? 'Loading…' : 'Load earlier messages'}
         </button>
       )}
       {isSearching && allMessages.length === 0 && (
-        <p className="text-sm text-gray-500 text-center mt-8">No messages found.</p>
+        <p className="text-sm text-muted text-center mt-8">No messages found.</p>
       )}
       {allMessages.map((msg, i) => {
         const prevMsg = allMessages[i - 1];
@@ -112,11 +112,11 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
           >
             {showSeparator && (
               <div className="flex items-center gap-3 px-4 py-3">
-                <div className="flex-1 border-t border-gray-200" />
-                <span className="text-xs text-gray-500 font-medium">
-                  {formatDaySeparator(msg.createdAt)}
+                <div className="flex-1 border-t border-rule" />
+                <span className="font-meta text-[10px] font-medium text-muted uppercase tracking-widest">
+                  — {formatDaySeparator(msg.createdAt)} —
                 </span>
-                <div className="flex-1 border-t border-gray-200" />
+                <div className="flex-1 border-t border-rule" />
               </div>
             )}
             <MessageItem

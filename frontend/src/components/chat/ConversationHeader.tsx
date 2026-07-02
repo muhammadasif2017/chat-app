@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Conversation } from '../../types';
 import { usePresenceStore } from '../../store/presence.store';
 import { formatRelativeTime } from '../../lib/utils';
+import { PresenceIndicator } from './PresenceIndicator';
 
 interface ConversationHeaderProps {
   conversation: Conversation;
@@ -42,12 +43,15 @@ export function ConversationHeader({
       : `${conversation.members.length} members`;
 
   return (
-    <div className="border-b border-gray-200 px-4 py-3 flex items-center gap-3 bg-white">
+    <div className="border-b border-rule px-4 py-3 flex items-center gap-3 bg-paper-raised">
       <div className="flex-1 min-w-0">
-        <h2 className="font-semibold text-gray-900 truncate">
+        <h2 className="font-display font-semibold text-ink truncate">
           {conversation.type === 'CHANNEL' ? `# ${title}` : title}
         </h2>
-        <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+        <p className="flex items-center gap-1.5 text-xs text-muted mt-0.5">
+          {conversation.type === 'DIRECT' && <PresenceIndicator online={isOtherOnline} />}
+          {subtitle}
+        </p>
       </div>
 
       <div className="flex items-center gap-1 flex-shrink-0">
@@ -63,7 +67,7 @@ export function ConversationHeader({
               }
             }}
             placeholder="Search messages…"
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 w-48"
+            className="border border-rule rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt w-48"
           />
         )}
 
@@ -72,10 +76,10 @@ export function ConversationHeader({
             onClick={onToggleMembers}
             aria-label={showMembers ? 'Hide members' : 'Show members'}
             title={showMembers ? 'Hide members' : 'Show members'}
-            className={`p-1.5 rounded-lg transition-colors ${
+            className={`p-1.5 rounded transition-colors ${
               showMembers
-                ? 'bg-orange-50 text-orange-600'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                ? 'bg-cobalt-subtle text-cobalt'
+                : 'text-muted hover:text-ink hover:bg-paper'
             }`}
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,10 +100,8 @@ export function ConversationHeader({
           }}
           aria-label={showSearch ? 'Close search' : 'Search messages'}
           title={showSearch ? 'Close search' : 'Search messages'}
-          className={`p-1.5 rounded-lg transition-colors ${
-            showSearch
-              ? 'bg-orange-50 text-orange-600'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+          className={`p-1.5 rounded transition-colors ${
+            showSearch ? 'bg-cobalt-subtle text-cobalt' : 'text-muted hover:text-ink hover:bg-paper'
           }`}
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

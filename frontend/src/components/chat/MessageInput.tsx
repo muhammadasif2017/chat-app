@@ -76,9 +76,9 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
   return (
     <div className="px-4 pb-4 pt-2">
       {replyTo && (
-        <div className="flex items-center gap-2 mb-2 pl-3 border-l-2 border-orange-400 bg-orange-50 rounded-r-lg pr-3 py-1.5">
-          <span className="flex-1 truncate text-xs text-gray-600">
-            Replying to <span className="font-medium text-gray-800">{replyTo.sender.username}</span>
+        <div className="flex items-center gap-2 mb-2 pl-3 border-l-2 border-cobalt bg-cobalt-subtle rounded-r pr-3 py-1.5">
+          <span className="flex-1 truncate text-xs text-muted">
+            Replying to <span className="font-medium text-ink">{replyTo.sender.username}</span>
             {': '}
             {replyTo.isDeleted
               ? 'Message deleted'
@@ -88,7 +88,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           </span>
           <button
             onClick={onCancelReply}
-            className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+            className="flex-shrink-0 text-muted hover:text-ink"
             title="Cancel reply"
             aria-label="Cancel reply"
           >
@@ -104,13 +104,13 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
         </div>
       )}
 
-      <div className="flex items-end gap-2 border border-gray-200 rounded-xl bg-white px-3 py-2 focus-within:border-orange-300 focus-within:ring-1 focus-within:ring-orange-200 transition-colors">
+      <div className="flex items-end gap-2 border border-rule rounded-lg bg-paper-raised px-3 py-2 focus-within:border-cobalt focus-within:ring-1 focus-within:ring-cobalt transition-colors">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
           title="Attach image"
           aria-label="Attach image"
-          className="flex-shrink-0 text-gray-500 hover:text-gray-700 disabled:opacity-40 transition-colors"
+          className="flex-shrink-0 text-muted hover:text-ink disabled:opacity-40 transition-colors"
         >
           {uploading ? (
             <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -162,14 +162,14 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           }}
           rows={1}
           placeholder="Type a message…"
-          className="flex-1 bg-transparent resize-none text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none max-h-32"
+          className="flex-1 bg-transparent resize-none text-sm text-ink placeholder:text-muted focus:outline-none max-h-32"
         />
 
         <button
           onClick={sendMessage}
           disabled={!value.trim()}
           aria-label="Send message"
-          className="flex-shrink-0 bg-accent text-white rounded-lg p-1.5 hover:bg-accent-dark disabled:opacity-40 transition-colors"
+          className="flex-shrink-0 bg-cobalt text-paper-raised rounded p-1.5 hover:bg-cobalt-dark disabled:opacity-40 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -183,11 +183,13 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
       </div>
 
       {uploadError && (
-        <p role="alert" className="text-xs text-red-500 mt-1 px-1">
+        <p role="alert" className="text-xs text-red-600 mt-1 px-1">
           {uploadError}
         </p>
       )}
-      <p className="text-[11px] text-gray-500 mt-1 px-1">Enter to send · Shift+Enter for newline</p>
+      <p className="font-meta text-[11px] text-muted mt-1 px-1">
+        Enter to send · Shift+Enter for newline
+      </p>
     </div>
   );
 }

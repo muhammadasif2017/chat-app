@@ -1,9 +1,9 @@
 export default function HomePage() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mb-5">
+      <div className="w-16 h-16 rounded-2xl bg-cobalt-subtle flex items-center justify-center mb-5">
         <svg
-          className="w-8 h-8 text-orange-500"
+          className="w-8 h-8 text-cobalt"
           fill="none"
           stroke="currentColor"
           strokeWidth={1.5}
@@ -17,8 +17,8 @@ export default function HomePage() {
         </svg>
       </div>
 
-      <h2 className="text-lg font-semibold text-gray-900 mb-2">Your messages live here</h2>
-      <p className="text-sm text-gray-500 max-w-xs leading-relaxed mb-6">
+      <h2 className="font-display text-lg font-semibold text-ink mb-2">Your messages live here</h2>
+      <p className="text-sm text-muted max-w-xs leading-relaxed mb-6">
         Pick a channel, group, or direct message from the sidebar to start chatting.
       </p>
 
@@ -71,10 +71,10 @@ function FeatureRow({
   description: string;
 }) {
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
-      <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
+    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-paper border border-rule">
+      <div className="w-8 h-8 rounded bg-paper-raised border border-rule flex items-center justify-center flex-shrink-0">
         <svg
-          className="w-4 h-4 text-orange-500"
+          className="w-4 h-4 text-cobalt"
           fill="none"
           stroke="currentColor"
           strokeWidth={1.5}
@@ -84,8 +84,8 @@ function FeatureRow({
         </svg>
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-medium text-gray-900">{label}</p>
-        <p className="text-xs text-gray-500">{description}</p>
+        <p className="text-sm font-medium text-ink">{label}</p>
+        <p className="text-xs text-muted">{description}</p>
       </div>
     </div>
   );

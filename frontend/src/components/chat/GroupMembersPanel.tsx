@@ -97,13 +97,13 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
   };
 
   return (
-    <div className="w-72 border-l border-gray-200 flex flex-col bg-white h-full flex-shrink-0">
-      <div className="px-4 py-3.5 border-b border-gray-200 flex items-center justify-between">
-        <span className="font-semibold text-sm text-gray-900">Members</span>
+    <div className="w-72 border-l border-rule flex flex-col bg-paper-raised h-full flex-shrink-0">
+      <div className="px-4 py-3.5 border-b border-rule flex items-center justify-between">
+        <span className="font-display font-semibold text-sm text-ink">Members</span>
         <button
           onClick={onClose}
           aria-label="Close members panel"
-          className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          className="p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -117,7 +117,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       </div>
 
       {error && (
-        <div className="mx-3 mt-3 flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+        <div className="mx-3 mt-3 flex items-start gap-2 border-l-2 border-red-400 bg-red-50 px-3 py-2 text-xs text-red-700">
           <span className="flex-1">{error}</span>
           <button
             onClick={() => setError(null)}
@@ -136,7 +136,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
         </div>
       )}
 
-      <div className="px-4 py-3 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-rule">
         {editingInfo ? (
           <div className="space-y-2">
             <input
@@ -144,25 +144,25 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
               onChange={(e) => setEditName(e.target.value)}
               maxLength={100}
               placeholder="Group name"
-              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
             />
             <input
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
               placeholder="Description"
-              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
             />
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleSaveInfo}
                 disabled={infoLoading}
-                className="text-xs px-3 py-1.5 bg-accent text-white rounded-lg hover:bg-accent-dark disabled:opacity-50 font-medium transition-colors"
+                className="text-xs px-3 py-1.5 bg-cobalt text-paper-raised rounded hover:bg-cobalt-dark disabled:opacity-50 font-medium transition-colors"
               >
                 Save
               </button>
               <button
                 onClick={() => setEditingInfo(false)}
-                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5"
+                className="text-xs text-muted hover:text-ink px-2 py-1.5"
               >
                 Cancel
               </button>
@@ -171,18 +171,16 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
         ) : (
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{conversation.name}</p>
+              <p className="text-sm font-medium text-ink truncate">{conversation.name}</p>
               {conversation.description && (
-                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                  {conversation.description}
-                </p>
+                <p className="text-xs text-muted mt-0.5 line-clamp-2">{conversation.description}</p>
               )}
             </div>
             {canManage && (
               <button
                 onClick={() => setEditingInfo(true)}
                 title="Edit group info"
-                className="flex-shrink-0 p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                className="flex-shrink-0 p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -199,7 +197,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <p className="px-4 py-2.5 text-[11px] font-semibold text-gray-500 uppercase tracking-widest">
+        <p className="px-4 py-2.5 font-meta text-[10px] font-medium text-muted uppercase tracking-widest">
           {conversation.members.length} members
         </p>
         <ul>
@@ -216,11 +214,11 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
         </ul>
       </div>
 
-      <div className="border-t border-gray-100 px-4 py-3 space-y-2">
+      <div className="border-t border-rule px-4 py-3 space-y-2">
         {canManage && (
           <button
             onClick={() => setShowAddMembers(true)}
-            className="flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-800 font-medium transition-colors"
+            className="flex items-center gap-1.5 text-sm text-cobalt hover:text-cobalt-dark font-medium transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -234,8 +232,8 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
           </button>
         )}
         {confirmingLeave ? (
-          <div className="flex items-center gap-2 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-            <span className="text-gray-700 flex-1 text-xs">Leave this group?</span>
+          <div className="flex items-center gap-2 text-sm bg-red-50 border-l-2 border-red-400 px-3 py-2">
+            <span className="text-muted flex-1 text-xs">Leave this group?</span>
             <button
               onClick={handleLeave}
               className="text-red-600 font-medium hover:text-red-800 text-xs"
@@ -244,7 +242,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
             </button>
             <button
               onClick={() => setConfirmingLeave(false)}
-              className="text-gray-400 hover:text-gray-600 text-xs"
+              className="text-muted hover:text-ink text-xs"
             >
               Cancel
             </button>
@@ -252,7 +250,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
         ) : (
           <button
             onClick={() => setConfirmingLeave(true)}
-            className="text-sm text-red-500 hover:text-red-700 transition-colors"
+            className="text-sm text-red-600 hover:text-red-800 transition-colors"
           >
             Leave group
           </button>
@@ -288,22 +286,22 @@ function MemberRow({
     (myRole === 'OWNER' || myRole === 'ADMIN') && !isCurrentUser && member.role !== 'OWNER';
 
   const ROLE_BADGE: Record<MemberRole, string> = {
-    OWNER: 'bg-amber-50 text-amber-700 border border-amber-200',
-    ADMIN: 'bg-blue-50 text-blue-700 border border-blue-200',
-    MEMBER: 'bg-gray-100 text-gray-500',
+    OWNER: 'bg-ember-subtle text-ember',
+    ADMIN: 'bg-cobalt-subtle text-cobalt',
+    MEMBER: 'bg-paper text-muted',
   };
 
   return (
-    <li className="flex items-center gap-2.5 px-4 py-2 hover:bg-gray-50">
+    <li className="flex items-center gap-2.5 px-4 py-2 hover:bg-paper">
       <Avatar username={member.user.username} avatarUrl={member.user.avatarUrl} size="sm" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900 truncate">
+        <p className="text-sm text-ink truncate">
           {member.user.username}
-          {isCurrentUser && <span className="text-gray-400 text-xs ml-1">(you)</span>}
+          {isCurrentUser && <span className="text-muted text-xs ml-1">(you)</span>}
         </p>
       </div>
       <span
-        className={`text-[10px] rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-wide ${ROLE_BADGE[member.role]}`}
+        className={`font-meta text-[10px] rounded px-1.5 py-0.5 font-medium uppercase tracking-wide ${ROLE_BADGE[member.role]}`}
       >
         {member.role.toLowerCase()}
       </span>
@@ -311,7 +309,7 @@ function MemberRow({
         <select
           value={member.role}
           onChange={(e) => onRoleChange(member, e.target.value as 'ADMIN' | 'MEMBER')}
-          className="text-xs border border-gray-200 rounded-lg px-1.5 py-0.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-400"
+          className="text-xs border border-rule rounded px-1.5 py-0.5 text-muted focus:outline-none focus:ring-1 focus:ring-cobalt"
           title="Change role"
         >
           <option value="MEMBER">member</option>
@@ -322,7 +320,7 @@ function MemberRow({
         <button
           onClick={() => onRemove(member)}
           aria-label={`Remove ${member.user.username}`}
-          className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+          className="p-1 rounded text-muted hover:text-red-600 hover:bg-red-50 transition-colors"
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -384,11 +382,11 @@ function AddMembersSheet({
   };
 
   return (
-    <div className="absolute inset-0 bg-white z-10 flex flex-col">
-      <div className="px-4 py-3.5 border-b border-gray-200 flex items-center gap-3">
+    <div className="absolute inset-0 bg-paper-raised z-10 flex flex-col">
+      <div className="px-4 py-3.5 border-b border-rule flex items-center gap-3">
         <button
           onClick={onClose}
-          className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          className="p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
           aria-label="Back"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,7 +398,7 @@ function AddMembersSheet({
             />
           </svg>
         </button>
-        <span className="font-semibold text-sm text-gray-900">Add Members</span>
+        <span className="font-display font-semibold text-sm text-ink">Add Members</span>
       </div>
       <div className="px-4 py-3">
         <input
@@ -411,29 +409,29 @@ function AddMembersSheet({
             if (!e.target.value.trim()) setResults([]);
           }}
           placeholder="Search by username or email…"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
         />
       </div>
       {addError && <p className="px-4 pb-2 text-xs text-red-600">{addError}</p>}
-      <ul className="flex-1 overflow-y-auto divide-y divide-gray-50">
+      <ul className="flex-1 overflow-y-auto divide-y divide-rule">
         {results.map((u) => (
-          <li key={u.id} className="flex items-center gap-2.5 px-4 py-2 hover:bg-gray-50">
+          <li key={u.id} className="flex items-center gap-2.5 px-4 py-2 hover:bg-paper">
             <Avatar username={u.username} avatarUrl={u.avatarUrl} size="sm" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-900 truncate">{u.username}</p>
-              <p className="text-xs text-gray-400 truncate">{u.email}</p>
+              <p className="text-sm text-ink truncate">{u.username}</p>
+              <p className="text-xs text-muted truncate">{u.email}</p>
             </div>
             <button
               onClick={() => handleAdd(u)}
               disabled={adding === u.id}
-              className="text-xs px-3 py-1 bg-accent text-white rounded-lg hover:bg-accent-dark disabled:opacity-50 font-medium transition-colors"
+              className="text-xs px-3 py-1 bg-cobalt text-paper-raised rounded hover:bg-cobalt-dark disabled:opacity-50 font-medium transition-colors"
             >
               {adding === u.id ? '…' : 'Add'}
             </button>
           </li>
         ))}
         {results.length === 0 && query.trim() && (
-          <li className="px-4 py-4 text-xs text-gray-400 text-center">No users found.</li>
+          <li className="px-4 py-4 text-xs text-muted text-center">No users found.</li>
         )}
       </ul>
     </div>

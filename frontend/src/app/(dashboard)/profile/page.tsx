@@ -56,7 +56,7 @@ export default function ProfilePage() {
         <div className="flex items-center gap-3 mb-8">
           <Link
             href="/"
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
             aria-label="Back"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,10 +68,10 @@ export default function ProfilePage() {
               />
             </svg>
           </Link>
-          <h1 className="text-lg font-semibold text-gray-900">Profile settings</h1>
+          <h1 className="font-display text-lg font-semibold text-ink">Profile settings</h1>
         </div>
 
-        <div className="flex items-center gap-4 mb-8 pb-8 border-b border-gray-100">
+        <div className="flex items-center gap-4 mb-8 pb-8 border-b border-rule">
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploadingAvatar}
@@ -80,15 +80,15 @@ export default function ProfilePage() {
             className="relative group flex-shrink-0"
           >
             <Avatar username={user?.username ?? '?'} avatarUrl={user?.avatarUrl} size="lg" />
-            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-white text-[10px] font-semibold">
+            <div className="absolute inset-0 bg-ink/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-paper-raised text-[10px] font-semibold">
                 {uploadingAvatar ? '…' : 'Change'}
               </span>
             </div>
           </button>
           <div>
-            <p className="font-semibold text-gray-900">{user?.username}</p>
-            <p className="text-sm text-gray-500">{user?.email}</p>
+            <p className="font-semibold text-ink">{user?.username}</p>
+            <p className="text-sm text-muted">{user?.email}</p>
           </div>
           <input
             ref={fileRef}
@@ -101,37 +101,43 @@ export default function ProfilePage() {
 
         <div className="space-y-5">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="username"
+              className="block font-meta text-[11px] font-medium text-muted uppercase tracking-widest mb-1.5"
+            >
               Username
             </label>
             <input
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block font-meta text-[11px] font-medium text-muted uppercase tracking-widest mb-1.5"
+            >
               Email
             </label>
             <input
               id="email"
               value={user?.email ?? ''}
               disabled
-              className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
+              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-muted cursor-not-allowed"
             />
-            <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
+            <p className="text-xs text-muted mt-1">Email cannot be changed.</p>
           </div>
 
           {feedback && (
             <p
               role="status"
-              className={`text-sm px-3 py-2 rounded-lg border ${
+              className={`text-sm px-3 py-2 border-l-2 ${
                 feedback.ok
-                  ? 'text-green-700 bg-green-50 border-green-200'
-                  : 'text-red-700 bg-red-50 border-red-200'
+                  ? 'text-green-700 bg-green-50 border-green-400'
+                  : 'text-red-700 bg-red-50 border-red-400'
               }`}
             >
               {feedback.text}
@@ -141,7 +147,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving || !username.trim()}
-            className="bg-accent text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-accent-dark disabled:opacity-40 transition-colors"
+            className="bg-cobalt text-paper-raised rounded px-4 py-2 text-sm font-medium hover:bg-cobalt-dark disabled:opacity-40 transition-colors"
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>

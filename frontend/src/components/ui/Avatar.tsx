@@ -30,17 +30,25 @@ export function Avatar({ username, avatarUrl, size = 'md', online }: AvatarProps
         />
       ) : (
         <div
-          className={`${sizeClasses[size]} rounded-full bg-orange-100 text-orange-700 font-semibold flex items-center justify-center`}
+          className={`${sizeClasses[size]} rounded-full bg-cobalt-subtle text-cobalt font-display font-semibold flex items-center justify-center`}
         >
           {getInitials(username)}
         </div>
       )}
       {online !== undefined && (
-        <span
-          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${
-            online ? 'bg-green-500' : 'bg-gray-300'
-          }`}
-        />
+        <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center">
+          {online && (
+            <span
+              className="signal-ring absolute w-2 h-2 rounded-full bg-ember"
+              aria-hidden="true"
+            />
+          )}
+          <span
+            className={`relative w-2 h-2 rounded-full border-2 border-paper-raised ${
+              online ? 'bg-ember' : 'bg-rule'
+            }`}
+          />
+        </span>
       )}
     </div>
   );
