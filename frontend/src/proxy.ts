@@ -2,18 +2,44 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const PUBLIC_PATHS = ['/login', '/register'];
 
+function buildCsp(nonce: string): string {
+  const isDev = process.env.NODE_ENV !== 'production';
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
+    "style-src 'self' 'unsafe-inline'",
+    `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL ?? ''} ${process.env.NEXT_PUBLIC_WS_URL ?? ''}`,
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+}
+
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
   const isAuthed = req.cookies.has('ca_authed');
 
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  const csp = buildCsp(nonce);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('Content-Security-Policy', csp);
+
   if (!isAuthed && !isPublic) {
-    return NextResponse.redirect(new URL('/login', req.url));
+    const res = NextResponse.redirect(new URL('/login', req.url));
+    res.headers.set('Content-Security-Policy', csp);
+    return res;
   }
   if (isAuthed && isPublic) {
-    return NextResponse.redirect(new URL('/', req.url));
+    const res = NextResponse.redirect(new URL('/', req.url));
+    res.headers.set('Content-Security-Policy', csp);
+    return res;
   }
-  return NextResponse.next();
+
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
+  res.headers.set('Content-Security-Policy', csp);
+  return res;
 }
 
 export const config = {

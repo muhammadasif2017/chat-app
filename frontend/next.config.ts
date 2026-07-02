@@ -1,17 +1,9 @@
 import type { NextConfig } from 'next';
 
-const CSP = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL ?? ''} ${process.env.NEXT_PUBLIC_WS_URL ?? ''}`,
-  "img-src 'self' data: blob:",
-  "font-src 'self'",
-  "frame-ancestors 'none'",
-].join('; ');
-
+// Content-Security-Policy is set per-request (with a nonce) in src/proxy.ts instead of here —
+// Next's inline RSC hydration scripts need 'nonce-{value}' or 'unsafe-inline', and a nonce can
+// only be minted per-request, not baked into a static header.
 const securityHeaders = [
-  { key: 'Content-Security-Policy', value: CSP },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
