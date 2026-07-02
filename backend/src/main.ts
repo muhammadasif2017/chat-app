@@ -10,6 +10,7 @@ import { Logger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { join, basename } from 'path';
+import type { Response } from 'express';
 import { AppModule } from './app.module.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter.js';
@@ -23,7 +24,7 @@ async function bootstrap() {
   app.use(helmet());
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads',
-    setHeaders: (res: { setHeader: (key: string, value: string) => void }, filePath: string) => {
+    setHeaders: (res: Response, filePath: string) => {
       res.setHeader('Content-Disposition', `attachment; filename="${basename(filePath)}"`);
     },
   });
