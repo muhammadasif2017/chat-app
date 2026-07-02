@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useCallback } from 'react';
-import { getSocket } from '../../lib/socket';
+import { emitReliable, getSocket } from '../../lib/socket';
 import api from '../../lib/api';
 import type { Message } from '../../types';
 
@@ -42,7 +42,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
     isTyping.current = false;
     const payload: Record<string, unknown> = { conversationId, content };
     if (replyTo) payload.replyToId = replyTo.id;
-    getSocket().emit('send_message', payload);
+    emitReliable('send_message', payload);
     onCancelReply?.();
   }, [value, conversationId, replyTo, onCancelReply]);
 
@@ -58,7 +58,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
         form.append('file', file);
         const res = await api.post<{ url: string }>('/upload', form);
         const url = `${process.env.NEXT_PUBLIC_API_URL}${res.data.url}`;
-        getSocket().emit('send_message', {
+        emitReliable('send_message', {
           conversationId,
           content: '',
           type: 'IMAGE',

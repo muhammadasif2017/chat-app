@@ -209,9 +209,9 @@ describe('ChatGateway.handleSendMessage', () => {
     const result = (await gateway.handleSendMessage(socket, {
       conversationId: CONV_ID,
       content: 'hello',
-    })) as { event: string; data: { id: string } };
+    })) as { id: string };
 
-    expect(typeof result.data.id).toBe('string');
+    expect(typeof result.id).toBe('string');
   });
 });
 

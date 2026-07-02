@@ -24,6 +24,36 @@ function processQueue(error: unknown) {
   failedQueue = [];
 }
 
+// Shared by the 401 interceptor below and by useSocket's server-disconnect handler,
+// so a socket kicked for an expired token and an HTTP 401 don't race separate refreshes.
+export async function refreshAccessToken(): Promise<string> {
+  if (isRefreshing) {
+    return new Promise<void>((resolve, reject) => {
+      failedQueue.push({ resolve, reject });
+    }).then(() => tokenStorage.getAccess()!);
+  }
+
+  isRefreshing = true;
+  try {
+    const { data } = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+      {},
+      { withCredentials: true },
+    );
+    tokenStorage.set(data.accessToken);
+    connectSocket();
+    processQueue(null);
+    return data.accessToken;
+  } catch (err) {
+    processQueue(err);
+    useAuthStore.getState().logout();
+    window.location.href = '/login';
+    throw err;
+  } finally {
+    isRefreshing = false;
+  }
+}
+
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -36,37 +66,13 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (isRefreshing) {
-      return new Promise<void>((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      }).then(() => {
-        original._retry = true;
-        original.headers.Authorization = `Bearer ${tokenStorage.getAccess()}`;
-        return api(original);
-      });
-    }
-
     original._retry = true;
-    isRefreshing = true;
-
     try {
-      const { data } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-        {},
-        { withCredentials: true },
-      );
-      tokenStorage.set(data.accessToken);
-      connectSocket();
-      processQueue(null);
-      original.headers.Authorization = `Bearer ${data.accessToken}`;
+      const accessToken = await refreshAccessToken();
+      original.headers.Authorization = `Bearer ${accessToken}`;
       return api(original);
     } catch (err) {
-      processQueue(err);
-      useAuthStore.getState().logout();
-      window.location.href = '/login';
       return Promise.reject(err);
-    } finally {
-      isRefreshing = false;
     }
   },
 );

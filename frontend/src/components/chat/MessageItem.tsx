@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import Image from 'next/image';
 import { Avatar } from '../ui/Avatar';
 import { formatTime } from '../../lib/utils';
-import { getSocket } from '../../lib/socket';
+import { emitReliable } from '../../lib/socket';
 import { useAuthStore } from '../../store/auth.store';
 import { usePresenceStore } from '../../store/presence.store';
 import type { ConversationMember, Message } from '../../types';
@@ -92,13 +92,13 @@ export function MessageItem({
       setIsEditing(false);
       return;
     }
-    getSocket().emit('edit_message', { messageId: message.id, content: trimmed });
+    emitReliable('edit_message', { messageId: message.id, content: trimmed });
     setIsEditing(false);
   };
 
   const handleDelete = () => {
     setShowMenu(false);
-    getSocket().emit('delete_message', { messageId: message.id });
+    emitReliable('delete_message', { messageId: message.id });
   };
 
   return (
@@ -146,7 +146,7 @@ export function MessageItem({
                         <button
                           key={emoji}
                           onClick={() => {
-                            getSocket().emit('add_reaction', { messageId: message.id, emoji });
+                            emitReliable('add_reaction', { messageId: message.id, emoji });
                             setShowEmojiPicker(false);
                           }}
                           className="text-base hover:scale-125 transition-transform px-0.5"
@@ -282,7 +282,7 @@ export function MessageItem({
                 <button
                   key={emoji}
                   onClick={() =>
-                    getSocket().emit(reacted ? 'remove_reaction' : 'add_reaction', {
+                    emitReliable(reacted ? 'remove_reaction' : 'add_reaction', {
                       messageId: message.id,
                       emoji,
                     })

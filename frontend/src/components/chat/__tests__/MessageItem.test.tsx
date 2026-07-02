@@ -9,7 +9,7 @@ jest.mock('../../../store/auth.store', () => ({
 }));
 
 jest.mock('../../../lib/socket', () => ({
-  getSocket: () => ({ emit: jest.fn() }),
+  emitReliable: jest.fn(),
 }));
 
 function makeMessage(overrides: Partial<Message> = {}): Message {
