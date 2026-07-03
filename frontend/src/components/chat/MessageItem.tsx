@@ -102,7 +102,9 @@ export function MessageItem({
   };
 
   return (
-    <div className={`flex gap-3 px-4 ${isGrouped ? 'py-0.5' : 'py-1'} hover:bg-paper group`}>
+    <div
+      className={`relative flex gap-3 px-4 ${isGrouped ? 'py-0.5' : 'py-1'} hover:bg-paper group`}
+    >
       <div className="flex-shrink-0 w-7 mt-0.5 relative">
         {isGrouped ? (
           <span className="absolute right-0 top-0.5 font-meta text-[9px] text-muted opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -118,6 +120,88 @@ export function MessageItem({
         )}
       </div>
 
+      {!isEditing && (
+        <div className="absolute top-0.5 right-4 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-paper-raised rounded shadow-sm border border-rule">
+          {/* emoji reaction */}
+          <div className="relative">
+            <button
+              onClick={() => setShowEmojiPicker((v) => !v)}
+              title="React"
+              className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors"
+            >
+              😊
+            </button>
+            {showEmojiPicker && (
+              <div
+                className="absolute bottom-7 right-0 z-20 bg-paper-raised rounded-lg shadow-lg border border-rule p-1.5 flex gap-1"
+                onMouseLeave={() => setShowEmojiPicker(false)}
+              >
+                {QUICK_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => {
+                      emitReliable('add_reaction', { messageId: message.id, emoji });
+                      setShowEmojiPicker(false);
+                    }}
+                    className="text-base hover:scale-125 transition-transform px-0.5"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* reply */}
+          {onReply && (
+            <button
+              onClick={onReply}
+              title="Reply"
+              className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors"
+            >
+              ↩
+            </button>
+          )}
+
+          {/* edit/delete menu (own messages only) */}
+          {isOwn && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu((v) => !v)}
+                className="p-1 rounded text-muted hover:text-ink hover:bg-rule transition-colors leading-none"
+              >
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <circle cx="4" cy="10" r="1.5" />
+                  <circle cx="10" cy="10" r="1.5" />
+                  <circle cx="16" cy="10" r="1.5" />
+                </svg>
+              </button>
+              {showMenu && (
+                <div
+                  className="absolute right-0 top-7 bg-paper-raised rounded-lg shadow-lg border border-rule py-1 w-28 z-10"
+                  onMouseLeave={() => setShowMenu(false)}
+                >
+                  {message.type !== 'IMAGE' && (
+                    <button
+                      onClick={handleEdit}
+                      className="w-full text-left px-3 py-1.5 text-sm text-ink hover:bg-paper"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={handleDelete}
+                    className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex-1 min-w-0">
         {/* Header row — only for first message in a group */}
         {!isGrouped && (
@@ -125,88 +209,6 @@ export function MessageItem({
             <span className="text-sm font-semibold text-ink">{message.sender.username}</span>
             <span className="font-meta text-xs text-muted">{formatTime(message.createdAt)}</span>
             {message.isEdited && <span className="font-meta text-xs text-muted">(edited)</span>}
-
-            {!isEditing && (
-              <div className="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                {/* emoji reaction */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowEmojiPicker((v) => !v)}
-                    title="React"
-                    className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors"
-                  >
-                    😊
-                  </button>
-                  {showEmojiPicker && (
-                    <div
-                      className="absolute bottom-7 right-0 z-20 bg-paper-raised rounded-lg shadow-lg border border-rule p-1.5 flex gap-1"
-                      onMouseLeave={() => setShowEmojiPicker(false)}
-                    >
-                      {QUICK_EMOJIS.map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => {
-                            emitReliable('add_reaction', { messageId: message.id, emoji });
-                            setShowEmojiPicker(false);
-                          }}
-                          className="text-base hover:scale-125 transition-transform px-0.5"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* reply */}
-                {onReply && (
-                  <button
-                    onClick={onReply}
-                    title="Reply"
-                    className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors"
-                  >
-                    ↩
-                  </button>
-                )}
-
-                {/* edit/delete menu (own messages only) */}
-                {isOwn && (
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowMenu((v) => !v)}
-                      className="p-1 rounded text-muted hover:text-ink hover:bg-rule transition-colors leading-none"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                        <circle cx="4" cy="10" r="1.5" />
-                        <circle cx="10" cy="10" r="1.5" />
-                        <circle cx="16" cy="10" r="1.5" />
-                      </svg>
-                    </button>
-                    {showMenu && (
-                      <div
-                        className="absolute right-0 top-7 bg-paper-raised rounded-lg shadow-lg border border-rule py-1 w-28 z-10"
-                        onMouseLeave={() => setShowMenu(false)}
-                      >
-                        {message.type !== 'IMAGE' && (
-                          <button
-                            onClick={handleEdit}
-                            className="w-full text-left px-3 py-1.5 text-sm text-ink hover:bg-paper"
-                          >
-                            Edit
-                          </button>
-                        )}
-                        <button
-                          onClick={handleDelete}
-                          className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
 
