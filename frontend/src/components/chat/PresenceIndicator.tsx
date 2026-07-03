@@ -14,7 +14,7 @@ export function PresenceIndicator({ online }: PresenceIndicatorProps) {
           aria-hidden="true"
         />
       )}
-      <span className={`relative w-1.5 h-1.5 rounded-full ${online ? 'bg-moss' : 'bg-rule'}`} />
+      <span className={`relative w-1.5 h-1.5 rounded-full ${online ? 'bg-moss' : 'bg-muted'}`} />
     </span>
   );
 }

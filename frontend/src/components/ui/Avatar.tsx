@@ -45,7 +45,7 @@ export function Avatar({ username, avatarUrl, size = 'md', online }: AvatarProps
           )}
           <span
             className={`relative w-2 h-2 rounded-full border-2 border-paper-raised ${
-              online ? 'bg-moss' : 'bg-rule'
+              online ? 'bg-moss' : 'bg-muted'
             }`}
           />
         </span>
