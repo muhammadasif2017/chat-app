@@ -24,6 +24,9 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [{ protocol: 'http', hostname: 'localhost', port: '3001' }],
+    // Backend runs on localhost in dev, which the image optimizer's SSRF guard blocks by
+    // default (resolves to a private/loopback IP). Only bypass that guard outside production.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV !== 'production',
   },
 };
 
