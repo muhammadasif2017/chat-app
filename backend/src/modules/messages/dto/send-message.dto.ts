@@ -1,7 +1,7 @@
 import {
   IsEnum,
-  IsInt,
   IsNotEmpty,
+  IsNumberString,
   IsOptional,
   IsString,
   IsUrl,
@@ -30,10 +30,10 @@ export class SendMessageDto {
   @MaxLength(4000)
   content?: string;
 
-  @ApiPropertyOptional({ example: 42, description: 'ID of the message being replied to' })
+  @ApiPropertyOptional({ example: '42', description: 'ID of the message being replied to' })
   @IsOptional()
-  @IsInt()
-  replyToId?: number;
+  @IsNumberString()
+  replyToId?: string;
 
   @ApiPropertyOptional({ enum: ['TEXT', 'IMAGE', 'FILE'], default: 'TEXT' })
   @IsOptional()

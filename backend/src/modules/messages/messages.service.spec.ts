@@ -91,11 +91,11 @@ describe('MessagesService.create', () => {
     expect(createCall[0].data.content).toBeNull();
   });
 
-  it('converts replyToId number to BigInt', async () => {
+  it('converts replyToId string to BigInt', async () => {
     const { svc, prisma } = makeService();
     (prisma.message.findUnique as jest.Mock).mockResolvedValue({ conversationId: CONV_ID });
 
-    await svc.create(SENDER_ID, { conversationId: CONV_ID, content: 'reply', replyToId: 7 });
+    await svc.create(SENDER_ID, { conversationId: CONV_ID, content: 'reply', replyToId: '7' });
 
     const createCall = (prisma.message.create as jest.Mock).mock.calls[0] as [
       { data: { replyToId: bigint } },
