@@ -107,7 +107,7 @@ export function MessageItem({
     >
       <div className="flex-shrink-0 w-7 mt-0.5 relative">
         {isGrouped ? (
-          <span className="absolute right-0 top-0.5 font-meta text-[9px] text-muted opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <span className="absolute right-0 top-0.5 font-meta text-[9px] text-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity whitespace-nowrap">
             {formatTime(message.createdAt)}
           </span>
         ) : (
@@ -121,29 +121,36 @@ export function MessageItem({
       </div>
 
       {!isEditing && (
-        <div className="absolute top-0.5 right-4 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-paper-raised rounded shadow-sm border border-rule">
+        <div className="absolute top-0.5 right-4 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity bg-paper-raised rounded shadow-sm border border-rule">
           {/* emoji reaction */}
           <div className="relative">
             <button
               onClick={() => setShowEmojiPicker((v) => !v)}
               title="React"
-              className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors"
+              aria-label="React"
+              aria-haspopup="menu"
+              aria-expanded={showEmojiPicker}
+              className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
             >
               😊
             </button>
             {showEmojiPicker && (
               <div
+                role="menu"
+                aria-label="Quick reactions"
                 className="absolute bottom-7 right-0 z-20 bg-paper-raised rounded-lg shadow-lg border border-rule p-1.5 flex gap-1"
                 onMouseLeave={() => setShowEmojiPicker(false)}
               >
                 {QUICK_EMOJIS.map((emoji) => (
                   <button
                     key={emoji}
+                    role="menuitem"
+                    aria-label={`React with ${emoji}`}
                     onClick={() => {
                       emitReliable('add_reaction', { messageId: message.id, emoji });
                       setShowEmojiPicker(false);
                     }}
-                    className="text-base hover:scale-125 transition-transform px-0.5"
+                    className="text-base hover:scale-125 transition-transform px-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1 rounded"
                   >
                     {emoji}
                   </button>
@@ -157,7 +164,7 @@ export function MessageItem({
             <button
               onClick={onReply}
               title="Reply"
-              className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors"
+              className="p-1 rounded text-muted hover:text-ink hover:bg-rule text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
             >
               ↩
             </button>
@@ -168,7 +175,10 @@ export function MessageItem({
             <div className="relative">
               <button
                 onClick={() => setShowMenu((v) => !v)}
-                className="p-1 rounded text-muted hover:text-ink hover:bg-rule transition-colors leading-none"
+                aria-label="Message options"
+                aria-haspopup="menu"
+                aria-expanded={showMenu}
+                className="p-1 rounded text-muted hover:text-ink hover:bg-rule transition-colors leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
               >
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                   <circle cx="4" cy="10" r="1.5" />
@@ -178,11 +188,14 @@ export function MessageItem({
               </button>
               {showMenu && (
                 <div
+                  role="menu"
+                  aria-label="Message options"
                   className="absolute right-0 top-7 bg-paper-raised rounded-lg shadow-lg border border-rule py-1 w-28 z-10"
                   onMouseLeave={() => setShowMenu(false)}
                 >
                   {message.type !== 'IMAGE' && (
                     <button
+                      role="menuitem"
                       onClick={handleEdit}
                       className="w-full text-left px-3 py-1.5 text-sm text-ink hover:bg-paper"
                     >
@@ -190,8 +203,9 @@ export function MessageItem({
                     </button>
                   )}
                   <button
+                    role="menuitem"
                     onClick={handleDelete}
-                    className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                    className="w-full text-left px-3 py-1.5 text-sm text-ember hover:bg-ember-subtle"
                   >
                     Delete
                   </button>

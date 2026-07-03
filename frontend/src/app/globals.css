@@ -16,7 +16,7 @@
   --color-paper: #f0f1f3;
   --color-paper-raised: #ffffff;
   --color-ink: #1b1d22;
-  --color-muted: #6b6e76;
+  --color-muted: #5c5f68;
   --color-rule: #d9dadc;
 
   --color-cobalt: #2b3f8c;
@@ -25,6 +25,9 @@
 
   --color-ember: #e0562e;
   --color-ember-subtle: #fbe9e3;
+
+  --color-moss: #3f7a5c;
+  --color-moss-subtle: #e4f0e9;
 }
 
 body {
@@ -51,5 +54,26 @@ body {
   .signal-ring {
     animation: none;
     opacity: 0;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise-in {
+  animation: rise-in 0.45s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
   }
 }

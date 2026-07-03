@@ -39,13 +39,13 @@ export function Avatar({ username, avatarUrl, size = 'md', online }: AvatarProps
         <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center">
           {online && (
             <span
-              className="signal-ring absolute w-2 h-2 rounded-full bg-ember"
+              className="signal-ring absolute w-2 h-2 rounded-full bg-moss"
               aria-hidden="true"
             />
           )}
           <span
             className={`relative w-2 h-2 rounded-full border-2 border-paper-raised ${
-              online ? 'bg-ember' : 'bg-rule'
+              online ? 'bg-moss' : 'bg-rule'
             }`}
           />
         </span>

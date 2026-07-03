@@ -10,7 +10,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen lg:grid lg:grid-cols-2">
       <div className="hidden lg:flex flex-col justify-between bg-ink p-12">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-ember flex-shrink-0" aria-hidden="true" />
+          <span className="relative flex items-center justify-center w-2 h-2 flex-shrink-0">
+            <span
+              className="signal-ring absolute w-2 h-2 rounded-full bg-ember"
+              aria-hidden="true"
+            />
+            <span className="relative w-2 h-2 rounded-full bg-ember" aria-hidden="true" />
+          </span>
           <span className="font-display text-paper-raised text-base font-semibold tracking-widest uppercase">
             Chat App
           </span>
@@ -25,8 +31,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             Real-time messaging built for people who value speed and simplicity.
           </p>
           <div className="mt-8 flex flex-col gap-1.5 font-meta text-[11px] text-paper-raised/40">
-            {LOG_LINES.map((line) => (
-              <p key={line}>{line}</p>
+            {LOG_LINES.map((line, i) => (
+              <p key={line} className="rise-in" style={{ animationDelay: `${i * 0.15 + 0.2}s` }}>
+                {line}
+              </p>
             ))}
           </div>
         </div>

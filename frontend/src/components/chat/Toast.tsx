@@ -26,7 +26,7 @@ export function Toast() {
         <button
           onClick={clear}
           aria-label="Dismiss"
-          className="flex-shrink-0 text-paper-raised/80 hover:text-paper-raised"
+          className="flex-shrink-0 rounded text-paper-raised/80 hover:text-paper-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper-raised focus-visible:ring-offset-1 focus-visible:ring-offset-ember"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

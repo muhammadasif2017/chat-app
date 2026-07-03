@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useAuthStore } from '../../../store/auth.store';
 import api from '../../../lib/api';
 import { Avatar } from '../../../components/ui/Avatar';
+import { Button } from '../../../components/ui/Button';
+import { Input } from '../../../components/ui/Input';
 import type { User } from '../../../types';
 
 export default function ProfilePage() {
@@ -56,7 +58,7 @@ export default function ProfilePage() {
         <div className="flex items-center gap-3 mb-8">
           <Link
             href="/"
-            className="p-1.5 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
+            className="p-1.5 rounded text-muted hover:text-ink hover:bg-paper transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
             aria-label="Back"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +79,7 @@ export default function ProfilePage() {
             disabled={uploadingAvatar}
             title="Change avatar"
             aria-label="Change avatar"
-            className="relative group flex-shrink-0"
+            className="relative group flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
           >
             <Avatar username={user?.username ?? '?'} avatarUrl={user?.avatarUrl} size="lg" />
             <div className="absolute inset-0 bg-ink/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -100,34 +102,16 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-5">
-          <div>
-            <label
-              htmlFor="username"
-              className="block font-meta text-[11px] font-medium text-muted uppercase tracking-widest mb-1.5"
-            >
-              Username
-            </label>
-            <input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
-            />
-          </div>
+          <Input
+            id="username"
+            label="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            maxLength={30}
+          />
 
           <div>
-            <label
-              htmlFor="email"
-              className="block font-meta text-[11px] font-medium text-muted uppercase tracking-widest mb-1.5"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              value={user?.email ?? ''}
-              disabled
-              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-muted cursor-not-allowed"
-            />
+            <Input id="email" label="Email" value={user?.email ?? ''} disabled />
             <p className="text-xs text-muted mt-1">Email cannot be changed.</p>
           </div>
 
@@ -136,21 +120,17 @@ export default function ProfilePage() {
               role="status"
               className={`text-sm px-3 py-2 border-l-2 ${
                 feedback.ok
-                  ? 'text-green-700 bg-green-50 border-green-400'
-                  : 'text-red-700 bg-red-50 border-red-400'
+                  ? 'text-moss bg-moss-subtle border-moss'
+                  : 'text-ember bg-ember-subtle border-ember'
               }`}
             >
               {feedback.text}
             </p>
           )}
 
-          <button
-            onClick={handleSave}
-            disabled={saving || !username.trim()}
-            className="bg-cobalt text-paper-raised rounded px-4 py-2 text-sm font-medium hover:bg-cobalt-dark disabled:opacity-40 transition-colors"
-          >
+          <Button onClick={handleSave} disabled={saving || !username.trim()}>
             {saving ? 'Saving…' : 'Save changes'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

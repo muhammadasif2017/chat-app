@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { useAuthStore } from '../../store/auth.store';
 import { Avatar } from '../ui/Avatar';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 import {
   addMember,
   removeMember,
@@ -97,13 +99,13 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
   };
 
   return (
-    <div className="w-72 border-l border-rule flex flex-col bg-paper-raised h-full flex-shrink-0">
+    <div className="fixed inset-0 z-30 flex flex-col bg-paper-raised lg:static lg:inset-auto lg:z-auto lg:w-72 lg:border-l lg:border-rule lg:flex-shrink-0">
       <div className="px-4 py-3.5 border-b border-rule flex items-center justify-between">
         <span className="font-display font-semibold text-sm text-ink">Members</span>
         <button
           onClick={onClose}
           aria-label="Close members panel"
-          className="p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
+          className="p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -117,12 +119,12 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       </div>
 
       {error && (
-        <div className="mx-3 mt-3 flex items-start gap-2 border-l-2 border-red-400 bg-red-50 px-3 py-2 text-xs text-red-700">
+        <div className="mx-3 mt-3 flex items-start gap-2 border-l-2 border-ember bg-ember-subtle px-3 py-2 text-xs text-ember">
           <span className="flex-1">{error}</span>
           <button
             onClick={() => setError(null)}
             aria-label="Dismiss error"
-            className="flex-shrink-0 text-red-400 hover:text-red-600"
+            className="flex-shrink-0 rounded text-ember/60 hover:text-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -139,33 +141,24 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
       <div className="px-4 py-3 border-b border-rule">
         {editingInfo ? (
           <div className="space-y-2">
-            <input
+            <Input
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               maxLength={100}
               placeholder="Group name"
-              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
             />
-            <input
+            <Input
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
               placeholder="Description"
-              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
             />
             <div className="flex gap-2 pt-1">
-              <button
-                onClick={handleSaveInfo}
-                disabled={infoLoading}
-                className="text-xs px-3 py-1.5 bg-cobalt text-paper-raised rounded hover:bg-cobalt-dark disabled:opacity-50 font-medium transition-colors"
-              >
+              <Button size="sm" onClick={handleSaveInfo} disabled={infoLoading}>
                 Save
-              </button>
-              <button
-                onClick={() => setEditingInfo(false)}
-                className="text-xs text-muted hover:text-ink px-2 py-1.5"
-              >
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditingInfo(false)}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -180,7 +173,8 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
               <button
                 onClick={() => setEditingInfo(true)}
                 title="Edit group info"
-                className="flex-shrink-0 p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
+                aria-label="Edit group info"
+                className="flex-shrink-0 p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -218,7 +212,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
         {canManage && (
           <button
             onClick={() => setShowAddMembers(true)}
-            className="flex items-center gap-1.5 text-sm text-cobalt hover:text-cobalt-dark font-medium transition-colors"
+            className="flex items-center gap-1.5 text-sm text-cobalt hover:text-cobalt-dark font-medium transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -232,11 +226,11 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
           </button>
         )}
         {confirmingLeave ? (
-          <div className="flex items-center gap-2 text-sm bg-red-50 border-l-2 border-red-400 px-3 py-2">
+          <div className="flex items-center gap-2 text-sm bg-ember-subtle border-l-2 border-ember px-3 py-2">
             <span className="text-muted flex-1 text-xs">Leave this group?</span>
             <button
               onClick={handleLeave}
-              className="text-red-600 font-medium hover:text-red-800 text-xs"
+              className="text-ember font-medium hover:opacity-70 text-xs"
             >
               Leave
             </button>
@@ -250,7 +244,7 @@ export function GroupMembersPanel({ conversation, onClose }: Props) {
         ) : (
           <button
             onClick={() => setConfirmingLeave(true)}
-            className="text-sm text-red-600 hover:text-red-800 transition-colors"
+            className="text-sm text-ember hover:opacity-70 transition-colors"
           >
             Leave group
           </button>
@@ -309,7 +303,11 @@ function MemberRow({
         <select
           value={member.role}
           onChange={(e) => onRoleChange(member, e.target.value as 'ADMIN' | 'MEMBER')}
-          className="text-xs border border-rule rounded px-1.5 py-0.5 text-muted focus:outline-none focus:ring-1 focus:ring-cobalt"
+          className="appearance-none bg-[right_0.3rem_center] bg-no-repeat bg-[length:0.6rem] font-meta text-[10px] uppercase tracking-wide border border-rule rounded pl-1.5 pr-4 py-0.5 text-muted hover:text-ink transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b6e76'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E\")",
+          }}
           title="Change role"
         >
           <option value="MEMBER">member</option>
@@ -320,7 +318,7 @@ function MemberRow({
         <button
           onClick={() => onRemove(member)}
           aria-label={`Remove ${member.user.username}`}
-          className="p-1 rounded text-muted hover:text-red-600 hover:bg-red-50 transition-colors"
+          className="p-1 rounded text-muted hover:text-ember hover:bg-ember-subtle transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -349,6 +347,7 @@ function AddMembersSheet({
   const [results, setResults] = useState<User[]>([]);
   const [adding, setAdding] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const existingIds = useMemo(
     () => new Set(conversation.members.map((m) => m.userId)),
@@ -364,6 +363,8 @@ function AddMembersSheet({
         setResults(res.data.filter((u) => !existingIds.has(u.id)));
       } catch {
         /* ignore */
+      } finally {
+        setSearchingUsers(false);
       }
     }, 300);
   }, [query, existingIds]);
@@ -386,7 +387,7 @@ function AddMembersSheet({
       <div className="px-4 py-3.5 border-b border-rule flex items-center gap-3">
         <button
           onClick={onClose}
-          className="p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
+          className="p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
           aria-label="Back"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,18 +402,19 @@ function AddMembersSheet({
         <span className="font-display font-semibold text-sm text-ink">Add Members</span>
       </div>
       <div className="px-4 py-3">
-        <input
+        <Input
           autoFocus
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
+            setSearchingUsers(Boolean(e.target.value.trim()));
             if (!e.target.value.trim()) setResults([]);
           }}
           placeholder="Search by username or email…"
-          className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
+          loading={searchingUsers}
         />
       </div>
-      {addError && <p className="px-4 pb-2 text-xs text-red-600">{addError}</p>}
+      {addError && <p className="px-4 pb-2 text-xs text-ember">{addError}</p>}
       <ul className="flex-1 overflow-y-auto divide-y divide-rule">
         {results.map((u) => (
           <li key={u.id} className="flex items-center gap-2.5 px-4 py-2 hover:bg-paper">
@@ -421,16 +423,17 @@ function AddMembersSheet({
               <p className="text-sm text-ink truncate">{u.username}</p>
               <p className="text-xs text-muted truncate">{u.email}</p>
             </div>
-            <button
+            <Button
+              size="sm"
+              className="px-3 py-1"
               onClick={() => handleAdd(u)}
               disabled={adding === u.id}
-              className="text-xs px-3 py-1 bg-cobalt text-paper-raised rounded hover:bg-cobalt-dark disabled:opacity-50 font-medium transition-colors"
             >
               {adding === u.id ? '…' : 'Add'}
-            </button>
+            </Button>
           </li>
         ))}
-        {results.length === 0 && query.trim() && (
+        {!searchingUsers && results.length === 0 && query.trim() && (
           <li className="px-4 py-4 text-xs text-muted text-center">No users found.</li>
         )}
       </ul>

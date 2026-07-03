@@ -17,8 +17,11 @@ interface MessageListProps {
 
 export function MessageList({ conversationId, searchQuery, members, onReply }: MessageListProps) {
   const user = useAuthStore((s) => s.user);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const prevPageCount = useRef(0);
+  const prevScrollHeight = useRef<number | null>(null);
   const isSearching = Boolean(searchQuery?.trim());
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } = useInfiniteQuery({
@@ -41,10 +44,34 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
     const pages = data?.pages ?? [];
     const isHistoryLoad = pages.length > 1 && pages.length > prevPageCount.current;
     prevPageCount.current = pages.length;
-    if (!isHistoryLoad) {
+    if (isHistoryLoad) {
+      const el = containerRef.current;
+      if (el && prevScrollHeight.current !== null) {
+        el.scrollTop += el.scrollHeight - prevScrollHeight.current;
+      }
+      prevScrollHeight.current = null;
+    } else {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [data?.pages, isSearching]);
+
+  useEffect(() => {
+    if (isSearching || !hasNextPage) return;
+    const sentinel = topSentinelRef.current;
+    const container = containerRef.current;
+    if (!sentinel || !container) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingNextPage) {
+          prevScrollHeight.current = container.scrollHeight;
+          fetchNextPage();
+        }
+      },
+      { root: container },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [isSearching, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const allMessages = useMemo(() => data?.pages.flatMap((p) => p.messages) ?? [], [data?.pages]);
   const msgById = useMemo(() => new Map(allMessages.map((m) => [m.id, m])), [allMessages]);
@@ -76,18 +103,22 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
   }
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col py-2">
+    <div ref={containerRef} className="flex-1 overflow-y-auto flex flex-col py-2">
       {!isSearching && hasNextPage && (
-        <button
-          onClick={() => fetchNextPage()}
-          disabled={isFetchingNextPage}
-          className="mx-auto my-2 font-meta text-xs text-cobalt hover:underline disabled:opacity-50 px-3 py-1 rounded hover:bg-cobalt-subtle transition-colors"
-        >
-          {isFetchingNextPage ? 'Loading…' : 'Load earlier messages'}
-        </button>
+        <div ref={topSentinelRef} className="flex justify-center py-2">
+          {isFetchingNextPage && (
+            <span className="font-meta text-xs text-muted">Loading earlier messages…</span>
+          )}
+        </div>
       )}
       {isSearching && allMessages.length === 0 && (
         <p className="text-sm text-muted text-center mt-8">No messages found.</p>
+      )}
+      {!isSearching && !hasNextPage && allMessages.length === 0 && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-1 py-12">
+          <p className="text-sm font-medium text-ink">No messages yet</p>
+          <p className="text-sm text-muted">Say hello to start the conversation.</p>
+        </div>
       )}
       {allMessages.map((msg, i) => {
         const prevMsg = allMessages[i - 1];

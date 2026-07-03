@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { createGroup, searchUsers } from '../../lib/groups';
 import { Avatar } from '../ui/Avatar';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Modal } from '../ui/Modal';
 import type { User } from '../../types';
 
 interface Props {
@@ -21,6 +24,7 @@ export function CreateGroupModal({ onClose }: Props) {
   const [results, setResults] = useState<User[]>([]);
   const [selected, setSelected] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const [error, setError] = useState('');
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,6 +37,8 @@ export function CreateGroupModal({ onClose }: Props) {
         setResults(res.data.filter((u) => !selected.some((s) => s.id === u.id)));
       } catch {
         /* ignore */
+      } finally {
+        setSearchingUsers(false);
       }
     }, 300);
   }, [query, selected]);
@@ -66,161 +72,113 @@ export function CreateGroupModal({ onClose }: Props) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="bg-paper-raised rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-rule">
-          <h2 className="font-display text-base font-semibold text-ink">New Group</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="p-1 rounded text-muted hover:text-ink hover:bg-paper transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+    <Modal title="New Group" onClose={onClose} maxWidth="md">
+      <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+        <Input
+          id="group-name"
+          label={
+            <>
+              Group name <span className="text-ember">*</span>
+            </>
+          }
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={100}
+          placeholder="e.g. Team Design"
+        />
+
+        <Input
+          id="group-desc"
+          label="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Optional"
+        />
+
+        <div>
+          <label className="block font-meta text-[11px] font-medium text-muted uppercase tracking-widest mb-1.5">
+            Add members
+          </label>
+          {selected.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {selected.map((u) => (
+                <span
+                  key={u.id}
+                  className="flex items-center gap-1 bg-cobalt-subtle text-cobalt text-xs rounded px-2.5 py-1 font-medium"
+                >
+                  {u.username}
+                  <button
+                    type="button"
+                    onClick={() => toggleUser(u)}
+                    aria-label={`Remove ${u.username}`}
+                    className="hover:text-cobalt-dark leading-none ml-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <Input
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSearchingUsers(Boolean(e.target.value.trim()));
+              if (!e.target.value.trim()) setResults([]);
+            }}
+            placeholder="Search by username or email…"
+            loading={searchingUsers}
+          />
+          {results.length > 0 && (
+            <ul className="mt-1 border border-rule rounded divide-y divide-rule max-h-40 overflow-y-auto">
+              {results.map((u) => (
+                <li key={u.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleUser(u)}
+                    className="flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-paper text-left transition-colors"
+                  >
+                    <Avatar username={u.username} avatarUrl={u.avatarUrl} size="sm" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-ink truncate">{u.username}</p>
+                      <p className="text-xs text-muted truncate">{u.email}</p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!searchingUsers && query.trim() && results.length === 0 && (
+            <p className="mt-1 px-1 text-xs text-muted">No users found.</p>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-          <div>
-            <label
-              htmlFor="group-name"
-              className="block font-meta text-[11px] font-medium text-muted uppercase tracking-widest mb-1.5"
-            >
-              Group name <span className="text-ember">*</span>
-            </label>
-            <input
-              id="group-name"
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={100}
-              placeholder="e.g. Team Design"
-              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
-            />
-          </div>
+        {error && (
+          <p
+            role="alert"
+            className="text-xs text-ember bg-ember-subtle border-l-2 border-ember px-3 py-2"
+          >
+            {error}
+          </p>
+        )}
 
-          <div>
-            <label
-              htmlFor="group-desc"
-              className="block font-meta text-[11px] font-medium text-muted uppercase tracking-widest mb-1.5"
-            >
-              Description
-            </label>
-            <input
-              id="group-desc"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional"
-              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="block font-meta text-[11px] font-medium text-muted uppercase tracking-widest mb-1.5">
-              Add members
-            </label>
-            {selected.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {selected.map((u) => (
-                  <span
-                    key={u.id}
-                    className="flex items-center gap-1 bg-cobalt-subtle text-cobalt text-xs rounded px-2.5 py-1 font-medium"
-                  >
-                    {u.username}
-                    <button
-                      type="button"
-                      onClick={() => toggleUser(u)}
-                      aria-label={`Remove ${u.username}`}
-                      className="hover:text-cobalt-dark leading-none ml-0.5"
-                    >
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <input
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                if (!e.target.value.trim()) setResults([]);
-              }}
-              placeholder="Search by username or email…"
-              className="w-full border-b border-rule bg-transparent py-1.5 text-sm text-ink focus:outline-none focus:border-cobalt transition-colors"
-            />
-            {results.length > 0 && (
-              <ul className="mt-1 border border-rule rounded divide-y divide-rule max-h-40 overflow-y-auto">
-                {results.map((u) => (
-                  <li key={u.id}>
-                    <button
-                      type="button"
-                      onClick={() => toggleUser(u)}
-                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-paper text-left transition-colors"
-                    >
-                      <Avatar username={u.username} avatarUrl={u.avatarUrl} size="sm" />
-                      <div className="min-w-0">
-                        <p className="font-medium text-ink truncate">{u.username}</p>
-                        <p className="text-xs text-muted truncate">{u.email}</p>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {error && (
-            <p
-              role="alert"
-              className="text-xs text-red-600 bg-red-50 border-l-2 border-red-400 px-3 py-2"
-            >
-              {error}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-2 pt-1 border-t border-rule mt-4 -mx-6 px-6 pb-0">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-muted hover:text-ink rounded hover:bg-paper transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !name.trim()}
-              className="px-4 py-2 text-sm bg-cobalt text-paper-raised rounded hover:bg-cobalt-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {loading ? 'Creating…' : 'Create Group'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-2 pt-1 border-t border-rule mt-4 -mx-6 px-6 pb-0">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading || !name.trim()}>
+            {loading ? 'Creating…' : 'Create Group'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

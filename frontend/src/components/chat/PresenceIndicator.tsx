@@ -10,11 +10,11 @@ export function PresenceIndicator({ online }: PresenceIndicatorProps) {
     >
       {online && (
         <span
-          className="signal-ring absolute w-1.5 h-1.5 rounded-full bg-ember"
+          className="signal-ring absolute w-1.5 h-1.5 rounded-full bg-moss"
           aria-hidden="true"
         />
       )}
-      <span className={`relative w-1.5 h-1.5 rounded-full ${online ? 'bg-ember' : 'bg-rule'}`} />
+      <span className={`relative w-1.5 h-1.5 rounded-full ${online ? 'bg-moss' : 'bg-rule'}`} />
     </span>
   );
 }

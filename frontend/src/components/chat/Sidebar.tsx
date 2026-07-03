@@ -99,7 +99,7 @@ function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
     <button
       onClick={onClick}
       aria-label={label}
-      className="w-4 h-4 rounded flex items-center justify-center text-muted hover:text-cobalt hover:bg-cobalt-subtle transition-colors text-sm leading-none"
+      className="w-4 h-4 rounded flex items-center justify-center text-muted hover:text-cobalt hover:bg-cobalt-subtle transition-colors text-sm leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
     >
       +
     </button>
@@ -109,7 +109,7 @@ function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
-  const { data: conversations = [] } = useConversations();
+  const { data: conversations = [], isLoading: conversationsLoading } = useConversations();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showNewDm, setShowNewDm] = useState(false);
   const [logoutError, setLogoutError] = useState(false);
@@ -134,7 +134,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-paper border-r border-rule flex flex-col h-full flex-shrink-0">
+    <aside className="w-full lg:w-64 bg-paper border-r border-rule flex flex-col h-full flex-shrink-0">
       <div className="px-4 py-4 border-b border-rule flex items-center gap-2">
         <span className="w-2 h-2 bg-cobalt flex-shrink-0" aria-hidden="true" />
         <h1 className="font-display font-semibold text-base tracking-tight text-ink uppercase">
@@ -143,23 +143,41 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-4">
-        <Section title="Channels" items={channels} userId={user?.id} pathname={pathname} />
-        <Section
-          title="Groups"
-          items={groups}
-          userId={user?.id}
-          pathname={pathname}
-          action={<AddButton onClick={() => setShowCreateGroup(true)} label="New group" />}
-        />
-        <Section
-          title="Direct Messages"
-          items={dms}
-          userId={user?.id}
-          pathname={pathname}
-          action={<AddButton onClick={() => setShowNewDm(true)} label="New direct message" />}
-        />
-        {!conversations.length && (
-          <p className="pl-2.5 pr-3 text-xs text-muted">No conversations yet.</p>
+        {conversationsLoading ? (
+          <div
+            className="flex flex-col gap-2 px-2.5"
+            aria-busy="true"
+            aria-label="Loading conversations"
+          >
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="h-4 bg-rule rounded animate-pulse"
+                style={{ width: `${50 + ((i * 23) % 40)}%` }}
+              />
+            ))}
+          </div>
+        ) : (
+          <>
+            <Section title="Channels" items={channels} userId={user?.id} pathname={pathname} />
+            <Section
+              title="Groups"
+              items={groups}
+              userId={user?.id}
+              pathname={pathname}
+              action={<AddButton onClick={() => setShowCreateGroup(true)} label="New group" />}
+            />
+            <Section
+              title="Direct Messages"
+              items={dms}
+              userId={user?.id}
+              pathname={pathname}
+              action={<AddButton onClick={() => setShowNewDm(true)} label="New direct message" />}
+            />
+            {!conversations.length && (
+              <p className="pl-2.5 pr-3 text-xs text-muted">No conversations yet.</p>
+            )}
+          </>
         )}
       </nav>
 
@@ -179,7 +197,7 @@ export function Sidebar() {
           onClick={handleLogout}
           disabled={loggingOut}
           title="Sign out"
-          className="flex-shrink-0 p-1 rounded text-muted hover:text-cobalt hover:bg-cobalt-subtle transition-colors disabled:opacity-50"
+          className="flex-shrink-0 p-1 rounded text-muted hover:text-cobalt hover:bg-cobalt-subtle transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
           aria-label="Sign out"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -18,6 +18,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
   const typingTimer = useRef<NodeJS.Timeout | null>(null);
   const isTyping = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const emitTypingStart = useCallback(() => {
     if (!isTyping.current) {
@@ -35,6 +36,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
     const content = value.trim();
     if (!content) return;
     setValue('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     if (typingTimer.current) clearTimeout(typingTimer.current);
     if (isTyping.current) {
       getSocket().emit('typing_stop', { conversationId });
@@ -88,7 +90,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           </span>
           <button
             onClick={onCancelReply}
-            className="flex-shrink-0 text-muted hover:text-ink"
+            className="flex-shrink-0 rounded text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
             title="Cancel reply"
             aria-label="Cancel reply"
           >
@@ -110,7 +112,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           disabled={uploading}
           title="Attach image"
           aria-label="Attach image"
-          className="flex-shrink-0 text-muted hover:text-ink disabled:opacity-40 transition-colors"
+          className="flex-shrink-0 text-muted hover:text-ink disabled:opacity-40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1 rounded"
         >
           {uploading ? (
             <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -149,10 +151,13 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
         />
 
         <textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
             emitTypingStart();
+            e.target.style.height = 'auto';
+            e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -162,14 +167,14 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
           }}
           rows={1}
           placeholder="Type a message…"
-          className="flex-1 bg-transparent resize-none text-sm text-ink placeholder:text-muted focus:outline-none max-h-32"
+          className="flex-1 bg-transparent resize-none text-sm text-ink placeholder:text-muted focus:outline-none max-h-32 overflow-y-auto"
         />
 
         <button
           onClick={sendMessage}
           disabled={!value.trim()}
           aria-label="Send message"
-          className="flex-shrink-0 bg-cobalt text-paper-raised rounded p-1.5 hover:bg-cobalt-dark disabled:opacity-40 transition-colors"
+          className="flex-shrink-0 bg-cobalt text-paper-raised rounded p-1.5 hover:bg-cobalt-dark disabled:opacity-40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -183,7 +188,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }: Message
       </div>
 
       {uploadError && (
-        <p role="alert" className="text-xs text-red-600 mt-1 px-1">
+        <p role="alert" className="text-xs text-ember mt-1 px-1">
           {uploadError}
         </p>
       )}

@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { Conversation } from '../../types';
 import { usePresenceStore } from '../../store/presence.store';
 import { formatRelativeTime } from '../../lib/utils';
 import { PresenceIndicator } from './PresenceIndicator';
+import { Input } from '../ui/Input';
 
 interface ConversationHeaderProps {
   conversation: Conversation;
@@ -44,6 +46,15 @@ export function ConversationHeader({
 
   return (
     <div className="border-b border-rule px-4 py-3 flex items-center gap-3 bg-paper-raised">
+      <Link
+        href="/"
+        aria-label="Back to conversations"
+        className="lg:hidden flex-shrink-0 p-1.5 -ml-1.5 rounded text-muted hover:text-ink hover:bg-paper transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </Link>
       <div className="flex-1 min-w-0">
         <h2 className="font-display font-semibold text-ink truncate">
           {conversation.type === 'CHANNEL' ? `# ${title}` : title}
@@ -56,7 +67,7 @@ export function ConversationHeader({
 
       <div className="flex items-center gap-1 flex-shrink-0">
         {showSearch && (
-          <input
+          <Input
             autoFocus
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -67,7 +78,7 @@ export function ConversationHeader({
               }
             }}
             placeholder="Search messages…"
-            className="border border-rule rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt w-48"
+            className="w-48"
           />
         )}
 
@@ -75,8 +86,9 @@ export function ConversationHeader({
           <button
             onClick={onToggleMembers}
             aria-label={showMembers ? 'Hide members' : 'Show members'}
+            aria-pressed={showMembers}
             title={showMembers ? 'Hide members' : 'Show members'}
-            className={`p-1.5 rounded transition-colors ${
+            className={`p-1.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1 ${
               showMembers
                 ? 'bg-cobalt-subtle text-cobalt'
                 : 'text-muted hover:text-ink hover:bg-paper'
@@ -99,8 +111,9 @@ export function ConversationHeader({
             if (showSearch) onSearchChange('');
           }}
           aria-label={showSearch ? 'Close search' : 'Search messages'}
+          aria-pressed={showSearch}
           title={showSearch ? 'Close search' : 'Search messages'}
-          className={`p-1.5 rounded transition-colors ${
+          className={`p-1.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt focus-visible:ring-offset-1 ${
             showSearch ? 'bg-cobalt-subtle text-cobalt' : 'text-muted hover:text-ink hover:bg-paper'
           }`}
         >
