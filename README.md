@@ -29,7 +29,7 @@ A full-stack real-time chat application built with NestJS, Next.js, and Socket.i
 |---|---|
 | Frontend | Next.js 16 (App Router), TypeScript, TanStack Query v5, Zustand, Tailwind CSS |
 | Backend | NestJS 11, TypeScript, Prisma 7 (PostgreSQL adapter) |
-| Real-time | Socket.io, Redis pub/sub adapter |
+| Real-time | Socket.io (single-instance) |
 | Database | PostgreSQL |
 | Cache / Presence | Redis |
 | Auth | Passport.js, JWT, bcrypt |
@@ -199,7 +199,7 @@ npm run format              # Prettier
 │  └──────┘ └───────┘ └────────────┘ └──────────────────┘    │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  Chat Gateway  (/chat)  — JWT auth · room guard ·   │   │
-│  │  Redis pub/sub adapter · 10 events / 10 s per user  │   │
+│  │  single-instance Socket.io · 10 events / 10 s / user│   │
 │  └──────────────────────────────────────────────────────┘   │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  Presence Service — Redis keys (TTL 30 s) · roster  │   │
@@ -208,8 +208,8 @@ npm run format              # Prettier
                         │                     │
               ┌─────────▼──────┐    ┌─────────▼──────────┐
               │  PostgreSQL    │    │       Redis         │
-              │  Prisma 7      │    │  Presence · Pub/   │
-              │  (pg adapter)  │    │  Sub · Rate limit  │
+              │  Prisma 7      │    │  Presence ·        │
+              │  (pg adapter)  │    │  Rate limit        │
               └────────────────┘    └────────────────────┘
 ```
 
@@ -217,7 +217,7 @@ npm run format              # Prettier
 
 The API is built with **NestJS** using a layered module structure:
 
-- **`infra/`** — infrastructure adapters: Prisma (DB), Redis (cache/pub-sub), file upload (Multer)
+- **`infra/`** — infrastructure adapters: Prisma (DB), Redis (presence/rate-limit cache), file upload (Multer)
 - **`modules/auth`** — register, login, token refresh, logout. Two JWTs: short-lived access token + long-lived refresh token (hashed and stored in DB for revocation)
 - **`modules/users`** — profile management, user search
 - **`modules/conversations`** — DIRECT and GROUP conversations; role-based member management (OWNER / ADMIN / MEMBER)
@@ -243,31 +243,16 @@ Key patterns:
 - **`hooks/useChat.ts`** — subscribes to all WS events and keeps TanStack Query cache in sync (messages, members, presence, read receipts)
 - **TanStack Query** — server state with `staleTime: 60s` and cursor-based infinite scroll for message history
 
-### Architecture Decision Records
-
-See [`docs/decisions/`](docs/decisions/) for full context on key design choices:
-
-| ADR | Decision |
-|---|---|
-| [001](docs/decisions/001-read-receipt-tracking.md) | Read receipts via `lastReadAt` on `ConversationMember` vs per-message `MessageRead` |
-| [002](docs/decisions/002-prisma-adapter-pattern.md) | Prisma runtime adapter — why `schema.prisma` has no `url` field |
-| [003](docs/decisions/003-two-jwt-auth.md) | Dual-JWT auth with hashed, stored refresh tokens |
-| [004](docs/decisions/004-eventemitter2-gateway-decoupling.md) | EventEmitter2 for service-to-gateway broadcast decoupling |
-| [005](docs/decisions/005-websocket-security-and-rate-limiting.md) | WebSocket security: JWT auth on connect, server-side room membership, per-event-type rate limits |
-| [006](docs/decisions/006-conversation-ordering-and-presence.md) | Conversation ordering via `updatedAt` touch on message create; last-seen via `PresenceService.setOffline` |
-| [007](docs/decisions/007-cursor-based-pagination.md) | Cursor-based (keyset) pagination for messages — stable under concurrent inserts, O(log n) with composite index |
-| [008](docs/decisions/008-access-token-bearer-body.md) | Access token delivery — response body + localStorage vs cookie |
-
 ---
 
 ## Testing
 
 ```bash
-# Backend — 116 unit tests across 8 suites
+# Backend — 153 unit tests across 11 suites
 cd backend && npm test
 cd backend && npm run test:cov   # with coverage
 
-# Frontend — 30 unit tests across 3 suites
+# Frontend — 54 unit tests across 8 suites
 cd frontend && npm test
 ```
 
