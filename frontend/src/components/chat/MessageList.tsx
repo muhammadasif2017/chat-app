@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { formatDaySeparator } from '../../lib/utils';
@@ -104,12 +104,7 @@ export function MessageList({ conversationId, searchQuery, members, onReply }: M
           new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000,
         );
         return (
-          <div
-            key={msg.id}
-            style={
-              { contentVisibility: 'auto', containIntrinsicSize: 'auto 56px' } as CSSProperties
-            }
-          >
+          <div key={msg.id}>
             {showSeparator && (
               <div className="flex items-center gap-3 px-4 py-3">
                 <div className="flex-1 border-t border-rule" />
