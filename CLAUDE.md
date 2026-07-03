@@ -136,7 +136,7 @@ npm run lint                  # ESLint
 
 **WebSocket:**
 - `ChatGateway` on namespace `/chat` using `@nestjs/websockets` + Socket.io.
-- Redis adapter (`@socket.io/redis-adapter`) via `RedisIoAdapter` for multi-instance pub/sub.
+- `SocketIoAdapter` (`infra/websocket/`) — default Socket.io adapter, sets CORS from `ConfigService`. Single-instance only; no cross-process pub/sub.
 - JWT read from `handshake.auth.token` on `handleConnection`; user attached to `socket.data.userId`.
 - Room membership verified server-side on every WS event — never trust client-declared conversation IDs.
 

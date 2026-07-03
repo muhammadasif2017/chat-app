@@ -14,7 +14,7 @@ import type { Response } from 'express';
 import { AppModule } from './app.module.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter.js';
-import { RedisIoAdapter } from './infra/redis/redis-io.adapter.js';
+import { SocketIoAdapter } from './infra/websocket/socket-io.adapter.js';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -31,9 +31,7 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
 
-  const redisAdapter = new RedisIoAdapter(app);
-  await redisAdapter.connectToRedis(config.get<string>('REDIS_URL')!);
-  app.useWebSocketAdapter(redisAdapter);
+  app.useWebSocketAdapter(new SocketIoAdapter(app));
 
   if (config.get('NODE_ENV') !== 'production') {
     const swaggerConfig = new DocumentBuilder()
