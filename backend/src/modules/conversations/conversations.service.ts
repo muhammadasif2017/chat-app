@@ -53,6 +53,7 @@ export class ConversationsService {
         LEFT JOIN "Message" m
           ON m."conversationId" = cm."conversationId"
           AND m."isDeleted" = false
+          AND m."senderId" != cm."userId"
           AND (cm."lastReadAt" IS NULL OR m."createdAt" > cm."lastReadAt")
         WHERE cm."userId" = ${userId}
         GROUP BY cm."conversationId"
@@ -85,9 +86,16 @@ export class ConversationsService {
 
     const unreadCount = member.lastReadAt
       ? await this.prisma.message.count({
-          where: { conversationId, createdAt: { gt: member.lastReadAt }, isDeleted: false },
+          where: {
+            conversationId,
+            createdAt: { gt: member.lastReadAt },
+            isDeleted: false,
+            senderId: { not: userId },
+          },
         })
-      : await this.prisma.message.count({ where: { conversationId, isDeleted: false } });
+      : await this.prisma.message.count({
+          where: { conversationId, isDeleted: false, senderId: { not: userId } },
+        });
 
     return {
       ...member.conversation,
