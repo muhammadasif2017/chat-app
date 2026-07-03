@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import api from '../../../lib/api';
 import { useAuthStore } from '../../../store/auth.store';
 import type { User } from '../../../types';
@@ -24,7 +23,6 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 export default function RegisterPage() {
-  const router = useRouter();
   const { setAuth } = useAuthStore();
   const {
     register,
@@ -39,7 +37,7 @@ export default function RegisterPage() {
     try {
       const res = await api.post<{ user: User; accessToken: string }>('/auth/register', data);
       setAuth(res.data.user, res.data.accessToken);
-      router.push('/');
+      window.location.assign('/');
     } catch {
       setError('root', { message: 'Registration failed. Check your details and try again.' });
     }
