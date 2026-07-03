@@ -17,7 +17,7 @@ function buildCsp(nonce: string): string {
   ].join('; ');
 }
 
-export function proxy(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
   const isAuthed = req.cookies.has('ca_authed');

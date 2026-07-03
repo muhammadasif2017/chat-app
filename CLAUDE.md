@@ -145,7 +145,7 @@ npm run lint                  # ESLint
 ### Frontend (Next.js 16 App Router)
 
 **Routing:**
-- `proxy.ts` (not `middleware.ts`) with `export function proxy()` — Next.js 16 convention. Protects routes via `ca_authed` cookie.
+- `proxy.ts` (not `middleware.ts`) with `export default function proxy()` — Next.js 16 convention. Must be a default export named `proxy`; a bare named export loads under webpack but crashes Turbopack's dev middleware loader (`adapterFn is not a function`). Protects routes via `ca_authed` cookie.
 - Route groups `(auth)` and `(dashboard)` do **not** add path segments.
 - `proxy.ts` also mints a per-request CSP nonce and sets `Content-Security-Policy` on every response path (login redirect, authed redirect, pass-through) — required because Next's inline RSC hydration scripts need `'nonce-{value}'`, which can only be generated per-request, not baked into `next.config.ts`. See ADR-010.
 
