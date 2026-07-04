@@ -26,7 +26,7 @@ function makeSocket(token?: string): Socket {
 
 function makeServer() {
   return {
-    to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+    to: jest.fn().mockReturnValue({ emit: jest.fn(), except: jest.fn().mockReturnThis() }),
     in: jest.fn().mockReturnValue({
       socketsJoin: jest.fn(),
       socketsLeave: jest.fn(),
@@ -238,5 +238,34 @@ describe('ChatGateway.handleAddReaction', () => {
       expect.objectContaining({ create: expect.objectContaining({ emoji: '❤️' }) as unknown }),
     );
     expect(gateway.server.to).toHaveBeenCalledWith(`conversation:${CONV_ID}`);
+  });
+});
+
+describe('ChatGateway.handleSessionRevoked', () => {
+  it('excludes the originating socket when exceptSocketId is given', () => {
+    const { gateway } = makeGateway();
+
+    gateway.handleSessionRevoked({ userId: USER_ID, exceptSocketId: 'socket-123' });
+
+    expect(gateway.server.to).toHaveBeenCalledWith(`user:${USER_ID}`);
+    const room = (gateway.server.to as jest.Mock).mock.results[0].value as {
+      except: jest.Mock;
+      emit: jest.Mock;
+    };
+    expect(room.except).toHaveBeenCalledWith('socket-123');
+    expect(room.emit).toHaveBeenCalledWith('session_revoked', {});
+  });
+
+  it('broadcasts to everyone when no exceptSocketId is given', () => {
+    const { gateway } = makeGateway();
+
+    gateway.handleSessionRevoked({ userId: USER_ID });
+
+    const room = (gateway.server.to as jest.Mock).mock.results[0].value as {
+      except: jest.Mock;
+      emit: jest.Mock;
+    };
+    expect(room.except).not.toHaveBeenCalled();
+    expect(room.emit).toHaveBeenCalledWith('session_revoked', {});
   });
 });

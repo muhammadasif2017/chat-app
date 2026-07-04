@@ -55,10 +55,20 @@ export function useSocket(): void {
       useToastStore.getState().show('Unable to reach the server. Retrying…');
     };
 
+    // Server pushes this when this account's refresh token was rotated by a
+    // different connection (single-device enforcement) — our session is dead.
+    // Reason travels via query param, not a toast: the full-page navigation
+    // below tears down this JS context before an in-memory toast could render.
+    const onSessionRevoked = () => {
+      useAuthStore.getState().logout();
+      window.location.href = '/login?reason=session_revoked';
+    };
+
     socket.on('disconnect', onDisconnect);
     socket.on('connect', onConnect);
     socket.on('error', onError);
     socket.on('connect_error', onConnectError);
+    socket.on('session_revoked', onSessionRevoked);
 
     intervalRef.current = setInterval(() => {
       getSocket()?.emit('ping');
@@ -70,6 +80,7 @@ export function useSocket(): void {
       socket.off('connect', onConnect);
       socket.off('error', onError);
       socket.off('connect_error', onConnectError);
+      socket.off('session_revoked', onSessionRevoked);
       disconnectSocket();
     };
   }, [isAuthenticated, qc]);

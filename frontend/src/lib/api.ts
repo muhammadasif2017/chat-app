@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { tokenStorage } from './auth';
-import { connectSocket } from './socket';
+import { connectSocket, getSocket } from './socket';
 import { useAuthStore } from '../store/auth.store';
 
 const api = axios.create({
@@ -35,11 +35,14 @@ export async function refreshAccessToken(): Promise<string> {
 
   isRefreshing = true;
   try {
-    const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-      {},
-      { withCredentials: true },
-    );
+    // Tell the server which socket is us so its session_revoked broadcast (fired
+    // on every rotation, per single-device enforcement) excludes this connection —
+    // otherwise a normal self-triggered refresh would immediately log itself out.
+    const socket = getSocket();
+    const body = socket.connected ? { socketId: socket.id } : {};
+    const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, body, {
+      withCredentials: true,
+    });
     tokenStorage.set(data.accessToken);
     connectSocket();
     processQueue(null);

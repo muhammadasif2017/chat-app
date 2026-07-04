@@ -54,10 +54,20 @@ function makeConfig() {
   return { get: (k: string) => env[k] } as unknown as import('@nestjs/config').ConfigService;
 }
 
-async function makeService(prisma: FakePrisma = makePrisma(), users: FakeUsers = makeUsers()) {
-  const svc = new AuthService(prisma, users, makeJwt(), makeConfig());
+function makeEvents() {
+  return { emit: jest.fn() } as unknown as import('@nestjs/event-emitter').EventEmitter2;
+}
+
+type FakeEvents = ReturnType<typeof makeEvents>;
+
+async function makeService(
+  prisma: FakePrisma = makePrisma(),
+  users: FakeUsers = makeUsers(),
+  events: FakeEvents = makeEvents(),
+) {
+  const svc = new AuthService(prisma, users, makeJwt(), makeConfig(), events);
   await svc.onModuleInit();
-  return { svc, prisma, users };
+  return { svc, prisma, users, events };
 }
 
 describe('AuthService.register', () => {
@@ -205,6 +215,15 @@ describe('AuthService.refresh', () => {
     await expect(svc.refresh(USER_ID, EMAIL, 'raw-token', JTI)).rejects.toThrow(ForbiddenException);
   });
 
+  it('pushes a session_revoked event (no exceptSocketId) when reuse is detected', async () => {
+    const { svc, events } = await makeService();
+    await expect(svc.refresh(USER_ID, EMAIL, 'raw-token', JTI)).rejects.toThrow(ForbiddenException);
+
+    expect(events.emit as jest.Mock).toHaveBeenCalledWith('internal.session.revoked', {
+      userId: USER_ID,
+    });
+  });
+
   it('throws ForbiddenException when token is expired', async () => {
     const { svc, prisma } = await makeService();
     (prisma.refreshToken.findUnique as jest.Mock).mockResolvedValue({
@@ -245,7 +264,7 @@ describe('AuthService.refresh', () => {
   });
 
   it('deletes the old token and issues new pair on valid refresh', async () => {
-    const { svc, prisma } = await makeService();
+    const { svc, prisma, events } = await makeService();
     const rawToken = 'valid-refresh-token';
     const rawDigest = createHash('sha256').update(rawToken).digest('hex');
     const hash = await bcrypt.hash(rawDigest, 10);
@@ -256,11 +275,15 @@ describe('AuthService.refresh', () => {
       expiresAt: new Date(Date.now() + 10000),
     });
 
-    const result = await svc.refresh(USER_ID, EMAIL, rawToken, JTI);
+    const result = await svc.refresh(USER_ID, EMAIL, rawToken, JTI, 'socket-123');
 
     expect(prisma.refreshToken.delete as jest.Mock).toHaveBeenCalledWith({ where: { id: JTI } });
     expect(prisma.refreshToken.deleteMany as jest.Mock).toHaveBeenCalledWith({
       where: { userId: USER_ID },
+    });
+    expect(events.emit as jest.Mock).toHaveBeenCalledWith('internal.session.revoked', {
+      userId: USER_ID,
+      exceptSocketId: 'socket-123',
     });
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');

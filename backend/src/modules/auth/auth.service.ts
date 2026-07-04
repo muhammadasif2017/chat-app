@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, OnModuleInit } from '@nestjs/common';
 import { randomUUID, createHash } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import ms, { type StringValue } from 'ms';
@@ -18,6 +19,7 @@ export class AuthService implements OnModuleInit {
     private users: UsersService,
     private jwt: JwtService,
     private config: ConfigService,
+    private events: EventEmitter2,
   ) {}
 
   async onModuleInit() {
@@ -57,12 +59,22 @@ export class AuthService implements OnModuleInit {
     return { ...tokens, user };
   }
 
-  async refresh(userId: string, email: string, rawRefreshToken: string, jti: string) {
+  async refresh(
+    userId: string,
+    email: string,
+    rawRefreshToken: string,
+    jti: string,
+    exceptSocketId?: string,
+  ) {
     const stored = await this.prisma.refreshToken.findUnique({ where: { id: jti } });
     if (!stored || stored.userId !== userId || stored.expiresAt < new Date()) {
       // jti not found after a valid JWT signature means the token was already rotated —
       // a second presenter means one copy was stolen. Revoke all sessions for this user.
       await this.prisma.refreshToken.deleteMany({ where: { userId } });
+      // No exceptSocketId: this request is being rejected, not the legitimate
+      // rotation, so every live socket for this user (including the presenter's,
+      // if any) must be kicked.
+      this.events.emit('internal.session.revoked', { userId });
       throw new ForbiddenException();
     }
 
@@ -71,14 +83,14 @@ export class AuthService implements OnModuleInit {
     if (!valid) throw new ForbiddenException();
 
     await this.prisma.refreshToken.delete({ where: { id: jti } });
-    return this.issueTokens(userId, email);
+    return this.issueTokens(userId, email, exceptSocketId);
   }
 
   async logout(userId: string) {
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
   }
 
-  private async issueTokens(userId: string, email: string) {
+  private async issueTokens(userId: string, email: string, exceptSocketId?: string) {
     const jti = randomUUID();
     const payload = { sub: userId, email };
 
@@ -106,6 +118,10 @@ export class AuthService implements OnModuleInit {
     await this.prisma.refreshToken.create({
       data: { id: jti, userId, tokenHash, expiresAt },
     });
+
+    // Push-notify any other live socket for this user immediately, instead of
+    // letting it discover the revoked session on its own next 401/refresh.
+    this.events.emit('internal.session.revoked', { userId, exceptSocketId });
 
     return { accessToken, refreshToken };
   }

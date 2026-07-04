@@ -1,9 +1,11 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import api from '../../../lib/api';
 import { useAuthStore } from '../../../store/auth.store';
 import { Button } from '../../../components/ui/Button';
@@ -19,6 +21,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const { setAuth } = useAuthStore();
+  const searchParams = useSearchParams();
 
   const {
     register,
@@ -28,6 +31,12 @@ export default function LoginPage() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+
+  useEffect(() => {
+    if (searchParams.get('reason') === 'session_revoked') {
+      setError('root', { message: 'Signed out — this account was signed in elsewhere.' });
+    }
+  }, [searchParams, setError]);
 
   const onSubmit = async (data: FormData) => {
     try {

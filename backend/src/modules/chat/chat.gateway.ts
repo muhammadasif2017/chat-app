@@ -388,4 +388,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logger.error(`internal.member.role_changed failed: ${String(err)}`);
     }
   }
+
+  @OnEvent('internal.session.revoked')
+  handleSessionRevoked(payload: { userId: string; exceptSocketId?: string }) {
+    try {
+      const room = this.server.to(`user:${payload.userId}`);
+      const target = payload.exceptSocketId ? room.except(payload.exceptSocketId) : room;
+      target.emit('session_revoked', {});
+    } catch (err: unknown) {
+      this.logger.error(`internal.session.revoked failed: ${String(err)}`);
+    }
+  }
 }
