@@ -33,3 +33,7 @@ Thumbs.db
 backend/learning/
 frontend/learning/
 
+# Local MCP config / uploaded files
+.mcp.json
+backend/uploads/
+

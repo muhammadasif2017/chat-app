@@ -34,6 +34,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private readonly logger = new Logger(ChatGateway.name);
+  private readonly sendQueues = new Map<string, Promise<unknown>>();
 
   constructor(
     private jwt: JwtService,
@@ -122,6 +123,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: Socket) {
+    this.sendQueues.delete(client.id);
+
     const userId = (client.data as { userId?: string }).userId;
     if (!userId) return;
 
@@ -137,7 +140,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send_message')
-  async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: SendMessageDto) {
+  handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: SendMessageDto) {
+    // Socket.IO invokes async handlers without awaiting the previous call, so
+    // back-to-back sends on the same socket can race and be inserted out of
+    // order. Chain them per-socket to preserve arrival order.
+    const prev = this.sendQueues.get(client.id) ?? Promise.resolve();
+    const queued = prev.then(() => this.sendMessage(client, dto));
+    this.sendQueues.set(
+      client.id,
+      queued.catch(() => undefined),
+    );
+    return queued;
+  }
+
+  private async sendMessage(client: Socket, dto: SendMessageDto) {
     const userId = this.getUserId(client);
     await this.checkRateLimit(userId);
     await this.assertMember(dto.conversationId, userId);
