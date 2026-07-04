@@ -100,6 +100,9 @@ export class AuthService implements OnModuleInit {
     const tokenHash = await bcrypt.hash(tokenDigest, 10);
     const refreshExpiry = this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d';
     const expiresAt = new Date(Date.now() + ms(refreshExpiry as StringValue));
+
+    // Single-device enforcement: only one active session per user.
+    await this.prisma.refreshToken.deleteMany({ where: { userId } });
     await this.prisma.refreshToken.create({
       data: { id: jti, userId, tokenHash, expiresAt },
     });

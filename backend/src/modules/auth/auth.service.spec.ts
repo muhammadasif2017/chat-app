@@ -181,6 +181,22 @@ describe('AuthService.login', () => {
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');
   });
+
+  it('clears any existing sessions for the user (single-device enforcement)', async () => {
+    const { svc, prisma, users } = await makeService();
+    (users.findPublicById as jest.Mock).mockResolvedValue({
+      id: USER_ID,
+      username: 'alice',
+      email: EMAIL,
+      avatarUrl: null,
+    });
+
+    await svc.login(USER_ID, EMAIL);
+
+    expect(prisma.refreshToken.deleteMany as jest.Mock).toHaveBeenCalledWith({
+      where: { userId: USER_ID },
+    });
+  });
 });
 
 describe('AuthService.refresh', () => {
@@ -243,6 +259,9 @@ describe('AuthService.refresh', () => {
     const result = await svc.refresh(USER_ID, EMAIL, rawToken, JTI);
 
     expect(prisma.refreshToken.delete as jest.Mock).toHaveBeenCalledWith({ where: { id: JTI } });
+    expect(prisma.refreshToken.deleteMany as jest.Mock).toHaveBeenCalledWith({
+      where: { userId: USER_ID },
+    });
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');
   });
