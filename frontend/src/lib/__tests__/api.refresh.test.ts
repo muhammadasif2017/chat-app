@@ -20,6 +20,7 @@ jest.mock('../auth', () => ({
 
 jest.mock('../socket', () => ({
   connectSocket: jest.fn(),
+  getSocket: jest.fn(() => ({ connected: false, id: undefined })),
 }));
 
 jest.mock('../../store/auth.store', () => {
